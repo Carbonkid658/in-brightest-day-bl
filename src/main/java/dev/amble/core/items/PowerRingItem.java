@@ -1,5 +1,6 @@
 package dev.amble.core.items;
 
+import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.blocks.GreenLanternBlock;
 import dev.amble.core.ringpowers.LanternCorps;
@@ -53,9 +54,15 @@ public class PowerRingItem extends Item {
     @Override
     public void inventoryTick(ItemStack itemStack, ServerLevel level, Entity owner, @Nullable EquipmentSlot slot) {
         super.inventoryTick(itemStack, level, owner, slot);
-        if (level.getServer().getTickCount() % (20 * 60) * 20 == 0) {
-            PowerRingItem.drainRing(itemStack, 1);
-        }
+        PowerRingItem.tickCharge(itemStack, level);
+    }
+
+    public static boolean tickCharge(ItemStack ring, ServerLevel level) {
+        if (level.getServer().getTickCount() % (20 * 60) * 20 != 0) return false;
+
+        int before = getRingPower(ring);
+        drainRing(ring, 1);
+        return getRingPower(ring) != before;
     }
 
     public static Optional<LanternCorps> getCorps(ItemStack ring) {
@@ -63,8 +70,20 @@ public class PowerRingItem extends Item {
         return Optional.ofNullable(ring.get(BrightestDayComponents.LANTERN_CORPS));
     }
 
+    public static ItemStack getWornRing(Player player) {
+        ItemStack slotted = BrightestDayAttachments.getRing(player);
+        if (slotted.getItem() instanceof PowerRingItem) return slotted;
+        if (player.getMainHandItem().getItem() instanceof PowerRingItem) return player.getMainHandItem();
+        if (player.getOffhandItem().getItem() instanceof PowerRingItem) return player.getOffhandItem();
+        return ItemStack.EMPTY;
+    }
+
     public static Optional<LanternCorps> getWornCorps(Player player) {
-        return getCorps(player.getMainHandItem()).or(() -> getCorps(player.getOffhandItem()));
+        return getCorps(getWornRing(player));
+    }
+
+    public static float getChargeFraction(ItemStack ring) {
+        return (float) getRingPower(ring) / BrightestDayComponents.MAX_POWER;
     }
 
     public static int getRingPower(ItemStack ring) {

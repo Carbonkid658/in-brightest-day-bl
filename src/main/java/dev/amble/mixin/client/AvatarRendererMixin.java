@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import dev.amble.client.flight.FlightAnimator;
 import dev.amble.client.flight.FlightPose;
+import dev.amble.client.render.SlottedRingRenderer;
 import net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
@@ -23,6 +24,7 @@ public abstract class AvatarRendererMixin {
     private void brightestday$extractFlightPose(Avatar entity, AvatarRenderState state, float partialTicks, CallbackInfo ci) {
         FlightPose pose = entity instanceof Player player ? FlightAnimator.pose(player, partialTicks) : null;
         ((FabricRenderState) state).setData(FlightAnimator.POSE, pose);
+        SlottedRingRenderer.extract(entity, state);
     }
 
     @Inject(method = "setupRotations(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;FF)V", at = @At("TAIL"))

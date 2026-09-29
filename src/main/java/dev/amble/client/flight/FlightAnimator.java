@@ -165,9 +165,9 @@ public final class FlightAnimator {
         float roll = Mth.lerp(partialTicks, motion.oRoll, motion.roll);
         float bodyAngle = -flight * Mth.lerp(tilt, HOVER_LEAN, 90.0F + pitch);
 
-        HumanoidArm leadArm = PowerRingItem.getCorps(player.getMainHandItem()).isPresent()
-                ? player.getMainArm()
-                : player.getMainArm().getOpposite();
+        HumanoidArm leadArm = PowerRingItem.getWornRing(player) == player.getOffhandItem()
+                ? player.getMainArm().getOpposite()
+                : player.getMainArm();
 
         return new FlightPose(flight, tilt, bodyAngle, roll * flight, leadArm);
     }

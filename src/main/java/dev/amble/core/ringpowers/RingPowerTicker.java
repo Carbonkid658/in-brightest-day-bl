@@ -5,6 +5,7 @@ import dev.amble.core.items.PowerRingItem;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 
 public final class RingPowerTicker {
 
@@ -14,6 +15,11 @@ public final class RingPowerTicker {
 
     private static void tick(MinecraftServer server) {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            ItemStack ring = BrightestDayAttachments.getRing(player);
+            if (!ring.isEmpty() && PowerRingItem.tickCharge(ring, player.level())) {
+                BrightestDayAttachments.setRing(player, ring);
+            }
+
             BrightestDayAttachments.sync(player, PowerRingItem.getWornCorps(player).orElse(null));
 
             for (RingPowerInstance<?> instance : BrightestDayAttachments.get(player)) {

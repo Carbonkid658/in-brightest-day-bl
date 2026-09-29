@@ -8,8 +8,11 @@ import dev.amble.core.ringpowers.RingPowerRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.gamerules.GameRules;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -25,7 +28,23 @@ public class BrightestDayAttachments {
                     .syncWith(RingPowerInstance.LIST_STREAM_CODEC, AttachmentSyncPredicate.all())
                     .buildAndRegister(BrightestDay.id("powers"));
 
+    public static final AttachmentType<ItemStack> RING =
+            AttachmentRegistry.<ItemStack>builder()
+                    .initializer(() -> ItemStack.EMPTY)
+                    .persistent(ItemStack.OPTIONAL_CODEC)
+                    .copyOnDeath()
+                    .syncWith(ItemStack.OPTIONAL_STREAM_CODEC, AttachmentSyncPredicate.all())
+                    .buildAndRegister(BrightestDay.id("ring"));
+
     public static final int MAX_SLOTS = 4;
+
+    public static ItemStack getRing(Player player) {
+        return player.getAttachedOrElse(BrightestDayAttachments.RING, ItemStack.EMPTY);
+    }
+
+    public static void setRing(Player player, ItemStack ring) {
+        player.setAttached(BrightestDayAttachments.RING, ring.isEmpty() ? ItemStack.EMPTY : ring.copy());
+    }
 
     public static List<RingPowerInstance<?>> get(Player player) {
         return player.getAttachedOrElse(BrightestDayAttachments.POWERS, List.of());
@@ -101,5 +120,16 @@ public class BrightestDayAttachments {
         instance.power().onRevoked(player, instance.data());
     }
 
-    public static void init() {}
+    public static void init() {
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+            if (!(entity instanceof ServerPlayer player)) return;
+            if (player.level().getGameRules().get(GameRules.KEEP_INVENTORY)) return;
+
+            ItemStack ring = getRing(player);
+            if (ring.isEmpty()) return;
+
+            player.spawnAtLocation(player.level(), ring);
+            setRing(player, ItemStack.EMPTY);
+        });
+    }
 }

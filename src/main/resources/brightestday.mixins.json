@@ -9,8 +9,10 @@
 	],
 	"client": [
 		"client.AbstractClientPlayerMixin",
+		"client.AbstractContainerScreenAccessor",
 		"client.AvatarRendererMixin",
 		"client.CameraMixin",
+		"client.FirstPersonHandsAndItemsRendererMixin",
 		"client.LocalPlayerMixin",
 		"client.PlayerModelMixin"
 	],

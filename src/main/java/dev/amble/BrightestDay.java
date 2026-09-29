@@ -4,6 +4,7 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayBlockEntityTypes;
 import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.BrightestDayItems;
+import dev.amble.core.BrightestDayMenus;
 import dev.amble.core.networking.Networking;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.RingPowerTicker;
@@ -27,6 +28,7 @@ public class BrightestDay implements ModInitializer {
 		BrightestDayItems.init();
 		BrightestDayBlocks.init();
 		BrightestDayBlockEntityTypes.init();
+		BrightestDayMenus.init();
 		RingPowerRegistry.init();
 		BrightestDayAttachments.init();
 		RingPowerTicker.init();
