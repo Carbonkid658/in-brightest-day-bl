@@ -2,6 +2,7 @@ package dev.amble.client.effects;
 
 import dev.amble.core.ringpowers.CorpsColors;
 import dev.amble.core.blocks.LanternBlock;
+import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.CycleConstructC2SPayload;
 import dev.amble.core.ringpowers.constructs.AreaShieldConstruct;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
@@ -44,6 +45,7 @@ public final class ConstructClient {
 
     public static boolean onScroll(int wheel) {
         LocalPlayer player = Minecraft.getInstance().player;
+        if (TractorEffects.onScroll(wheel)) return true;
         if (player == null || !isSizingAreaShield(player)) return false;
 
         int resized = AreaShieldConstruct.clampRadius(radius + Integer.signum(wheel));
@@ -57,6 +59,7 @@ public final class ConstructClient {
     private static boolean isSizingAreaShield(LocalPlayer player) {
         return player.getMainHandItem().isEmpty()
                 && ArmedRingPower.isArmed(player)
+                && PowerRingItem.hasCharge(player)
                 && ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::usesRadius).orElse(false);
     }
 

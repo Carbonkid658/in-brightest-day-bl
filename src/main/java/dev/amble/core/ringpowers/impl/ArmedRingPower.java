@@ -62,6 +62,11 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
     }
 
     @Override
+    public boolean worksWithoutCharge() {
+        return true;
+    }
+
+    @Override
     public boolean run(ServerPlayer player, Data data) {
         this.setData(player, data.withActive(!data.active()));
         return true;
@@ -83,6 +88,11 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
     }
 
     public static void cycle(ServerPlayer player) {
+        if (!PowerRingItem.hasCharge(player)) {
+            player.sendOverlayMessage(Component.translatable("message.brightestday.ring_depleted"));
+            return;
+        }
+
         List<ConstructRingPower> constructs = constructs(player);
         Optional<Data> data = data(player);
         if (constructs.isEmpty() || data.isEmpty()) {

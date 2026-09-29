@@ -11,6 +11,7 @@ import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.RingPowerTicker;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import dev.amble.core.shields.ShieldManager;
+import dev.amble.core.tractor.TractorManager;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -38,6 +39,7 @@ public class BrightestDay implements ModInitializer {
 		Networking.init();
 		FlightRingPower.registerEvents();
 		ShieldManager.init();
+		TractorManager.init();
 	}
 
 	public static Identifier id(String path) {

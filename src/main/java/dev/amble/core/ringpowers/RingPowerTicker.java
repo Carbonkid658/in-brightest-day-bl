@@ -7,7 +7,12 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.Map;
+import java.util.WeakHashMap;
+
 public final class RingPowerTicker {
+    private static final Map<ServerPlayer, Boolean> CHARGED = new WeakHashMap<>();
+
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(RingPowerTicker::tick);
@@ -24,11 +29,22 @@ public final class RingPowerTicker {
 
             BrightestDayAttachments.sync(player, PowerRingItem.getWornCorps(player).orElse(null));
             RingBenefits.tick(player, server.getTickCount());
+            depleteOnEmpty(player);
 
             for (RingPowerInstance<?> instance : BrightestDayAttachments.get(player)) {
                 instance.tick(player);
                 if (drainTick) drain(player, instance);
             }
+        }
+    }
+
+    private static void depleteOnEmpty(ServerPlayer player) {
+        boolean charged = PowerRingItem.hasCharge(player);
+        Boolean wasCharged = CHARGED.put(player, charged);
+        if (charged || Boolean.FALSE.equals(wasCharged)) return;
+
+        for (RingPowerInstance<?> instance : BrightestDayAttachments.get(player)) {
+            if (!instance.power().worksWithoutCharge()) instance.onDepleted(player);
         }
     }
 

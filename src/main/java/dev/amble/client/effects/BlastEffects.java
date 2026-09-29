@@ -4,6 +4,7 @@ import dev.amble.core.ringpowers.CorpsColors;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.amble.client.flight.FlightRenderTypes;
+import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.FireConstructC2SPayload;
 import dev.amble.core.networking.payloads.s2c.BlastS2CPayload;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
@@ -89,6 +90,7 @@ public final class BlastEffects {
     public static boolean wantsToCharge(LocalPlayer player) {
         return player.getMainHandItem().isEmpty()
                 && ArmedRingPower.isArmed(player)
+                && PowerRingItem.hasCharge(player)
                 && ArmedRingPower.selectedConstruct(player).isPresent()
                 && !ConstructClient.isLookingAtLantern();
     }
@@ -127,6 +129,12 @@ public final class BlastEffects {
         charge = 0;
     }
 
+    public static float firingAmount(float partialTicks) {
+        float chargeProgress = Mth.lerp(partialTicks, oCharge, charge) / CHARGE_TICKS;
+        float easedCharge = chargeProgress * chargeProgress * (3.0F - 2.0F * chargeProgress);
+        return Math.max(Math.max(easedCharge, Mth.lerp(partialTicks, oKick, kick)), TractorEffects.holdAmount(partialTicks));
+    }
+
     public static float cameraShake(float partialTicks) {
         float chargeProgress = Mth.lerp(partialTicks, oCharge, charge) / CHARGE_TICKS;
         return chargeProgress * chargeProgress * MAX_CHARGE_SHAKE + Mth.lerp(partialTicks, oKick, kick) * FIRE_SHAKE;
@@ -144,7 +152,7 @@ public final class BlastEffects {
         return hand(player, 1.0F);
     }
 
-    private static Vec3 hand(Player player, float partialTicks) {
+    public static Vec3 hand(Player player, float partialTicks) {
         float yaw = Mth.rotLerp(partialTicks, player.yBodyRotO, player.yBodyRot) * Mth.DEG_TO_RAD;
         Vec3 right = new Vec3(-Mth.cos(yaw), 0.0, -Mth.sin(yaw));
         float side = player.getMainArm() == HumanoidArm.RIGHT ? 1.0F : -1.0F;

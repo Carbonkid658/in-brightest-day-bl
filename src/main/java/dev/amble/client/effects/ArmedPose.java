@@ -1,11 +1,13 @@
 package dev.amble.client.effects;
 
+import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.CorpsColors;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import dev.amble.client.flight.FlightRenderTypes;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
+import dev.amble.core.ringpowers.impl.TractorBeamRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState;
 import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey;
@@ -28,12 +30,15 @@ import java.util.WeakHashMap;
 public final class ArmedPose {
     public static final RenderStateDataKey<Float> AMOUNT = RenderStateDataKey.create(() -> "brightestday:armed_amount");
     public static final RenderStateDataKey<Integer> COLOR = RenderStateDataKey.create(() -> "brightestday:armed_color");
+    public static final RenderStateDataKey<Boolean> CHARGED = RenderStateDataKey.create(() -> "brightestday:ring_charged");
 
     public static final float AIM_INWARD = 0.1F;
     private static final float RAISE_SPEED = 0.25F;
 
     private static final float FIRST_PERSON_RAISE = 0.12F;
     private static final float FIRST_PERSON_FORWARD = 0.1F;
+    private static final float FIRING_INWARD = 0.22F;
+    private static final float FIRING_TURN = 18.0F;
     private static final float GLOW_SIZE = 1.5F * VoxelRenderer.PIXEL;
     private static final float GLOW_CORE_WHITENESS = 0.6F;
     private static final float GLOW_CORE_ALPHA = 0.9F;
@@ -52,7 +57,7 @@ public final class ArmedPose {
         if (client.level == null || client.isPaused()) return;
 
         for (AbstractClientPlayer player : client.level.players()) {
-            boolean armed = ArmedRingPower.isArmed(player);
+            boolean armed = ArmedRingPower.isArmed(player) || TractorBeamRingPower.isActive(player);
             float[] amount = AMOUNTS.get(player);
             if (amount == null) {
                 if (!armed) continue;
@@ -79,6 +84,7 @@ public final class ArmedPose {
         if (entity instanceof Player player) {
             data.setData(AMOUNT, amount(player, partialTicks));
             data.setData(COLOR, CorpsColors.of(player));
+            data.setData(CHARGED, PowerRingItem.hasCharge(player));
         } else {
             data.setData(AMOUNT, 0.0F);
         }
@@ -96,16 +102,23 @@ public final class ArmedPose {
     }
 
     public static void raiseFirstPersonArm(PoseStack poseStack, HumanoidArm arm, AvatarRenderState state) {
-        float amount = ((FabricRenderState) state).getDataOrDefault(AMOUNT, 0.0F);
+        float amount = state.getDataOrDefault(AMOUNT, 0.0F);
         if (amount <= 0.001F || arm != state.mainArm) return;
 
         poseStack.translate(0.0F, FIRST_PERSON_RAISE * amount, -FIRST_PERSON_FORWARD * amount);
+
+        float firing = BlastEffects.firingAmount(Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false)) * amount;
+        if (firing > 0.001F) {
+            float side = arm == HumanoidArm.RIGHT ? 1.0F : -1.0F;
+            poseStack.translate(-side * FIRING_INWARD * firing, 0.0F, 0.0F);
+            poseStack.rotateDegrees(Axis.YP, side * FIRING_TURN * firing);
+        }
     }
 
     public static void submitRingGlow(PlayerModel model, AvatarRenderState state, HumanoidArm arm, PoseStack poseStack, SubmitNodeCollector collector) {
-        FabricRenderState data = (FabricRenderState) state;
+        FabricRenderState data = state;
         float amount = data.getDataOrDefault(AMOUNT, 0.0F);
-        if (amount <= 0.001F || arm != state.mainArm || state.isInvisible) return;
+        if (amount <= 0.001F || arm != state.mainArm || state.isInvisible || !data.getDataOrDefault(CHARGED, false)) return;
 
         float pulse = 0.75F + 0.25F * Mth.sin(state.ageInTicks * 0.3F);
         int color = ARGB.opaque(data.getDataOrDefault(COLOR, LanternCorps.GREEN.color()));

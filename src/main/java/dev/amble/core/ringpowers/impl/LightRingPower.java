@@ -4,9 +4,11 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.amble.BrightestDay;
 import dev.amble.core.BrightestDayAttachments;
+import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerRegistry;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -40,6 +42,11 @@ public class LightRingPower extends RingPower<LightRingPower.Data> {
     }
 
     @Override
+    public boolean slotted() {
+        return false;
+    }
+
+    @Override
     public int drainPerSecond(ServerPlayer player, Data data) {
         return isEmitting(player) ? DRAIN_PER_SECOND : 0;
     }
@@ -57,6 +64,10 @@ public class LightRingPower extends RingPower<LightRingPower.Data> {
 
     public static boolean toggle(ServerPlayer player) {
         if (!ArmedRingPower.isArmed(player)) return false;
+        if (!PowerRingItem.hasCharge(player)) {
+            player.sendOverlayMessage(Component.translatable("message.brightestday.ring_depleted"));
+            return false;
+        }
 
         return BrightestDayAttachments.get(player, RingPowerRegistry.LIGHT).map(instance -> {
             boolean on = !instance.data().on();

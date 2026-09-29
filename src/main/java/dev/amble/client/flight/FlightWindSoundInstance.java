@@ -9,7 +9,12 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 
 public class FlightWindSoundInstance extends AbstractTickableSoundInstance {
+    private static final int FADE_IN_TICKS = 20;
+    private static final float SPEED_SQUARED_FOR_FULL_VOLUME = 4.0F;
+    private static final float PITCH_THRESHOLD = 0.8F;
+
     private final LocalPlayer player;
+    private int time;
 
     public FlightWindSoundInstance(LocalPlayer player) {
         super(SoundEvents.ELYTRA_FLYING, SoundSource.PLAYERS, SoundInstance.createUnseededRandom());
@@ -21,7 +26,8 @@ public class FlightWindSoundInstance extends AbstractTickableSoundInstance {
 
     @Override
     public void tick() {
-        if (this.player.isRemoved() || !FlightRingPower.isFlying(this.player)) {
+        float blend = FlightAnimator.flightBlend(this.player);
+        if (this.player.isRemoved() || !FlightRingPower.isFlying(this.player) || (this.time++ > FADE_IN_TICKS && blend < 0.01F)) {
             this.stop();
             return;
         }
@@ -30,8 +36,9 @@ public class FlightWindSoundInstance extends AbstractTickableSoundInstance {
         this.y = this.player.getY();
         this.z = this.player.getZ();
 
-        float intensity = Mth.clamp(FlightAnimator.speed(this.player) / (float) FlightRingPower.BOOST_SPEED, 0.0F, 1.0F);
-        this.volume = intensity * 0.8F;
-        this.pitch = 0.8F + intensity * 0.6F;
+        float speed = FlightAnimator.speed(this.player);
+        float loudness = Mth.clamp(speed * speed / SPEED_SQUARED_FOR_FULL_VOLUME, 0.0F, 1.0F);
+        this.volume = loudness * blend;
+        this.pitch = loudness > PITCH_THRESHOLD ? 1.0F + (loudness - PITCH_THRESHOLD) : 1.0F;
     }
 }

@@ -78,7 +78,7 @@ public class BrightestDayAttachments {
 
     public static List<RingPowerInstance<?>> slotted(Player player) {
         return get(player).stream()
-                .filter(instance -> instance.power().category() != RingPowerCategory.CONSTRUCT)
+                .filter(instance -> instance.power().slotted())
                 .limit(MAX_SLOTS)
                 .toList();
     }

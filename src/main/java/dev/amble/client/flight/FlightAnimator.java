@@ -142,7 +142,7 @@ public final class FlightAnimator {
             if (speed > SONIC_BOOM_SPEED && motion.oSpeed <= SONIC_BOOM_SPEED) sonicBoom(client.level, player, velocity, color);
         }
 
-        if (player == client.player && flying && (windSound == null || windSound.isStopped())) {
+        if (player == client.player && flying && motion.phase == Phase.FLIGHT && (windSound == null || windSound.isStopped())) {
             windSound = new FlightWindSoundInstance(client.player);
             client.getSoundManager().play(windSound);
         }
@@ -256,6 +256,11 @@ public final class FlightAnimator {
 
     public static boolean isAnimating(Player player) {
         return MOTIONS.containsKey(player);
+    }
+
+    public static float flightBlend(Player player) {
+        Motion motion = MOTIONS.get(player);
+        return motion == null ? 0.0F : ease(motion.flightBlend);
     }
 
     public static float speed(Player player) {

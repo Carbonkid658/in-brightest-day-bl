@@ -110,6 +110,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.wrong_lantern", "This lantern only answers to the %s.");
         builder.add("message.brightestday.arm_to_charge", "Raise your ring to the lantern to charge it.");
         builder.add("message.brightestday.no_constructs", "Your ring cannot manifest constructs.");
+        builder.add("message.brightestday.ring_depleted", "Your ring is out of charge.");
         builder.add("message.brightestday.construct_selected", "Construct: %s");
         builder.add("message.brightestday.shield_radius", "Shield radius: %s");
 
@@ -119,6 +120,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(RingPowerRegistry.BLAST.getTranslationKey(), "Blast");
         builder.add(RingPowerRegistry.ENTITY_SHIELD.getTranslationKey(), "Bubble Shield");
         builder.add(RingPowerRegistry.AREA_SHIELD.getTranslationKey(), "Dome Shield");
+        builder.add(RingPowerRegistry.TRACTOR_BEAM.getTranslationKey(), "Tractor Beam");
 
         builder.add("key.category.brightestday.main", "In Brightest Day");
         builder.add("key.brightestday.power_1", "Ring Power 1");
