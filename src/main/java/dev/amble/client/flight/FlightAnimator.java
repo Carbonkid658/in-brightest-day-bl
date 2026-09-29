@@ -27,8 +27,11 @@ public final class FlightAnimator {
 
     private static final float HOVER_LEAN = 15.0F;
     private static final float MAX_ROLL = 55.0F;
-    private static final float CAMERA_ROLL_SCALE = 0.3F;
-    private static final float MAX_FOV_BOOST = 0.4F;
+    private static final float CAMERA_ROLL_SCALE = 0.6F;
+    private static final float FIRST_PERSON_FOV_BOOST = 0.4F;
+    private static final float THIRD_PERSON_FOV_BOOST = 0.9F;
+    public static final float MAX_FOV_MODIFIER = 2.0F;
+    public static final float MAX_FOV = 170.0F;
     private static final double TRAIL_SPEED = 0.6;
     private static final double SONIC_BOOM_SPEED = 3.0;
 
@@ -169,16 +172,20 @@ public final class FlightAnimator {
         return new FlightPose(flight, tilt, bodyAngle, roll * flight, leadArm);
     }
 
+    public static boolean isAnimating(Player player) {
+        return MOTIONS.containsKey(player);
+    }
+
     public static float speed(Player player) {
         Motion motion = MOTIONS.get(player);
         return motion == null ? 0.0F : motion.speed;
     }
 
-    public static float fovBoost(Player player) {
+    public static float fovBoost(Player player, boolean firstPerson) {
         Motion motion = MOTIONS.get(player);
         if (motion == null) return 0.0F;
         float speedFactor = Mth.clamp((motion.speed - 0.3F) / (float) (FlightRingPower.BOOST_SPEED - 0.3), 0.0F, 1.0F);
-        return motion.flight * speedFactor * MAX_FOV_BOOST;
+        return motion.flight * speedFactor * (firstPerson ? FIRST_PERSON_FOV_BOOST : THIRD_PERSON_FOV_BOOST);
     }
 
     public static float cameraRoll(Player player, float partialTicks) {

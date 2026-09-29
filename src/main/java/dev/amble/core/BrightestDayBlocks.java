@@ -11,13 +11,17 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 
 import java.util.function.Function;
 
 public class BrightestDayBlocks {
     public static final Block GREEN_LANTERN_BLOCK = registerBlockWithItem("green_lantern",
-            properties -> new GreenLanternBlock(properties.lightLevel(_ -> 7)),
+            properties -> new GreenLanternBlock(properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
+                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
             new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
 
     private static <T extends Block> T registerBlockWithItem(String name, Function<BlockBehaviour.Properties, T> function, Item.Properties itemProperties) {

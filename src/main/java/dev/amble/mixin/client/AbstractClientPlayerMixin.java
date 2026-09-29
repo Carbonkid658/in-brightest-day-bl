@@ -13,7 +13,7 @@ public abstract class AbstractClientPlayerMixin {
 
     @Inject(method = "getFieldOfViewModifier", at = @At("RETURN"), cancellable = true)
     private void brightestday$flightFov(boolean firstPerson, float effectScale, CallbackInfoReturnable<Float> cir) {
-        float boost = FlightAnimator.fovBoost((AbstractClientPlayer) (Object) this);
+        float boost = FlightAnimator.fovBoost((AbstractClientPlayer) (Object) this, firstPerson);
         if (boost > 0.0F && cir.getReturnValue() > 0.5F) {
             cir.setReturnValue(cir.getReturnValue() * Mth.lerp(effectScale, 1.0F, 1.0F + boost));
         }
