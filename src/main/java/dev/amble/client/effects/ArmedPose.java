@@ -78,7 +78,7 @@ public final class ArmedPose {
 
     private static boolean isUsingPower(Minecraft client, Player player) {
         if (!PowerRingItem.hasCharge(player)) return false;
-        if (TractorEffects.isBeaming(player) || BeamEffects.isBeaming(player) || TractorBeamRingPower.isActive(player) || LightRingPower.isEmitting(player)) return true;
+        if (TractorEffects.isBeaming(player) || BeamEffects.isBeaming(player) || HealBeamEffects.isHealing(player) || TractorBeamRingPower.isActive(player) || LightRingPower.isEmitting(player)) return true;
         return player == client.player && (BlastEffects.firingAmount(1.0F) > 0.01F || ScanEffects.isScanning());
     }
 

@@ -16,6 +16,8 @@ import dev.amble.core.tractor.TractorManager;
 import dev.amble.core.ringpowers.constructs.ConstructTools;
 import dev.amble.core.walls.WallManager;
 import dev.amble.core.beams.BeamManager;
+import dev.amble.core.beams.HealBeamManager;
+import dev.amble.core.ringpowers.CorpsSynergy;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -48,6 +50,8 @@ public class BrightestDay implements ModInitializer {
 		ConstructTools.init();
 		WallManager.init();
 		BeamManager.init();
+		HealBeamManager.init();
+		CorpsSynergy.init();
 	}
 
 	public static Identifier id(String path) {

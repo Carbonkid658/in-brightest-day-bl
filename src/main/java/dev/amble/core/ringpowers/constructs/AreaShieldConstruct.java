@@ -18,7 +18,7 @@ public class AreaShieldConstruct extends ConstructRingPower {
 
     @Override
     public int cost(int radius) {
-        return BASE_COST + COST_PER_BLOCK * this.clampSize(radius);
+        return BASE_COST + COST_PER_BLOCK * this.costSize(radius);
     }
 
     @Override
@@ -42,9 +42,14 @@ public class AreaShieldConstruct extends ConstructRingPower {
     }
 
     @Override
+    public int empoweredMaxSize() {
+        return 15;
+    }
+
+    @Override
     public void fire(ServerPlayer player, int radius, int color) {
         Vec3 center = aim(player, RANGE).end();
-        ShieldManager.shieldArea(player.level(), center, this.clampSize(radius), color, player);
+        ShieldManager.shieldArea(player.level(), center, this.clampSize(player, radius), color, player);
         player.level().playSound(null, center.x, center.y, center.z, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.5F, 0.8F);
         player.level().playSound(null, center.x, center.y, center.z, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.4F);
     }

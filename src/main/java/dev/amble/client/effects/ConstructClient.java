@@ -39,7 +39,9 @@ public final class ConstructClient {
     }
 
     public static int size(ConstructRingPower construct) {
-        return construct.clampSize(SIZES.getOrDefault(construct.id(), construct.defaultSize()));
+        int size = SIZES.getOrDefault(construct.id(), construct.defaultSize());
+        LocalPlayer player = Minecraft.getInstance().player;
+        return player == null ? construct.clampSize(size) : construct.clampSize(player, size);
     }
 
     public static int selectedSize(LocalPlayer player) {
@@ -66,7 +68,7 @@ public final class ConstructClient {
         if (construct.isEmpty()) return false;
 
         int current = size(construct.get());
-        int resized = construct.get().clampSize(current + Integer.signum(wheel));
+        int resized = construct.get().clampSize(player, current + Integer.signum(wheel));
         if (resized != current) {
             SIZES.put(construct.get().id(), resized);
             Minecraft.getInstance().gui.hud.setOverlayMessage(Component.translatable("message.brightestday.construct_size",

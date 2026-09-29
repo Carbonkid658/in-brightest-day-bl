@@ -2,6 +2,7 @@ package dev.amble.core;
 
 import dev.amble.BrightestDay;
 import dev.amble.core.ringpowers.ColorTweak;
+import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerCategory;
@@ -112,7 +113,7 @@ public class BrightestDayAttachments {
         List<RingPowerInstance<?>> current = get(player);
         List<RingPower<?>> available = corps == null
                 ? List.of()
-                : RingPowerRegistry.forCorps(corps);
+                : RingPowerRegistry.forCorps(corps, CorpsSynergy.borrowsWill(player) ? LanternCorps.GREEN : null);
 
         if (current.size() == available.size()) {
             boolean unchanged = true;

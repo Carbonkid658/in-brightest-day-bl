@@ -146,7 +146,7 @@ public final class TractorEffects {
         }
     }
 
-    private static void wrap(AABB box, float time, int color, List<ShieldEffects.Voxel> out) {
+    public static void wrap(AABB box, float time, int color, List<ShieldEffects.Voxel> out) {
         AABB shell = box.inflate(WRAP_PADDING);
         double maxSize = Math.max(shell.getXsize(), Math.max(shell.getYsize(), shell.getZsize()));
         double spacing = Math.max(WRAP_MIN_SPACING, maxSize / WRAP_MAX_CELLS);

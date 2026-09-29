@@ -110,7 +110,12 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.wrong_lantern", "This lantern only answers to the %s.");
         builder.add("message.brightestday.arm_to_charge", "Raise your ring to the lantern to charge it.");
         builder.add("message.brightestday.no_constructs", "Your ring cannot manifest constructs.");
+        builder.add("message.brightestday.nothing_to_heal", "No one to heal.");
         builder.add("message.brightestday.ring_depleted", "Your ring is out of charge.");
+        builder.add("message.brightestday.hope_gained", "A Blue Lantern's hope empowers your ring.");
+        builder.add("message.brightestday.hope_lost", "The Blue Lantern's hope fades from your ring.");
+        builder.add("message.brightestday.will_gained", "A Green Lantern's will unlocks your ring.");
+        builder.add("message.brightestday.will_lost", "Without a Green Lantern, your ring's power recedes.");
         builder.add("subtitles.brightestday.ring.charge_5_percent", "Power ring charge at 5%");
         builder.add("message.brightestday.construct_selected", "Construct: %s");
         builder.add("message.brightestday.shield_radius", "Shield radius: %s");
@@ -122,6 +127,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(RingPowerRegistry.ENTITY_SHIELD.getTranslationKey(), "Bubble Shield");
         builder.add(RingPowerRegistry.AREA_SHIELD.getTranslationKey(), "Dome Shield");
         builder.add(RingPowerRegistry.BEAM.getTranslationKey(), "Beam");
+        builder.add(RingPowerRegistry.HEAL_BEAM.getTranslationKey(), "Healing Beam");
         builder.add(RingPowerRegistry.WALL.getTranslationKey(), "Wall");
         builder.add("message.brightestday.construct_size", "%s size: %s");
         builder.add("message.brightestday.wall_blocked", "There's no room for a wall there.");

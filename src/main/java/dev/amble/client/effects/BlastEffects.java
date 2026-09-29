@@ -112,7 +112,7 @@ public final class BlastEffects {
         boolean keyDown = player != null && client.gui.screen() == null && client.options.keyUse.isDown();
         if (sustaining) {
             sustainTicks++;
-            boolean serverStopped = sustainTicks > SUSTAIN_GRACE_TICKS && (player == null || !BeamEffects.isBeaming(player));
+            boolean serverStopped = sustainTicks > SUSTAIN_GRACE_TICKS && (player == null || !BeamEffects.isBeaming(player) && !HealBeamEffects.isHealing(player));
             if (!keyDown || serverStopped) {
                 if (!serverStopped) ClientPlayNetworking.send(StopBeamC2SPayload.INSTANCE);
                 sustaining = false;

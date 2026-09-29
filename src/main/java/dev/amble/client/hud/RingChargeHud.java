@@ -4,6 +4,7 @@ import dev.amble.BrightestDay;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.CorpsColors;
+import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
@@ -48,6 +49,12 @@ public final class RingChargeHud {
         int filled = Math.round(ICON_SIZE * charge);
         graphics.fill(barX, y, barX + BAR_WIDTH, y + ICON_SIZE, 0x80000000);
         graphics.fill(barX, y + ICON_SIZE - filled, barX + BAR_WIDTH, y + ICON_SIZE, color);
+
+        CorpsSynergy.State synergy = CorpsSynergy.get(player);
+        if (synergy.hope() || synergy.will()) {
+            int link = ARGB.opaque((synergy.hope() ? LanternCorps.BLUE : LanternCorps.GREEN).color());
+            graphics.outline(barX - 1, y - 1, BAR_WIDTH + 2, ICON_SIZE + 2, link);
+        }
     }
 
     private RingChargeHud() {}

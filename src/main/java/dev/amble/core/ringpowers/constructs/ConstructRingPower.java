@@ -1,6 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
 import com.mojang.serialization.MapCodec;
+import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerCategory;
@@ -11,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Unit;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
@@ -20,11 +22,21 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 import java.util.EnumSet;
+import java.util.Set;
 
 public abstract class ConstructRingPower extends RingPower<Unit> {
 
     protected ConstructRingPower(Identifier id) {
-        super(id, EnumSet.allOf(LanternCorps.class), MapCodec.unitCodec(Unit.INSTANCE));
+        this(id, EnumSet.allOf(LanternCorps.class));
+    }
+
+    protected ConstructRingPower(Identifier id, Set<LanternCorps> corps) {
+        super(id, corps, MapCodec.unitCodec(Unit.INSTANCE));
+    }
+
+    @Override
+    public boolean slotted() {
+        return false;
     }
 
     @Override
@@ -57,8 +69,24 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
         return this.minSize();
     }
 
+    public int empoweredMaxSize() {
+        return this.maxSize();
+    }
+
+    public int maxSize(Player player) {
+        return CorpsSynergy.empoweredByHope(player) ? this.empoweredMaxSize() : this.maxSize();
+    }
+
     public int clampSize(int size) {
         return Mth.clamp(size, this.minSize(), this.maxSize());
+    }
+
+    public int clampSize(Player player, int size) {
+        return Mth.clamp(size, this.minSize(), this.maxSize(player));
+    }
+
+    protected int costSize(int size) {
+        return Mth.clamp(size, this.minSize(), this.empoweredMaxSize());
     }
 
     public Component describeSize(int size) {

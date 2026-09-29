@@ -2,6 +2,7 @@ package dev.amble.core.networking.payloads.c2s;
 
 import dev.amble.BrightestDay;
 import dev.amble.core.beams.BeamManager;
+import dev.amble.core.beams.HealBeamManager;
 import io.netty.buffer.ByteBuf;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.codec.StreamCodec;
@@ -23,5 +24,6 @@ public record StopBeamC2SPayload() implements CustomPacketPayload {
 
     public void handle(ServerPlayNetworking.Context context) {
         BeamManager.stop(context.player());
+        HealBeamManager.stop(context.player());
     }
 }

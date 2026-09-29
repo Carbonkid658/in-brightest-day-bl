@@ -13,6 +13,7 @@ import dev.amble.core.ringpowers.RingPowerInstance;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.beams.BeamManager;
+import dev.amble.core.beams.HealBeamManager;
 import dev.amble.core.tractor.TractorManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -80,6 +81,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
 
     public static void lower(ServerPlayer player) {
         BeamManager.stop(player);
+        HealBeamManager.stop(player);
         data(player).ifPresent(data -> BrightestDayAttachments.setData(player, RingPowerRegistry.ARMED, data.withActive(false)));
         BrightestDayAttachments.setData(player, RingPowerRegistry.TRACTOR_BEAM, new TractorBeamRingPower.Data(false));
         TractorManager.release(player);
@@ -148,7 +150,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
     }
 
     private static List<ConstructRingPower> constructs(Player player) {
-        return BrightestDayAttachments.constructs(player).stream()
+        return BrightestDayAttachments.get(player).stream()
                 .map(RingPowerInstance::power)
                 .filter(ConstructRingPower.class::isInstance)
                 .map(ConstructRingPower.class::cast)

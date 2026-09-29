@@ -2,6 +2,7 @@ package dev.amble.core.items;
 
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
+import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -26,6 +27,7 @@ public class PowerRingItem extends Item {
     @Override
     public void inventoryTick(ItemStack itemStack, ServerLevel level, Entity owner, @Nullable EquipmentSlot slot) {
         super.inventoryTick(itemStack, level, owner, slot);
+        if (owner instanceof Player player && CorpsSynergy.empoweredByHope(player)) return;
         PowerRingItem.tickCharge(itemStack, level);
     }
 
@@ -59,6 +61,7 @@ public class PowerRingItem extends Item {
     }
 
     public static void refund(Player player, int amount) {
+        amount = CorpsSynergy.scaleCost(player, amount);
         ItemStack ring = getWornRing(player);
         if (ring.isEmpty() || player.hasInfiniteMaterials()) return;
 
@@ -71,6 +74,7 @@ public class PowerRingItem extends Item {
     }
 
     public static boolean drainWorn(Player player, int amount) {
+        amount = CorpsSynergy.scaleCost(player, amount);
         ItemStack ring = getWornRing(player);
         if (ring.isEmpty()) return false;
 
@@ -81,6 +85,7 @@ public class PowerRingItem extends Item {
     }
 
     public static boolean consumeCharge(Player player, int amount) {
+        amount = CorpsSynergy.scaleCost(player, amount);
         ItemStack ring = getWornRing(player);
         if (ring.isEmpty() || getRingPower(ring) < amount) return false;
 

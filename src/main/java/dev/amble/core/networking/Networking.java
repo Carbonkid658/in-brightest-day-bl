@@ -16,6 +16,7 @@ import dev.amble.core.networking.payloads.c2s.UsePowerC2SPayload;
 import dev.amble.core.networking.payloads.s2c.BeamS2CPayload;
 import dev.amble.core.networking.payloads.s2c.BlastS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ForgeStrokeS2CPayload;
+import dev.amble.core.networking.payloads.s2c.HealBeamS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ScanS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ScanStartS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ShieldRemoveS2CPayload;
@@ -48,6 +49,7 @@ public class Networking {
         PayloadTypeRegistry.serverboundPlay().register(DismissConstructC2SPayload.TYPE, DismissConstructC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(StopBeamC2SPayload.TYPE, StopBeamC2SPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(BeamS2CPayload.TYPE, BeamS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(HealBeamS2CPayload.TYPE, HealBeamS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(BlastS2CPayload.TYPE, BlastS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ShieldSpawnS2CPayload.TYPE, ShieldSpawnS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ShieldRemoveS2CPayload.TYPE, ShieldRemoveS2CPayload.CODEC);

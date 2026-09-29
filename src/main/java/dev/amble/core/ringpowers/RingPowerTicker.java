@@ -31,7 +31,7 @@ public final class RingPowerTicker {
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             ItemStack ring = BrightestDayAttachments.getRing(player);
-            if (!ring.isEmpty() && PowerRingItem.tickCharge(ring, player.level())) {
+            if (!ring.isEmpty() && !CorpsSynergy.empoweredByHope(player) && PowerRingItem.tickCharge(ring, player.level())) {
                 BrightestDayAttachments.setRing(player, ring);
             }
 

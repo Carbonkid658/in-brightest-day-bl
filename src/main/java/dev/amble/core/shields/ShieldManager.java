@@ -1,5 +1,6 @@
 package dev.amble.core.shields;
 
+import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.networking.payloads.s2c.ShieldRemoveS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ShieldSpawnS2CPayload;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -49,6 +50,7 @@ public final class ShieldManager {
         final @Nullable Entity target;
         final Vec3 center;
         final float radius;
+        final float scale;
         final UUID caster;
         final long createdAt;
         final int color;
@@ -57,12 +59,13 @@ public final class ShieldManager {
         float strength;
         int age;
 
-        Shield(int id, ServerLevel level, @Nullable Entity target, Vec3 center, float radius, UUID caster, int color, int duration, float strength) {
+        Shield(int id, ServerLevel level, @Nullable Entity target, Vec3 center, float radius, float scale, UUID caster, int color, int duration, float strength) {
             this.id = id;
             this.level = level;
             this.target = target;
             this.center = center;
             this.radius = radius;
+            this.scale = scale;
             this.caster = caster;
             this.color = color;
             this.duration = duration;
@@ -95,14 +98,15 @@ public final class ShieldManager {
             return replaced;
         });
 
-        Shield shield = new Shield(nextId++, level, target, target.getBoundingBox().getCenter(), entityShieldRadius(target),
+        float scale = CorpsSynergy.empoweredByHope(caster) ? CorpsSynergy.HOPE_BUBBLE_SCALE : 1.0F;
+        Shield shield = new Shield(nextId++, level, target, target.getBoundingBox().getCenter(), entityShieldRadius(target) * scale, scale,
                 caster.getUUID(), color, ENTITY_SHIELD_TICKS, ENTITY_SHIELD_STRENGTH);
         SHIELDS.add(shield);
         syncWatchers(shield);
     }
 
     public static void shieldArea(ServerLevel level, Vec3 center, float radius, int color, ServerPlayer caster) {
-        Shield shield = new Shield(nextId++, level, null, center, radius, caster.getUUID(), color, AREA_SHIELD_TICKS, 0.0F);
+        Shield shield = new Shield(nextId++, level, null, center, radius, 1.0F, caster.getUUID(), color, AREA_SHIELD_TICKS, 0.0F);
         SHIELDS.add(shield);
         syncWatchers(shield);
     }
@@ -193,7 +197,7 @@ public final class ShieldManager {
         for (ServerPlayer player : tracking) {
             if (shield.watchers.add(player)) {
                 int entityId = shield.target != null ? shield.target.getId() : ShieldSpawnS2CPayload.NO_ENTITY;
-                ServerPlayNetworking.send(player, new ShieldSpawnS2CPayload(shield.id, entityId, shield.center(), shield.radius, shield.color, shield.duration, shield.age));
+                ServerPlayNetworking.send(player, new ShieldSpawnS2CPayload(shield.id, entityId, shield.center(), shield.target != null ? shield.scale : shield.radius, shield.color, shield.duration, shield.age));
             }
         }
 

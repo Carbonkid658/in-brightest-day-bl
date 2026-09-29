@@ -102,7 +102,7 @@ public final class ShieldEffects {
                 Entity entity = client.level.getEntity(shield.entityId);
                 if (entity == null) continue;
                 center = entity.getPosition(partialTicks).add(0.0, entity.getBbHeight() * 0.5, 0.0);
-                radius = ShieldManager.entityShieldRadius(entity);
+                radius = ShieldManager.entityShieldRadius(entity) * shield.radius;
             }
 
             float time = shield.age + partialTicks;
