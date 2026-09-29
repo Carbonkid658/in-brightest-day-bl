@@ -1,5 +1,6 @@
 package dev.amble;
 
+import dev.amble.core.BrightestDayBlockEntityTypes;
 import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.BrightestDayItems;
 import net.fabricmc.api.ModInitializer;
@@ -18,6 +19,7 @@ public class BrightestDay implements ModInitializer {
 	public void onInitialize() {
 		BrightestDayItems.init();
 		BrightestDayBlocks.init();
+		BrightestDayBlockEntityTypes.init();
 	}
 
 	public static Identifier id(String path) {

@@ -15,8 +15,7 @@ public class BrightestDayModelProvider extends FabricModelProvider {
     }
 
     @Override
-    public void generateBlockStateModels(BlockModelGenerators blockModelGenerators) {
-    }
+    public void generateBlockStateModels(BlockModelGenerators blockModelGenerators) {}
 
     @Override
     public void generateItemModels(ItemModelGenerators itemModelGenerators) {

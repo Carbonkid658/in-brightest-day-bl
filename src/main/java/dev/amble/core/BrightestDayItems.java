@@ -3,6 +3,7 @@ package dev.amble.core;
 import dev.amble.BrightestDay;
 import dev.amble.core.items.PowerRingItem;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -17,6 +18,8 @@ public class BrightestDayItems {
                     .setId(ResourceKey.create(Registries.ITEM, id))
                     .fireResistant()
                     .stacksTo(1)
+                    .component(BrightestDayComponents.POWER_TYPE, BrightestDayComponents.MAX_POWER)
+                    .component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring"))
     ));
 
     public static Item register(String name, Function<Identifier, Item> factory) {

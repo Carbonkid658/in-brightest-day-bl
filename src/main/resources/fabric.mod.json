@@ -18,6 +18,9 @@
 		"main": [
 			"dev.amble.BrightestDay"
 		],
+		"client": [
+			"dev.amble.client.BrightestDayClient"
+		],
 		"fabric-datagen": [
           "dev.amble.datagen.BrightestDayDataGenerator"
 		]
