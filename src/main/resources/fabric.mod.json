@@ -2,16 +2,20 @@
 	"schemaVersion": 1,
 	"id": "brightestday",
 	"version": "${version}",
-	"name": "brightestdaY",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "In Brightest Day",
+	"description": "In Brightest Day, you become any Lantern Corps you can dream of.",
 	"authors": [
-		"Me!"
+		"Loqor",
+		"Addie",
+		"BungusBen",
+		"Brettski",
+		"Ember (The Evil One)"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
-	"license": "CC0-1.0",
+	"license": "LGPL-3.0",
 	"icon": "assets/brightestday/icon.png",
 	"environment": "*",
 	"entrypoints": {

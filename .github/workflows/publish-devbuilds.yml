@@ -61,8 +61,8 @@ jobs:
       uses: drtheodor/discord-webhook-upload-action@v0.4
       with:
         url: ${{ secrets.DEV_BUILDS }}
-        username: green
-        avatar: 'https://i.imgur.com/uiFqrQh.png'
+        username: mogo doesnt socialize
+        avatar: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDmP1EjlVDygiFMy8_Nxg9Q7M7eZfLKEXyKCRtosnS_J3lTLJMT6lpPCA&s=10'
         
         message: |
           <:new1:1253371736510959636><:new2:1253371805734015006> New **In Brightest Day** dev build [**`#${{ github.run_number }}`**](<https://github.com/amblelabs/in-brightest-day/actions/runs/${{ github.run_id }}>):
