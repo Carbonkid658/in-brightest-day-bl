@@ -28,6 +28,7 @@ dependencies {
 }
 
 processResources {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 	def version = project.version
 	inputs.property "version", version
 
@@ -50,12 +51,26 @@ java {
 	targetCompatibility = JavaVersion.VERSION_25
 }
 
+sourcesJar {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 jar {
 	def projectName = project.name
 	inputs.property "projectName", projectName
 
 	from("LICENSE") {
 		rename { "${it}_$projectName"}
+	}
+}
+
+loom {
+	runs {
+		client {
+			environmentVariable "SDL_VIDEO_DRIVER", "wayland"
+			environmentVariable "__EGL_VENDOR_LIBRARY_FILENAMES", "/run/opengl-driver/share/glvnd/egl_vendor.d/50_mesa.json"
+			environmentVariable "MESA_LOADER_DRIVER_OVERRIDE", "zink"
+		}
 	}
 }
 

@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "brightestday:item/green_lantern_in_hand"
+  }
+}

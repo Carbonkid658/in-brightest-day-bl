@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "brightestday:block/green_lantern",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "brightestday:block/green_lantern"
+    },
+    "facing=south": {
+      "model": "brightestday:block/green_lantern",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "brightestday:block/green_lantern",
+      "y": 270
+    }
+  }
+}

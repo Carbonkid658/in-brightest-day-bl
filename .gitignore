@@ -9,6 +9,9 @@ classes/
 
 *.launch
 
+# datagen
+src/main/generated/
+
 # idea
 
 .idea/

@@ -1,0 +1,30 @@
+package dev.amble.core;
+
+import dev.amble.BrightestDay;
+import dev.amble.core.items.PowerRingItem;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.Item;
+
+import java.util.function.Function;
+
+public class BrightestDayItems {
+    public static final Item POWER_RING = register("power_ring", id -> new PowerRingItem(
+            new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, id))
+                    .fireResistant()
+                    .stacksTo(1)
+    ));
+
+    public static Item register(String name, Function<Identifier, Item> factory) {
+        Identifier id = BrightestDay.id(name);
+        Item item = factory.apply(id);
+
+        return Registry.register(BuiltInRegistries.ITEM, id, item);
+    }
+
+    public static void init() {}
+}

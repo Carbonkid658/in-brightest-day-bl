@@ -1,5 +1,7 @@
 package dev.amble;
 
+import dev.amble.core.BrightestDayBlocks;
+import dev.amble.core.BrightestDayItems;
 import net.fabricmc.api.ModInitializer;
 
 import net.minecraft.resources.Identifier;
@@ -14,6 +16,8 @@ public class BrightestDay implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		BrightestDayItems.init();
+		BrightestDayBlocks.init();
 	}
 
 	public static Identifier id(String path) {

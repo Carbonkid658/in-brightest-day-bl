@@ -19,7 +19,7 @@
 			"dev.amble.BrightestDay"
 		],
 		"fabric-datagen": [
-			"dev.amble.BrightestDayDataGenerator"
+          "dev.amble.datagen.BrightestDayDataGenerator"
 		]
 	},
 	"mixins": [
