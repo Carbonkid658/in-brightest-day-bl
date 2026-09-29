@@ -117,6 +117,9 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.hope_lost", "The Blue Lantern's hope fades from your ring.");
         builder.add("message.brightestday.will_gained", "A Green Lantern's will unlocks your ring.");
         builder.add("message.brightestday.will_lost", "Without a Green Lantern, your ring's power recedes.");
+        builder.add("message.brightestday.dread_gained", "A Blue Lantern's hope weakens your ring.");
+        builder.add("message.brightestday.dread_lost", "Your ring's strength returns.");
+        builder.add("message.brightestday.stand_still_to_charge", "Stand still on the ground to charge your ring.");
         builder.add("subtitles.brightestday.ring.charge_5_percent", "Power ring charge at 5%");
         builder.add("message.brightestday.construct_selected", "Construct: %s");
         builder.add("message.brightestday.shield_radius", "Shield radius: %s");

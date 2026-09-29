@@ -98,7 +98,8 @@ public final class ShieldManager {
             return replaced;
         });
 
-        float scale = CorpsSynergy.empoweredByHope(caster) ? CorpsSynergy.HOPE_BUBBLE_SCALE : 1.0F;
+        float scale = CorpsSynergy.empoweredByHope(caster) ? CorpsSynergy.HOPE_BUBBLE_SCALE
+                : CorpsSynergy.weakenedByHope(caster) ? CorpsSynergy.DREAD_BUBBLE_SCALE : 1.0F;
         Shield shield = new Shield(nextId++, level, target, target.getBoundingBox().getCenter(), entityShieldRadius(target) * scale, scale,
                 caster.getUUID(), color, ENTITY_SHIELD_TICKS, ENTITY_SHIELD_STRENGTH);
         SHIELDS.add(shield);

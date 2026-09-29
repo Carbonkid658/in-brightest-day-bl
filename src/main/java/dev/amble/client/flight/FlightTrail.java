@@ -78,7 +78,12 @@ public final class FlightTrail {
     }
 
     private static void tick(Minecraft client) {
-        if (client.level == null || client.isPaused()) return;
+        if (client.level == null) {
+            TRAILS.clear();
+            return;
+        }
+        TRAILS.keySet().removeIf(player -> !isPresent(client, player));
+        if (client.isPaused()) return;
 
         for (AbstractClientPlayer player : client.level.players()) {
             Vec3 velocity = player.position().subtract(player.xo, player.yo, player.zo);
@@ -133,6 +138,7 @@ public final class FlightTrail {
 
         for (Map.Entry<Player, Trail> entry : TRAILS.entrySet()) {
             Player player = entry.getKey();
+            if (!isPresent(client, player)) continue;
             Trail trail = entry.getValue();
             boolean ownView = firstPerson && player == client.player;
             int color = ARGB.opaque(trail.color);
@@ -261,6 +267,10 @@ public final class FlightTrail {
         }
         outPoints.addAll(currentPoints);
         outLives.addAll(currentLives);
+    }
+
+    private static boolean isPresent(Minecraft client, Player player) {
+        return !player.isRemoved() && player.level() == client.level;
     }
 
     private static float footSide(int foot) {

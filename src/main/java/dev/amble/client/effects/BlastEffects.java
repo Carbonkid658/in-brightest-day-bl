@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.amble.client.forge.ForgeClient;
 import dev.amble.client.flight.FlightRenderTypes;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.networking.payloads.c2s.FireConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.StopBeamC2SPayload;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
@@ -99,7 +100,8 @@ public final class BlastEffects {
                 && ArmedRingPower.isArmed(player)
                 && PowerRingItem.hasCharge(player)
                 && ArmedRingPower.selectedConstruct(player).map(construct -> !construct.usesGesture()).orElse(false)
-                && !ConstructClient.isLookingAtLantern();
+                && !ConstructClient.isLookingAtLantern()
+                && !LanternBlockItem.isChargingLantern(player);
     }
 
     private static void tickCharge(Minecraft client) {

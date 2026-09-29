@@ -6,6 +6,7 @@ import dev.amble.client.effects.ConstructClient;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.VoxelRenderer;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.networking.payloads.c2s.ForgeC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ForgeStrokeC2SPayload;
 import dev.amble.core.networking.payloads.s2c.ForgeStrokeS2CPayload;
@@ -89,7 +90,8 @@ public final class ForgeClient {
                 && ArmedRingPower.isArmed(player)
                 && PowerRingItem.hasCharge(player)
                 && ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::usesGesture).orElse(false)
-                && !ConstructClient.isLookingAtLantern();
+                && !ConstructClient.isLookingAtLantern()
+                && !LanternBlockItem.isChargingLantern(player);
     }
 
     public static float drawAmount() {

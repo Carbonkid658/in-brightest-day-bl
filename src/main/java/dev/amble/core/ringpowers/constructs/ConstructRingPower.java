@@ -74,7 +74,9 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
     }
 
     public int maxSize(Player player) {
-        return CorpsSynergy.empoweredByHope(player) ? this.empoweredMaxSize() : this.maxSize();
+        if (CorpsSynergy.empoweredByHope(player)) return this.empoweredMaxSize();
+        if (CorpsSynergy.weakenedByHope(player)) return CorpsSynergy.weakenSize(this.minSize(), this.maxSize());
+        return this.maxSize();
     }
 
     public int clampSize(int size) {

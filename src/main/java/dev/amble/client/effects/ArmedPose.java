@@ -1,6 +1,7 @@
 package dev.amble.client.effects;
 
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.ringpowers.CorpsColors;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -77,6 +78,7 @@ public final class ArmedPose {
     }
 
     private static boolean isUsingPower(Minecraft client, Player player) {
+        if (player.isUsingItem() && player.getUseItem().getItem() instanceof LanternBlockItem) return true;
         if (!PowerRingItem.hasCharge(player)) return false;
         if (TractorEffects.isBeaming(player) || BeamEffects.isBeaming(player) || HealBeamEffects.isHealing(player) || TractorBeamRingPower.isActive(player) || LightRingPower.isEmitting(player)) return true;
         return player == client.player && (BlastEffects.firingAmount(1.0F) > 0.01F || ScanEffects.isScanning());

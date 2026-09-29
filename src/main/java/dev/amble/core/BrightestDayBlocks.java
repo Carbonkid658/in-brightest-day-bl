@@ -3,6 +3,7 @@ package dev.amble.core;
 import dev.amble.BrightestDay;
 import dev.amble.core.blocks.HardLightBlock;
 import dev.amble.core.blocks.LanternBlock;
+import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
@@ -99,7 +100,7 @@ public class BrightestDayBlocks {
 
         Item.Properties props = properties.setId(itemKey).useBlockDescriptionPrefix();
 
-        Registry.register(BuiltInRegistries.ITEM, itemKey, new BlockItem(block, props));
+        Registry.register(BuiltInRegistries.ITEM, itemKey, block instanceof LanternBlock ? new LanternBlockItem(block, props) : new BlockItem(block, props));
     }
 
     public static void init() {}
