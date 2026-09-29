@@ -2,6 +2,7 @@ package dev.amble.core;
 
 import dev.amble.BrightestDay;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -19,6 +20,7 @@ public class BrightestDayItems {
                     .fireResistant()
                     .stacksTo(1)
                     .component(BrightestDayComponents.POWER_TYPE, BrightestDayComponents.MAX_POWER)
+                    .component(BrightestDayComponents.LANTERN_CORPS, LanternCorps.GREEN)
                     .component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring"))
     ));
 

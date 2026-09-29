@@ -3,7 +3,16 @@
 	"package": "dev.amble.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
-		"ExampleMixin"
+		"ExampleMixin",
+		"PlayerMixin",
+		"ServerGamePacketListenerImplMixin"
+	],
+	"client": [
+		"client.AbstractClientPlayerMixin",
+		"client.AvatarRendererMixin",
+		"client.CameraMixin",
+		"client.LocalPlayerMixin",
+		"client.PlayerModelMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -2,12 +2,14 @@ package dev.amble.core.items;
 
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.blocks.GreenLanternBlock;
+import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -16,6 +18,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.Block;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class PowerRingItem extends Item {
@@ -39,7 +42,7 @@ public class PowerRingItem extends Item {
                     No evil shall escape my sight.
                     Let those who worship evil's might,
                     Beware my power,
-                    Green Lantern's might!""")
+                    Green Lantern's light!""")
                     .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD);
             context.getPlayer().sendSystemMessage(oath);
             return InteractionResult.SUCCESS_SERVER;
@@ -53,6 +56,15 @@ public class PowerRingItem extends Item {
         if (level.getServer().getTickCount() % (20 * 60) * 20 == 0) {
             PowerRingItem.drainRing(itemStack, 1);
         }
+    }
+
+    public static Optional<LanternCorps> getCorps(ItemStack ring) {
+        if (!(ring.getItem() instanceof PowerRingItem)) return Optional.empty();
+        return Optional.ofNullable(ring.get(BrightestDayComponents.LANTERN_CORPS));
+    }
+
+    public static Optional<LanternCorps> getWornCorps(Player player) {
+        return getCorps(player.getMainHandItem()).or(() -> getCorps(player.getOffhandItem()));
     }
 
     public static int getRingPower(ItemStack ring) {
@@ -87,7 +99,8 @@ public class PowerRingItem extends Item {
 
         double percentage = ((double) PowerRingItem.getRingPower(itemStack) / BrightestDayComponents.MAX_POWER) * 100;
 
-        Component component = Component.literal(String.format("%.0f%%", percentage)).withStyle(ChatFormatting.BOLD, ChatFormatting.GREEN);
+        int color = PowerRingItem.getCorps(itemStack).orElse(LanternCorps.GREEN).color();
+        Component component = Component.literal(String.format("%.0f%%", percentage)).withStyle(ChatFormatting.BOLD).withColor(color);
 
         builder.accept(component);
     }

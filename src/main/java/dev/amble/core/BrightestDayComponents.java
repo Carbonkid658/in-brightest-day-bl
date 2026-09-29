@@ -2,6 +2,7 @@ package dev.amble.core;
 
 import com.mojang.serialization.Codec;
 import dev.amble.BrightestDay;
+import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -16,6 +17,15 @@ public class BrightestDayComponents {
                     DataComponentType.<Integer>builder()
                             .persistent(Codec.INT)
                             .networkSynchronized(ByteBufCodecs.INT)
+                            .build()
+            );
+
+    public static final DataComponentType<LanternCorps> LANTERN_CORPS =
+            Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    BrightestDay.id("lantern_corps"),
+                    DataComponentType.<LanternCorps>builder()
+                            .persistent(LanternCorps.CODEC)
+                            .networkSynchronized(LanternCorps.STREAM_CODEC)
                             .build()
             );
 }
