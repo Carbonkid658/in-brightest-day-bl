@@ -121,6 +121,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(RingPowerRegistry.BLAST.getTranslationKey(), "Blast");
         builder.add(RingPowerRegistry.ENTITY_SHIELD.getTranslationKey(), "Bubble Shield");
         builder.add(RingPowerRegistry.AREA_SHIELD.getTranslationKey(), "Dome Shield");
+        builder.add(RingPowerRegistry.BEAM.getTranslationKey(), "Beam");
         builder.add(RingPowerRegistry.WALL.getTranslationKey(), "Wall");
         builder.add("message.brightestday.construct_size", "%s size: %s");
         builder.add("message.brightestday.wall_blocked", "There's no room for a wall there.");

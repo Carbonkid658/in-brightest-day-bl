@@ -1,6 +1,7 @@
 package dev.amble.client;
 
 import dev.amble.client.effects.ArmedPose;
+import dev.amble.client.effects.BeamEffects;
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.ConstructClient;
 import dev.amble.client.effects.ElementAura;
@@ -35,6 +36,7 @@ public class BrightestDayClient implements ClientModInitializer {
         BlastEffects.init();
         ShieldEffects.init();
         WallEffects.init();
+        BeamEffects.init();
         ArmedPose.init();
         ElementAura.init();
         TractorEffects.init();

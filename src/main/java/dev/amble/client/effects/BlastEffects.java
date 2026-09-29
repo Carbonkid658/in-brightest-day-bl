@@ -7,6 +7,8 @@ import dev.amble.client.forge.ForgeClient;
 import dev.amble.client.flight.FlightRenderTypes;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.FireConstructC2SPayload;
+import dev.amble.core.networking.payloads.c2s.StopBeamC2SPayload;
+import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.networking.payloads.s2c.BlastS2CPayload;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -51,6 +53,7 @@ public final class BlastEffects {
     private static final float ARM_LENGTH = 0.7F;
 
     private static final int CHARGE_TICKS = 25;
+    private static final int SUSTAIN_GRACE_TICKS = 10;
     private static final float CHARGE_SOUND_PITCH = 1.2F;
     private static final int CHARGE_VOXELS = 16;
     private static final float CHARGE_RADIUS = 1.2F;
@@ -61,6 +64,9 @@ public final class BlastEffects {
 
     private static final List<Blast> BLASTS = new ArrayList<>();
     private static int cooldown;
+    private static boolean sustaining;
+    private static int sustainTicks;
+    private static boolean awaitRelease;
     private static int charge;
     private static int oCharge;
     private static float kick;
@@ -103,7 +109,26 @@ public final class BlastEffects {
         kick *= SHAKE_DECAY;
         if (cooldown > 0) cooldown--;
 
-        boolean holding = player != null && client.gui.screen() == null && client.options.keyUse.isDown() && wantsToCharge(player);
+        boolean keyDown = player != null && client.gui.screen() == null && client.options.keyUse.isDown();
+        if (sustaining) {
+            sustainTicks++;
+            boolean serverStopped = sustainTicks > SUSTAIN_GRACE_TICKS && (player == null || !BeamEffects.isBeaming(player));
+            if (!keyDown || serverStopped) {
+                if (!serverStopped) ClientPlayNetworking.send(StopBeamC2SPayload.INSTANCE);
+                sustaining = false;
+                awaitRelease = keyDown;
+            }
+            return;
+        }
+        if (awaitRelease) {
+            if (keyDown) {
+                cancelCharge(client);
+                return;
+            }
+            awaitRelease = false;
+        }
+
+        boolean holding = keyDown && wantsToCharge(player);
         if (!holding || cooldown > 0) {
             cancelCharge(client);
             return;
@@ -115,7 +140,12 @@ public final class BlastEffects {
         }
 
         if (++charge >= CHARGE_TICKS) {
+            boolean sustained = ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::sustained).orElse(false);
             ClientPlayNetworking.send(new FireConstructC2SPayload(ConstructClient.selectedSize(player)));
+            if (sustained) {
+                sustaining = true;
+                sustainTicks = 0;
+            }
             charge = 0;
             oCharge = 0;
             chargeSound = null;
@@ -134,7 +164,8 @@ public final class BlastEffects {
         float chargeProgress = Mth.lerp(partialTicks, oCharge, charge) / CHARGE_TICKS;
         float easedCharge = chargeProgress * chargeProgress * (3.0F - 2.0F * chargeProgress);
         float forge = ForgeClient.drawAmount();
-        return Math.max(Math.max(easedCharge, Mth.lerp(partialTicks, oKick, kick)), Math.max(Math.max(TractorEffects.holdAmount(partialTicks), ScanEffects.scanAmount(partialTicks)), forge));
+        float beam = sustaining ? 1.0F : 0.0F;
+        return Math.max(Math.max(easedCharge, Mth.lerp(partialTicks, oKick, kick)), Math.max(Math.max(TractorEffects.holdAmount(partialTicks), ScanEffects.scanAmount(partialTicks)), Math.max(forge, beam)));
     }
 
     public static float cameraShake(float partialTicks) {

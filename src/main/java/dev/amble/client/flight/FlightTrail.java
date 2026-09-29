@@ -23,7 +23,9 @@ import java.util.WeakHashMap;
 
 public final class FlightTrail {
     private static final int MAX_AGE = 20;
-    private static final int SUBDIVISIONS = 4;
+    private static final int SMOOTHING_PASSES = 2;
+    private static final double MIN_POINT_SPACING = 0.02;
+    private static final double MAX_POINT_JUMP = 6.0;
     private static final double EMIT_SPEED = 0.5;
     private static final float PIXEL = VoxelRenderer.PIXEL;
 
@@ -100,7 +102,13 @@ public final class FlightTrail {
                 }
                 points.clear();
                 points.addAll(aged);
-                if (emit) points.addFirst(new Point(foot(player, 1.0F, footSide(foot)), 0));
+                if (emit) {
+                    Vec3 position = foot(player, 1.0F, footSide(foot));
+                    Point newest = points.peekFirst();
+                    double gap = newest == null ? 0.0 : newest.pos().distanceTo(position);
+                    if (gap > MAX_POINT_JUMP) points.clear();
+                    if (points.isEmpty() || gap > MIN_POINT_SPACING) points.addFirst(new Point(position, 0));
+                }
             }
 
             trail.emitting = emit;
@@ -229,29 +237,30 @@ public final class FlightTrail {
     }
 
     private static void subdivide(List<Vec3> points, List<Float> lives, List<Vec3> outPoints, List<Float> outLives) {
-        int last = points.size() - 1;
-        for (int i = 0; i < last; i++) {
-            Vec3 p0 = points.get(Math.max(i - 1, 0));
-            Vec3 p1 = points.get(i);
-            Vec3 p2 = points.get(i + 1);
-            Vec3 p3 = points.get(Math.min(i + 2, last));
-            for (int step = 0; step < SUBDIVISIONS; step++) {
-                float t = (float) step / SUBDIVISIONS;
-                outPoints.add(catmullRom(p0, p1, p2, p3, t));
-                outLives.add(Mth.lerp(t, lives.get(i), lives.get(i + 1)));
+        List<Vec3> currentPoints = new ArrayList<>(points);
+        List<Float> currentLives = new ArrayList<>(lives);
+        for (int pass = 0; pass < SMOOTHING_PASSES && currentPoints.size() > 2; pass++) {
+            List<Vec3> nextPoints = new ArrayList<>(currentPoints.size() * 2);
+            List<Float> nextLives = new ArrayList<>(currentLives.size() * 2);
+            nextPoints.add(currentPoints.getFirst());
+            nextLives.add(currentLives.getFirst());
+            for (int i = 0; i < currentPoints.size() - 1; i++) {
+                Vec3 a = currentPoints.get(i);
+                Vec3 b = currentPoints.get(i + 1);
+                float la = currentLives.get(i);
+                float lb = currentLives.get(i + 1);
+                nextPoints.add(a.lerp(b, 0.25));
+                nextLives.add(Mth.lerp(0.25F, la, lb));
+                nextPoints.add(a.lerp(b, 0.75));
+                nextLives.add(Mth.lerp(0.75F, la, lb));
             }
+            nextPoints.add(currentPoints.getLast());
+            nextLives.add(currentLives.getLast());
+            currentPoints = nextPoints;
+            currentLives = nextLives;
         }
-        outPoints.add(points.get(last));
-        outLives.add(lives.get(last));
-    }
-
-    private static Vec3 catmullRom(Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3, float t) {
-        double t2 = t * t;
-        double t3 = t2 * t;
-        return p0.scale(-0.5 * t3 + t2 - 0.5 * t)
-                .add(p1.scale(1.5 * t3 - 2.5 * t2 + 1.0))
-                .add(p2.scale(-1.5 * t3 + 2.0 * t2 + 0.5 * t))
-                .add(p3.scale(0.5 * t3 - 0.5 * t2));
+        outPoints.addAll(currentPoints);
+        outLives.addAll(currentLives);
     }
 
     private static float footSide(int foot) {

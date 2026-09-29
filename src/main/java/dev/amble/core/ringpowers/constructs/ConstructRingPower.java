@@ -69,11 +69,15 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
         return false;
     }
 
+    public boolean sustained() {
+        return false;
+    }
+
     public abstract void fire(ServerPlayer player, int radius, int color);
 
     public record Aim(Vec3 eye, Vec3 look, Vec3 end, @Nullable Entity entity) {}
 
-    protected static Aim aim(ServerPlayer player, double range) {
+    public static Aim aim(ServerPlayer player, double range) {
         ServerLevel level = player.level();
         Vec3 eye = player.getEyePosition();
         Vec3 look = player.getLookAngle();

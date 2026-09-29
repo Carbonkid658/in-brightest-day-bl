@@ -7,11 +7,14 @@ import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.VoxelRenderer;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.ForgeC2SPayload;
+import dev.amble.core.networking.payloads.c2s.ForgeStrokeC2SPayload;
+import dev.amble.core.networking.payloads.s2c.ForgeStrokeS2CPayload;
 import dev.amble.core.ringpowers.CorpsColors;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.ringpowers.constructs.ConstructTool;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
@@ -21,6 +24,7 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
@@ -29,10 +33,14 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public final class ForgeClient {
@@ -42,6 +50,7 @@ public final class ForgeClient {
     private static final float VOXEL_SPACING = 1.5F * VoxelRenderer.PIXEL;
     private static final float VOXEL_SIZE = 1.5F * VoxelRenderer.PIXEL;
     private static final int RELEASE_TICKS = 8;
+    private static final int REMOTE_TIMEOUT_TICKS = 100;
     private static final int LEGEND_MARGIN = 6;
     private static final int LEGEND_PADDING = 5;
     private static final int LEGEND_LINE = 10;
@@ -54,8 +63,22 @@ public final class ForgeClient {
     private static float yaw0;
     private static float pitch0;
     private static long seed;
+    private static int sentCount;
+
+    private static final Map<Integer, RemoteStroke> REMOTE = new HashMap<>();
+    private static @Nullable ClientLevel remoteLevel;
+
+    private static final class RemoteStroke {
+        final List<Vec3> directions = new ArrayList<>();
+        final long seed = RandomSource.create().nextLong();
+        boolean succeeded;
+        int releaseAge = -1;
+        int idle;
+    }
 
     public static void init() {
+        ClientPlayNetworking.registerGlobalReceiver(ForgeStrokeS2CPayload.TYPE, (payload, context) -> receive(payload));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> REMOTE.clear());
         ClientTickEvents.END_CLIENT_TICK.register(ForgeClient::tick);
         LevelRenderEvents.COLLECT_SUBMITS.register(ForgeClient::render);
         HudElementRegistry.attachElementAfter(VanillaHudElements.CROSSHAIR, BrightestDay.id("forge_legend"), ForgeClient::extractLegend);
@@ -80,6 +103,7 @@ public final class ForgeClient {
             STROKE.clear();
             DIRECTIONS.clear();
         }
+        tickRemote(client);
         if (player == null || client.isPaused()) return;
 
         boolean down = client.gui.screen() == null && client.options.keyUse.isDown() && wantsToDraw(player);
@@ -90,10 +114,12 @@ public final class ForgeClient {
             DIRECTIONS.clear();
             yaw0 = player.getYRot();
             pitch0 = player.getXRot();
+            sentCount = 0;
             play(client, SoundEvents.AMETHYST_BLOCK_CHIME, 1.6F);
         } else if (!down && drawing) {
             finish(client);
         }
+        if (drawing) flushPoints();
     }
 
     private static void finish(Minecraft client) {
@@ -105,6 +131,8 @@ public final class ForgeClient {
                 ? GestureRecognizer.recognize(STROKE)
                 : Optional.empty();
         succeeded = tool.isPresent();
+        flushPoints();
+        ClientPlayNetworking.send(new ForgeStrokeC2SPayload(succeeded ? ForgeStrokeC2SPayload.END_SUCCESS : ForgeStrokeC2SPayload.END_FAIL, List.of()));
         if (tool.isPresent()) {
             ClientPlayNetworking.send(new ForgeC2SPayload(tool.get().ordinal()));
         } else {
@@ -119,19 +147,71 @@ public final class ForgeClient {
         client.level.playLocalSound(player.getX(), player.getEyeY(), player.getZ(), sound, SoundSource.PLAYERS, 0.6F, pitch, false);
     }
 
+    private static void flushPoints() {
+        while (sentCount < DIRECTIONS.size()) {
+            int end = Math.min(sentCount + ForgeStrokeC2SPayload.MAX_POINTS, DIRECTIONS.size());
+            int action = sentCount == 0 ? ForgeStrokeC2SPayload.START : ForgeStrokeC2SPayload.POINTS;
+            ClientPlayNetworking.send(new ForgeStrokeC2SPayload(action, List.copyOf(DIRECTIONS.subList(sentCount, end))));
+            sentCount = end;
+        }
+    }
+
+    private static void receive(ForgeStrokeS2CPayload payload) {
+        switch (payload.action()) {
+            case ForgeStrokeC2SPayload.START -> {
+                RemoteStroke stroke = new RemoteStroke();
+                stroke.directions.addAll(payload.directions());
+                REMOTE.put(payload.playerId(), stroke);
+            }
+            case ForgeStrokeC2SPayload.POINTS -> {
+                RemoteStroke stroke = REMOTE.computeIfAbsent(payload.playerId(), id -> new RemoteStroke());
+                stroke.directions.addAll(payload.directions());
+                stroke.idle = 0;
+            }
+            default -> {
+                RemoteStroke stroke = REMOTE.get(payload.playerId());
+                if (stroke != null && stroke.releaseAge < 0) {
+                    stroke.succeeded = payload.action() == ForgeStrokeC2SPayload.END_SUCCESS;
+                    stroke.releaseAge = 0;
+                }
+            }
+        }
+    }
+
+    private static void tickRemote(Minecraft client) {
+        if (client.level != remoteLevel) {
+            REMOTE.clear();
+            remoteLevel = client.level;
+        }
+        REMOTE.values().removeIf(stroke -> stroke.releaseAge >= 0 ? ++stroke.releaseAge > RELEASE_TICKS : ++stroke.idle > REMOTE_TIMEOUT_TICKS);
+    }
+
     private static void render(LevelRenderContext context) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
-        if (player == null || (!drawing && releaseAge < 0)) return;
-
+        if (player == null || client.level == null) return;
         float partialTicks = client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        Vec3 camera = context.levelState().cameraRenderState.pos;
+
+        for (Map.Entry<Integer, RemoteStroke> entry : REMOTE.entrySet()) {
+            if (!(client.level.getEntity(entry.getKey()) instanceof Player drawer)) continue;
+            RemoteStroke stroke = entry.getValue();
+            submitStroke(context, camera, drawer, stroke.directions, stroke.releaseAge, stroke.succeeded, stroke.seed, partialTicks);
+        }
+
+        if (!drawing && releaseAge < 0) return;
         if (drawing) sample(player, partialTicks);
-        if (DIRECTIONS.isEmpty()) return;
+        submitStroke(context, camera, player, DIRECTIONS, releaseAge, succeeded, seed, partialTicks);
+    }
+
+    private static void submitStroke(LevelRenderContext context, Vec3 camera, Player player, List<Vec3> directions,
+                                     int releaseAge, boolean succeeded, long seed, float partialTicks) {
+        if (directions.isEmpty()) return;
 
         Vec3 eye = player.getEyePosition(partialTicks);
         int color = ARGB.opaque(CorpsColors.of(player));
-        List<Vec3> path = new ArrayList<>(DIRECTIONS.size());
-        for (Vec3 direction : DIRECTIONS) path.add(eye.add(direction.scale(DRAW_DISTANCE)));
+        List<Vec3> path = new ArrayList<>(directions.size());
+        for (Vec3 direction : directions) path.add(eye.add(direction.scale(DRAW_DISTANCE)));
 
         float release = releaseAge < 0 ? 0.0F : Mth.clamp((releaseAge + partialTicks) / RELEASE_TICKS, 0.0F, 1.0F);
         Vec3 hand = BlastEffects.hand(player, partialTicks);
@@ -153,7 +233,7 @@ public final class ForgeClient {
                 voxels.add(new ShieldEffects.Voxel(VoxelRenderer.snap(point), half, tint));
             }
         }
-        ShieldEffects.submit(context, context.levelState().cameraRenderState.pos, voxels, 1.0F - (succeeded ? 0.0F : release));
+        ShieldEffects.submit(context, camera, voxels, 1.0F - (succeeded ? 0.0F : release));
     }
 
     private static void sample(LocalPlayer player, float partialTicks) {

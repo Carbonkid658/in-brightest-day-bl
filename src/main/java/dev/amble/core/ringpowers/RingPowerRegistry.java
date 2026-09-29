@@ -1,6 +1,7 @@
 package dev.amble.core.ringpowers;
 
 import dev.amble.core.ringpowers.constructs.AreaShieldConstruct;
+import dev.amble.core.ringpowers.constructs.BeamConstruct;
 import dev.amble.core.ringpowers.constructs.BlastConstruct;
 import dev.amble.core.ringpowers.constructs.EntityShieldConstruct;
 import dev.amble.core.ringpowers.constructs.ToolForgeConstruct;
@@ -26,6 +27,7 @@ public final class RingPowerRegistry {
     public static final ArmedRingPower ARMED = register(new ArmedRingPower());
     public static final LightRingPower LIGHT = register(new LightRingPower());
     public static final BlastConstruct BLAST = register(new BlastConstruct());
+    public static final BeamConstruct BEAM = register(new BeamConstruct());
     public static final EntityShieldConstruct ENTITY_SHIELD = register(new EntityShieldConstruct());
     public static final AreaShieldConstruct AREA_SHIELD = register(new AreaShieldConstruct());
     public static final WallConstruct WALL = register(new WallConstruct());

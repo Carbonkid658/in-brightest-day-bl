@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.beams.BeamManager;
 import dev.amble.core.shields.ShieldManager;
 import dev.amble.core.walls.WallManager;
 import net.minecraft.network.chat.Component;
@@ -30,6 +31,7 @@ public final class ConstructDismissal {
     }
 
     public static void dismissAll(ServerPlayer player) {
+        BeamManager.stop(player);
         ShieldManager.dismissAll(player.getUUID());
         WallManager.dismissAll(player.getUUID());
         ConstructTools.dissolveAll(player);
