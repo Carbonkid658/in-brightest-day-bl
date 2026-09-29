@@ -1,4 +1,4 @@
-# brightestdaY
+# brightestday
 
 ## Setup
 
