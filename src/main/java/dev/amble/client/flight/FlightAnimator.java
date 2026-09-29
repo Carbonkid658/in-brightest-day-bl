@@ -1,10 +1,12 @@
 package dev.amble.client.flight;
 
+import com.zigythebird.playeranim.animation.PlayerAnimationController;
+import com.zigythebird.playeranimcore.animation.layered.modifier.AdjustmentModifier;
+import com.zigythebird.playeranimcore.math.Vec3f;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -13,19 +15,30 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.WeakHashMap;
 
 public final class FlightAnimator {
 
-    public static final RenderStateDataKey<FlightPose> POSE = RenderStateDataKey.create(() -> "brightestday:flight_pose");
-
-    private static final float HOVER_LEAN = 15.0F;
+    private static final float MAX_HOVER_LEAN = 30.0F;
+    private static final float HOVER_LEAN_PER_SPEED = 30.0F;
+    private static final float FLIGHT_ENTER_TILT = 0.55F;
+    private static final float FLIGHT_EXIT_TILT = 0.3F;
+    private static final float MAX_HEAD_PITCH = 50.0F;
+    private static final float MAX_HEAD_YAW = 70.0F;
+    public static final int TRANSITION_TICKS = 16;
+    private static final float LIMB_SWING_FORWARD = 25.0F;
+    private static final float LIMB_SWING_SIDE = 30.0F;
+    private static final float LIMB_SWING_TURN = 1.5F;
+    private static final float LIMB_SWING_PITCH = 3.0F;
+    private static final float MAX_LIMB_SWING = 35.0F;
+    private static final float ARM_SWING_SCALE = 0.6F;
     private static final float MAX_ROLL = 55.0F;
     private static final float CAMERA_ROLL_SCALE = 0.6F;
     private static final float FIRST_PERSON_FOV_BOOST = 0.4F;
@@ -38,12 +51,19 @@ public final class FlightAnimator {
     private static final Map<Player, Motion> MOTIONS = new WeakHashMap<>();
     private static @Nullable FlightWindSoundInstance windSound;
 
+    private enum Phase { NONE, HOVER, FLIGHT }
+
     private static final class Motion {
         float flight, oFlight;
         float tilt, oTilt;
         float pitch, oPitch;
         float roll, oRoll;
         float speed, oSpeed;
+        float bodyPitch, oBodyPitch;
+        float flightBlend, oFlightBlend;
+        float limbX, oLimbX;
+        float limbZ, oLimbZ;
+        Phase phase = Phase.NONE;
     }
 
     public static void init() {
@@ -81,6 +101,10 @@ public final class FlightAnimator {
         motion.oPitch = motion.pitch;
         motion.oRoll = motion.roll;
         motion.oSpeed = motion.speed;
+        motion.oBodyPitch = motion.bodyPitch;
+        motion.oFlightBlend = motion.flightBlend;
+        motion.oLimbX = motion.limbX;
+        motion.oLimbZ = motion.limbZ;
 
         motion.speed = (float) speed;
         motion.flight += ((flying ? 1.0F : 0.0F) - motion.flight) * 0.25F;
@@ -97,6 +121,21 @@ public final class FlightAnimator {
                 ? Mth.clamp((float) (side * 20.0 + turn * 2.0 * Math.min(speed, 2.0)), -MAX_ROLL, MAX_ROLL)
                 : 0.0F;
         motion.roll += (targetRoll - motion.roll) * 0.2F;
+
+        motion.flightBlend = Mth.approach(motion.flightBlend, motion.phase == Phase.FLIGHT ? 1.0F : 0.0F, 1.0F / TRANSITION_TICKS);
+        float blend = ease(motion.flightBlend);
+
+        float hoverLean = Mth.clamp((float) forward * HOVER_LEAN_PER_SPEED, -MAX_HOVER_LEAN, MAX_HOVER_LEAN);
+        float targetBodyPitch = motion.phase == Phase.NONE ? 0.0F : Mth.lerp(blend, hoverLean, motion.pitch);
+        motion.bodyPitch += (targetBodyPitch - motion.bodyPitch) * 0.2F;
+
+        float pitchRate = motion.pitch - motion.oPitch;
+        float targetLimbX = flying ? Mth.lerp(blend, (float) forward * LIMB_SWING_FORWARD, pitchRate * LIMB_SWING_PITCH) : 0.0F;
+        float targetLimbZ = flying ? -((float) side * LIMB_SWING_SIDE + turn * LIMB_SWING_TURN) : 0.0F;
+        motion.limbX += (Mth.clamp(targetLimbX, -MAX_LIMB_SWING, MAX_LIMB_SWING) - motion.limbX) * 0.12F;
+        motion.limbZ += (Mth.clamp(targetLimbZ, -MAX_LIMB_SWING, MAX_LIMB_SWING) - motion.limbZ) * 0.12F;
+
+        updateAnimation(player, motion, flying);
 
         if (!flying && motion.flight < 0.001F) {
             MOTIONS.remove(player);
@@ -153,23 +192,80 @@ public final class FlightAnimator {
                 SoundSource.PLAYERS, 1.0F, 0.6F, false);
     }
 
-    public static @Nullable FlightPose pose(Player player, float partialTicks) {
+    private static void updateAnimation(Player player, Motion motion, boolean flying) {
+        PlayerAnimationController controller = FlightAnimations.controller(player);
+        if (controller == null) return;
+
+        if (!flying) {
+            if (motion.phase != Phase.NONE) FlightAnimations.stop(controller);
+            motion.phase = Phase.NONE;
+            return;
+        }
+
+        switch (motion.phase) {
+            case NONE -> {
+                FlightAnimations.loop(controller, FlightAnimations.HOVER);
+                motion.phase = Phase.HOVER;
+            }
+            case HOVER -> {
+                if (motion.tilt > FLIGHT_ENTER_TILT) {
+                    FlightAnimations.loop(controller, FlightAnimations.FLIGHT);
+                    motion.phase = Phase.FLIGHT;
+                }
+            }
+            case FLIGHT -> {
+                if (motion.tilt < FLIGHT_EXIT_TILT) {
+                    FlightAnimations.loop(controller, FlightAnimations.HOVER);
+                    motion.phase = Phase.HOVER;
+                }
+            }
+        }
+
+        float intensity = Mth.clamp(motion.speed / (float) FlightRingPower.BOOST_SPEED, 0.0F, 1.0F);
+        float hoverSpeed = 1.0F + Math.min(motion.speed, 1.2F) * 1.2F;
+        float flightSpeed = 0.7F + intensity * 1.3F;
+        FlightAnimations.setSpeed(controller, Mth.lerp(ease(motion.flightBlend), hoverSpeed, flightSpeed));
+    }
+
+    public static Optional<AdjustmentModifier.PartModifier> adjustment(Avatar avatar, String bone) {
+        if (!(avatar instanceof Player player)) return Optional.empty();
+
         Motion motion = MOTIONS.get(player);
-        if (motion == null) return null;
+        if (motion == null) return Optional.empty();
 
+        float partialTicks = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
         float flight = Mth.lerp(partialTicks, motion.oFlight, motion.flight);
-        if (flight < 0.001F) return null;
+        float blend = ease(Mth.lerp(partialTicks, motion.oFlightBlend, motion.flightBlend)) * flight;
+        float limbX = Mth.lerp(partialTicks, motion.oLimbX, motion.limbX) * flight;
+        float limbZ = Mth.lerp(partialTicks, motion.oLimbZ, motion.limbZ) * flight;
 
-        float tilt = Mth.lerp(partialTicks, motion.oTilt, motion.tilt);
-        float pitch = Mth.lerp(partialTicks, motion.oPitch, motion.pitch);
-        float roll = Mth.lerp(partialTicks, motion.oRoll, motion.roll);
-        float bodyAngle = -flight * Mth.lerp(tilt, HOVER_LEAN, 90.0F + pitch);
+        return switch (bone) {
+            case "body" -> rotation(
+                    Mth.lerp(partialTicks, motion.oBodyPitch, motion.bodyPitch) * flight,
+                    0.0F,
+                    Mth.lerp(partialTicks, motion.oRoll, motion.roll) * flight);
+            case "head" -> {
+                float bodyPitch = Mth.lerp(partialTicks, motion.oBodyPitch, motion.bodyPitch);
+                float bodyYaw = Mth.rotLerp(partialTicks, player.yBodyRotO, player.yBodyRot);
+                float lookPitch = Mth.clamp(player.getViewXRot(partialTicks) - bodyPitch, -MAX_HEAD_PITCH, MAX_HEAD_PITCH);
+                float lookYaw = Mth.clamp(Mth.wrapDegrees(player.getViewYRot(partialTicks) - bodyYaw), -MAX_HEAD_YAW, MAX_HEAD_YAW);
+                yield rotation(lookPitch * blend, lookYaw * blend, 0.0F);
+            }
+            case "right_arm", "left_arm" -> rotation(limbX * ARM_SWING_SCALE, 0.0F, limbZ * ARM_SWING_SCALE);
+            case "right_leg", "left_leg" -> rotation(limbX, 0.0F, limbZ);
+            default -> Optional.empty();
+        };
+    }
 
-        HumanoidArm leadArm = PowerRingItem.getWornRing(player) == player.getOffhandItem()
-                ? player.getMainArm().getOpposite()
-                : player.getMainArm();
+    private static float ease(float t) {
+        return t * t * (3.0F - 2.0F * t);
+    }
 
-        return new FlightPose(flight, tilt, bodyAngle, roll * flight, leadArm);
+    private static Optional<AdjustmentModifier.PartModifier> rotation(float x, float y, float z) {
+        return Optional.of(new AdjustmentModifier.PartModifier(
+                new Vec3f(x * Mth.DEG_TO_RAD, y * Mth.DEG_TO_RAD, z * Mth.DEG_TO_RAD),
+                Vec3f.ZERO
+        ));
     }
 
     public static boolean isAnimating(Player player) {
