@@ -3,7 +3,6 @@ package dev.amble.mixin.client;
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.TractorEffects;
 import dev.amble.client.forge.ForgeClient;
-import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import org.jspecify.annotations.Nullable;
@@ -20,13 +19,13 @@ public abstract class MinecraftMixin {
     @Shadow public @Nullable LocalPlayer player;
 
     @Inject(method = "startAttack", at = @At("HEAD"), cancellable = true)
-    private void brightestday$noPunchWhileFlying(CallbackInfoReturnable<Boolean> cir) {
-        if (this.player != null && (FlightRingPower.isFlying(this.player) || TractorEffects.isTractorMode(this.player))) cir.setReturnValue(false);
+    private void brightestday$noPunchInTractorMode(CallbackInfoReturnable<Boolean> cir) {
+        if (this.player != null && TractorEffects.isTractorMode(this.player)) cir.setReturnValue(false);
     }
 
     @Inject(method = "continueAttack", at = @At("HEAD"), cancellable = true)
-    private void brightestday$noMiningWhileFlying(boolean down, CallbackInfo ci) {
-        if (this.player != null && (FlightRingPower.isFlying(this.player) || TractorEffects.isTractorMode(this.player))) ci.cancel();
+    private void brightestday$noMiningInTractorMode(boolean down, CallbackInfo ci) {
+        if (this.player != null && TractorEffects.isTractorMode(this.player)) ci.cancel();
     }
 
     @Inject(method = "startUseItem", at = @At("HEAD"), cancellable = true)
