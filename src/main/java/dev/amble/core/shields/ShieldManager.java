@@ -1,0 +1,213 @@
+package dev.amble.core.shields;
+
+import dev.amble.core.networking.payloads.s2c.ShieldRemoveS2CPayload;
+import dev.amble.core.networking.payloads.s2c.ShieldSpawnS2CPayload;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.WeakHashMap;
+
+public final class ShieldManager {
+    public static final int ENTITY_SHIELD_TICKS = 200;
+    public static final int AREA_SHIELD_TICKS = 300;
+    public static final int EXPAND_TICKS = 8;
+    private static final float ENTITY_SHIELD_STRENGTH = 20.0F;
+    private static final float ENTITY_SHIELD_PADDING = 0.35F;
+    private static final float ENTITY_SHIELD_SCALE = 1.15F;
+    private static final double DEFLECT_DAMPING = 0.6;
+    private static final double BARRIER_PUSH = 0.45;
+
+    private static final List<Shield> SHIELDS = new ArrayList<>();
+    private static int nextId;
+
+    private static final class Shield {
+        final int id;
+        final ServerLevel level;
+        final @Nullable Entity target;
+        final Vec3 center;
+        final float radius;
+        final UUID caster;
+        final int color;
+        final int duration;
+        final Set<ServerPlayer> watchers = Collections.newSetFromMap(new WeakHashMap<>());
+        float strength;
+        int age;
+
+        Shield(int id, ServerLevel level, @Nullable Entity target, Vec3 center, float radius, UUID caster, int color, int duration, float strength) {
+            this.id = id;
+            this.level = level;
+            this.target = target;
+            this.center = center;
+            this.radius = radius;
+            this.caster = caster;
+            this.color = color;
+            this.duration = duration;
+            this.strength = strength;
+        }
+
+        Vec3 center() {
+            return this.target != null ? this.target.getBoundingBox().getCenter() : this.center;
+        }
+
+        double currentRadius() {
+            return this.radius * Math.min(1.0, (this.age + 1.0) / EXPAND_TICKS);
+        }
+    }
+
+    public static void init() {
+        ServerTickEvents.END_SERVER_TICK.register(ShieldManager::tick);
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register(ShieldManager::allowDamage);
+    }
+
+    public static float entityShieldRadius(Entity entity) {
+        return Math.max(entity.getBbWidth(), entity.getBbHeight()) * 0.5F * ENTITY_SHIELD_SCALE + ENTITY_SHIELD_PADDING;
+    }
+
+    public static void shieldEntity(ServerLevel level, Entity target, int color, ServerPlayer caster) {
+        SHIELDS.removeIf(shield -> {
+            boolean replaced = shield.target == target;
+            if (replaced) forget(shield);
+            return replaced;
+        });
+
+        Shield shield = new Shield(nextId++, level, target, target.getBoundingBox().getCenter(), entityShieldRadius(target),
+                caster.getUUID(), color, ENTITY_SHIELD_TICKS, ENTITY_SHIELD_STRENGTH);
+        SHIELDS.add(shield);
+        syncWatchers(shield);
+    }
+
+    public static void shieldArea(ServerLevel level, Vec3 center, float radius, int color, ServerPlayer caster) {
+        Shield shield = new Shield(nextId++, level, null, center, radius, caster.getUUID(), color, AREA_SHIELD_TICKS, 0.0F);
+        SHIELDS.add(shield);
+        syncWatchers(shield);
+    }
+
+    private static void tick(MinecraftServer server) {
+        Iterator<Shield> iterator = SHIELDS.iterator();
+        while (iterator.hasNext()) {
+            Shield shield = iterator.next();
+            boolean targetGone = shield.target != null && (shield.target.isRemoved() || !shield.target.isAlive());
+            if (++shield.age >= shield.duration || targetGone) {
+                iterator.remove();
+                forget(shield);
+                continue;
+            }
+            syncWatchers(shield);
+            barrier(shield);
+        }
+    }
+
+    private static void barrier(Shield shield) {
+        Vec3 center = shield.center();
+        double radius = shield.currentRadius();
+
+        for (Entity entity : shield.level.getEntities((Entity) null, new AABB(center, center).inflate(radius + 3.0))) {
+            if (entity == shield.target || entity.getUUID().equals(shield.caster)) continue;
+
+            Vec3 position = entity.getBoundingBox().getCenter();
+            Vec3 previous = position.subtract(entity.getX() - entity.xo, entity.getY() - entity.yo, entity.getZ() - entity.zo);
+            double distance = position.distanceTo(center);
+            double previousDistance = previous.distanceTo(center);
+
+            if (entity instanceof Projectile projectile) {
+                if (shield.target != null && projectile.getOwner() == shield.target) continue;
+                if (distance <= radius + 0.3 && previousDistance > radius - 0.3) deflect(projectile, center);
+            } else if (shield.target == null && entity instanceof LivingEntity && previousDistance >= radius && distance < radius) {
+                Vec3 outward = position.subtract(center);
+                outward = outward.lengthSqr() < 1.0E-4 ? new Vec3(0.0, 1.0, 0.0) : outward.normalize();
+                entity.setDeltaMovement(outward.scale(BARRIER_PUSH));
+                entity.needsSync = true;
+            }
+        }
+    }
+
+    private static void deflect(Projectile projectile, Vec3 center) {
+        Vec3 velocity = projectile.getDeltaMovement();
+        Vec3 normal = projectile.position().subtract(center);
+        if (normal.lengthSqr() < 1.0E-4) return;
+        normal = normal.normalize();
+        if (velocity.dot(normal) >= 0.0) return;
+
+        Vec3 reflected = velocity.subtract(normal.scale(2.0 * velocity.dot(normal))).scale(DEFLECT_DAMPING);
+        projectile.setDeltaMovement(reflected);
+        projectile.needsSync = true;
+        projectile.level().playSound(null, projectile.getX(), projectile.getY(), projectile.getZ(),
+                SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 1.0F, 1.6F);
+    }
+
+    private static boolean allowDamage(LivingEntity entity, DamageSource source, float amount) {
+        if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return true;
+
+        for (Iterator<Shield> iterator = SHIELDS.iterator(); iterator.hasNext(); ) {
+            Shield shield = iterator.next();
+            if (shield.target != entity) continue;
+
+            shield.strength -= amount;
+            entity.level().playSound(null, entity.getX(), entity.getY(), entity.getZ(),
+                    SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 1.0F, 1.2F);
+            if (shield.strength <= 0.0F) {
+                iterator.remove();
+                forget(shield);
+                entity.level().playSound(null, entity.getX(), entity.getY(), entity.getZ(),
+                        SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 1.2F, 1.0F);
+            }
+            return false;
+        }
+        return true;
+    }
+
+    private static void syncWatchers(Shield shield) {
+        Set<ServerPlayer> tracking = new HashSet<>();
+        if (shield.target != null) {
+            tracking.addAll(PlayerLookup.tracking(shield.target));
+            if (shield.target instanceof ServerPlayer player) tracking.add(player);
+        } else {
+            tracking.addAll(PlayerLookup.tracking(shield.level, BlockPos.containing(shield.center)));
+        }
+
+        for (ServerPlayer player : tracking) {
+            if (shield.watchers.add(player)) {
+                int entityId = shield.target != null ? shield.target.getId() : ShieldSpawnS2CPayload.NO_ENTITY;
+                ServerPlayNetworking.send(player, new ShieldSpawnS2CPayload(shield.id, entityId, shield.center(), shield.radius, shield.color, shield.duration, shield.age));
+            }
+        }
+
+        shield.watchers.removeIf(player -> {
+            boolean gone = !tracking.contains(player);
+            if (gone && !player.hasDisconnected()) ServerPlayNetworking.send(player, new ShieldRemoveS2CPayload(shield.id));
+            return gone;
+        });
+    }
+
+    private static void forget(Shield shield) {
+        for (ServerPlayer player : shield.watchers) {
+            if (!player.hasDisconnected()) ServerPlayNetworking.send(player, new ShieldRemoveS2CPayload(shield.id));
+        }
+        shield.watchers.clear();
+    }
+
+    private ShieldManager() {}
+}

@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LocalPlayer.class)
 public abstract class LocalPlayerMixin {
@@ -40,7 +41,7 @@ public abstract class LocalPlayerMixin {
         } else if (!self.isSwimming() && !self.isPassenger()) {
             boolean enable = !FlightRingPower.canFly(self);
             this.brightestday$setFlight(self, enable);
-            if (enable && self.onGround()) self.jumpFromGround();
+            if (enable && self.onGround() && FlightRingPower.canFly(self)) self.jumpFromGround();
 
             this.brightestday$jumpTriggerTime = 0;
             this.brightestday$justToggled = true;
@@ -58,6 +59,11 @@ public abstract class LocalPlayerMixin {
         if (!this.brightestday$justToggled && self.onGround() && FlightRingPower.canFly(self)) {
             this.brightestday$setFlight(self, false);
         }
+    }
+
+    @Inject(method = "isCrouching", at = @At("HEAD"), cancellable = true)
+    private void brightestday$noCrouchWhileFlying(CallbackInfoReturnable<Boolean> cir) {
+        if (FlightRingPower.isFlying((LocalPlayer) (Object) this)) cir.setReturnValue(false);
     }
 
     @Unique

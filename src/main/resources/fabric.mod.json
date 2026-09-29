@@ -27,11 +27,17 @@
 		],
 		"fabric-datagen": [
           "dev.amble.datagen.BrightestDayDataGenerator"
+		],
+		"lambdynlights:initializer": [
+			"dev.amble.client.compat.LambDynamicLightsCompat"
 		]
 	},
 	"mixins": [
 		"brightestday.mixins.json"
 	],
+	"suggests": {
+		"lambdynlights": "*"
+	},
 	"depends": {
 		"fabricloader": ">=0.19.5",
 		"minecraft": "~26.3",

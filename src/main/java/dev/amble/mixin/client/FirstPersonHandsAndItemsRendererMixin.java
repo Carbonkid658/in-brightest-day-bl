@@ -1,6 +1,7 @@
 package dev.amble.mixin.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import dev.amble.client.effects.ArmedPose;
 import dev.amble.client.render.SlottedRingRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.FirstPersonHandsAndItemsRenderer;
@@ -21,6 +22,11 @@ public abstract class FirstPersonHandsAndItemsRendererMixin {
 
     @Shadow @Final private Minecraft minecraft;
 
+    @Inject(method = "renderPlayerArm", at = @At("HEAD"))
+    private void brightestday$raiseArmedArm(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, float inverseArmHeight, float attackValue, HumanoidArm arm, PlayerRenderState playerState, CallbackInfo ci) {
+        if (playerState.avatarRenderState != null) ArmedPose.raiseFirstPersonArm(poseStack, arm, playerState.avatarRenderState);
+    }
+
     @Inject(method = "renderPlayerHand", at = @At("TAIL"))
     private void brightestday$renderSlottedRing(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, HumanoidArm arm, PlayerRenderState playerState, CallbackInfo ci) {
         AvatarRenderState state = playerState.avatarRenderState;
@@ -28,5 +34,6 @@ public abstract class FirstPersonHandsAndItemsRendererMixin {
 
         AvatarRenderer<?> renderer = this.minecraft.getEntityRenderDispatcher().getRenderer(state);
         SlottedRingRenderer.submit(renderer.getModel(), state, arm, poseStack, submitNodeCollector, lightCoords, 0);
+        ArmedPose.submitFirstPersonGlow(renderer.getModel(), state, arm, poseStack, submitNodeCollector);
     }
 }

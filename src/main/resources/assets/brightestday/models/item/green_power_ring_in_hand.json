@@ -2,9 +2,9 @@
 	"format_version": "1.21.11",
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "brightestday:item/power_ring_in_hand",
-		"1": "brightestday:item/power_ring_in_hand_emission",
-		"particle": "brightestday:item/power_ring_in_hand"
+		"0": "brightestday:item/green_power_ring_in_hand",
+		"1": "brightestday:item/green_power_ring_in_hand_emission",
+		"particle": "brightestday:item/green_power_ring_in_hand"
 	},
 	"elements": [
 		{

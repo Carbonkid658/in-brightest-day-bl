@@ -1,10 +1,18 @@
 package dev.amble.core.blocks;
 
+import dev.amble.core.BrightestDayAttachments;
+import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.blockentities.LanternBlockEntity;
+import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.ringpowers.impl.ArmedRingPower;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Prediction;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -30,9 +38,16 @@ public class LanternBlock extends BaseEntityBlock {
     public static final IntegerProperty ROTATION = BlockStateProperties.ROTATION_16;
     private static final VoxelShape SHAPE = Shapes.or(Block.column(2.0F, 8.2F, 9.2F), Block.column(4.0F, 0.0F, 9.25F));
 
-    public LanternBlock(Properties properties) {
+    private final LanternCorps corps;
+
+    public LanternBlock(LanternCorps corps, Properties properties) {
         super(properties);
+        this.corps = corps;
         this.registerDefaultState(this.defaultBlockState().setValue(ROTATION, 0));
+    }
+
+    public LanternCorps corps() {
+        return this.corps;
     }
 
     public BlockState getStateForPlacement(final BlockPlaceContext context) {
@@ -66,9 +81,17 @@ public class LanternBlock extends BaseEntityBlock {
     }
 
     @Override
+    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
+        if (!(stack.getItem() instanceof PowerRingItem)) return InteractionResult.TRY_WITH_EMPTY_HAND;
+        return this.recharge(level, pos, player, stack, false);
+    }
+
+    @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
         if (!player.isSecondaryUseActive()) {
-            return super.useWithoutItem(state, level, pos, player, hitResult);
+            ItemStack slotted = BrightestDayAttachments.getRing(player);
+            if (slotted.isEmpty()) return super.useWithoutItem(state, level, pos, player, hitResult);
+            return this.recharge(level, pos, player, slotted, true);
         }
 
         if (!level.isClientSide()) {
@@ -84,5 +107,32 @@ public class LanternBlock extends BaseEntityBlock {
         }
 
         return InteractionResult.SUCCESS;
+    }
+
+    private InteractionResult recharge(Level level, BlockPos pos, Player player, ItemStack ring, boolean slotted) {
+        if (!ArmedRingPower.isArmed(player)) {
+            if (!level.isClientSide()) player.sendOverlayMessage(Component.translatable("message.brightestday.arm_to_charge"));
+            return InteractionResult.FAIL;
+        }
+
+        if (PowerRingItem.getCorps(ring).orElse(null) != this.corps) {
+            if (!level.isClientSide()) {
+                player.sendOverlayMessage(Component.translatable("message.brightestday.wrong_lantern", this.corps.displayName())
+                        .withColor(this.corps.color()));
+            }
+            return InteractionResult.FAIL;
+        }
+
+        if (PowerRingItem.getRingPower(ring) >= BrightestDayComponents.MAX_POWER) return InteractionResult.PASS;
+        if (level.isClientSide()) return InteractionResult.SUCCESS;
+
+        PowerRingItem.setMaxPower(ring);
+        if (slotted) BrightestDayAttachments.setRing(player, ring);
+
+        player.sendSystemMessage(Component.translatable(this.corps.oathKey())
+                .withStyle(ChatFormatting.BOLD)
+                .withColor(this.corps.color()));
+        level.playSound(null, pos, SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.0F, 1.0F);
+        return InteractionResult.SUCCESS_SERVER;
     }
 }

@@ -13,6 +13,7 @@ import com.zigythebird.playeranimcore.animation.layered.modifier.SpeedModifier;
 import com.zigythebird.playeranimcore.easing.EasingType;
 import com.zigythebird.playeranimcore.enums.PlayState;
 import dev.amble.BrightestDay;
+import dev.amble.client.effects.ArmedAimModifier;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import org.jspecify.annotations.Nullable;
@@ -30,6 +31,7 @@ public final class FlightAnimations {
             PlayerAnimationController controller = new PlayerAnimationController(avatar, (c, state, setter) -> PlayState.STOP);
             controller.addModifierLast(new AdjustmentModifier(bone -> FlightAnimator.adjustment(avatar, bone)));
             controller.addModifierLast(new SpeedModifier(1.0F));
+            controller.addModifierLast(new ArmedAimModifier(avatar));
             return controller;
         });
     }

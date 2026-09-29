@@ -1,7 +1,9 @@
 package dev.amble.client.hud;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.ringpowers.CorpsColors;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
@@ -32,7 +34,7 @@ public final class RingChargeHud {
         if (ring.isEmpty()) return;
 
         float charge = PowerRingItem.getChargeFraction(ring);
-        int color = ARGB.opaque(PowerRingItem.getCorps(ring).orElse(LanternCorps.GREEN).color());
+        int color = ARGB.opaque(CorpsColors.apply(PowerRingItem.getCorps(ring).orElse(LanternCorps.GREEN).color(), BrightestDayAttachments.getColorTweak(player)));
         if (charge < LOW_CHARGE && (player.tickCount / 10) % 2 == 0) {
             color = ARGB.color(96, color);
         }

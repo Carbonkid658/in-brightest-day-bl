@@ -1,8 +1,10 @@
 package dev.amble.core;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.ringpowers.ColorTweak;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
+import dev.amble.core.ringpowers.RingPowerCategory;
 import dev.amble.core.ringpowers.RingPowerInstance;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
@@ -36,7 +38,23 @@ public class BrightestDayAttachments {
                     .syncWith(ItemStack.OPTIONAL_STREAM_CODEC, AttachmentSyncPredicate.all())
                     .buildAndRegister(BrightestDay.id("ring"));
 
+    public static final AttachmentType<ColorTweak> COLOR_TWEAK =
+            AttachmentRegistry.<ColorTweak>builder()
+                    .initializer(() -> ColorTweak.NONE)
+                    .persistent(ColorTweak.CODEC)
+                    .copyOnDeath()
+                    .syncWith(ColorTweak.STREAM_CODEC, AttachmentSyncPredicate.all())
+                    .buildAndRegister(BrightestDay.id("color_tweak"));
+
     public static final int MAX_SLOTS = 4;
+
+    public static ColorTweak getColorTweak(Player player) {
+        return player.getAttachedOrElse(BrightestDayAttachments.COLOR_TWEAK, ColorTweak.NONE);
+    }
+
+    public static void setColorTweak(Player player, ColorTweak tweak) {
+        player.setAttached(BrightestDayAttachments.COLOR_TWEAK, tweak.clamped());
+    }
 
     public static ItemStack getRing(Player player) {
         return player.getAttachedOrElse(BrightestDayAttachments.RING, ItemStack.EMPTY);
@@ -56,6 +74,19 @@ public class BrightestDayAttachments {
             if (instance.is(power)) return Optional.of((RingPowerInstance<D>) instance);
         }
         return Optional.empty();
+    }
+
+    public static List<RingPowerInstance<?>> slotted(Player player) {
+        return get(player).stream()
+                .filter(instance -> instance.power().category() != RingPowerCategory.CONSTRUCT)
+                .limit(MAX_SLOTS)
+                .toList();
+    }
+
+    public static List<RingPowerInstance<?>> constructs(Player player) {
+        return get(player).stream()
+                .filter(instance -> instance.power().category() == RingPowerCategory.CONSTRUCT)
+                .toList();
     }
 
     public static boolean has(Player player, RingPower<?> power) {
@@ -81,7 +112,7 @@ public class BrightestDayAttachments {
         List<RingPowerInstance<?>> current = get(player);
         List<RingPower<?>> available = corps == null
                 ? List.of()
-                : RingPowerRegistry.forCorps(corps).stream().limit(MAX_SLOTS).toList();
+                : RingPowerRegistry.forCorps(corps);
 
         if (current.size() == available.size()) {
             boolean unchanged = true;

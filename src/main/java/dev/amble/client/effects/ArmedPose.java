@@ -1,0 +1,119 @@
+package dev.amble.client.effects;
+
+import dev.amble.core.ringpowers.CorpsColors;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+import dev.amble.client.flight.FlightRenderTypes;
+import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.ringpowers.impl.ArmedRingPower;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState;
+import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.player.PlayerModel;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Avatar;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.Map;
+import java.util.WeakHashMap;
+
+public final class ArmedPose {
+    public static final RenderStateDataKey<Float> AMOUNT = RenderStateDataKey.create(() -> "brightestday:armed_amount");
+    public static final RenderStateDataKey<Integer> COLOR = RenderStateDataKey.create(() -> "brightestday:armed_color");
+
+    public static final float AIM_INWARD = 0.1F;
+    private static final float RAISE_SPEED = 0.25F;
+
+    private static final float FIRST_PERSON_RAISE = 0.12F;
+    private static final float FIRST_PERSON_FORWARD = 0.1F;
+    private static final float GLOW_SIZE = 3.0F * VoxelRenderer.PIXEL;
+    private static final float GLOW_ALPHA = 0.55F;
+
+    private static final Map<Player, float[]> AMOUNTS = new WeakHashMap<>();
+
+    public static void init() {
+        ClientTickEvents.END_CLIENT_TICK.register(ArmedPose::tick);
+    }
+
+    private static void tick(Minecraft client) {
+        if (client.level == null || client.isPaused()) return;
+
+        for (AbstractClientPlayer player : client.level.players()) {
+            boolean armed = ArmedRingPower.isArmed(player);
+            float[] amount = AMOUNTS.get(player);
+            if (amount == null) {
+                if (!armed) continue;
+                amount = new float[2];
+                AMOUNTS.put(player, amount);
+            }
+            amount[1] = amount[0];
+            amount[0] += ((armed ? 1.0F : 0.0F) - amount[0]) * RAISE_SPEED;
+            if (!armed && amount[0] < 0.001F) AMOUNTS.remove(player);
+        }
+    }
+
+    public static float amount(Player player, float partialTicks) {
+        float[] amount = AMOUNTS.get(player);
+        return amount == null ? 0.0F : Mth.lerp(partialTicks, amount[1], amount[0]);
+    }
+
+    public static float amount(Player player) {
+        return amount(player, Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false));
+    }
+
+    public static void extract(Avatar entity, AvatarRenderState state, float partialTicks) {
+        FabricRenderState data = (FabricRenderState) state;
+        if (entity instanceof Player player) {
+            data.setData(AMOUNT, amount(player, partialTicks));
+            data.setData(COLOR, CorpsColors.of(player));
+        } else {
+            data.setData(AMOUNT, 0.0F);
+        }
+    }
+
+    public static void apply(PlayerModel model, AvatarRenderState state) {
+        float amount = ((FabricRenderState) state).getDataOrDefault(AMOUNT, 0.0F);
+        if (amount <= 0.001F) return;
+
+        boolean right = state.mainArm == HumanoidArm.RIGHT;
+        ModelPart arm = right ? model.rightArm : model.leftArm;
+        arm.xRot = Mth.lerp(amount, arm.xRot, model.head.xRot - Mth.HALF_PI);
+        arm.yRot = Mth.lerp(amount, arm.yRot, model.head.yRot + (right ? -AIM_INWARD : AIM_INWARD));
+        arm.zRot = Mth.lerp(amount, arm.zRot, 0.0F);
+    }
+
+    public static void raiseFirstPersonArm(PoseStack poseStack, HumanoidArm arm, AvatarRenderState state) {
+        float amount = ((FabricRenderState) state).getDataOrDefault(AMOUNT, 0.0F);
+        if (amount <= 0.001F || arm != state.mainArm) return;
+
+        poseStack.translate(0.0F, FIRST_PERSON_RAISE * amount, -FIRST_PERSON_FORWARD * amount);
+    }
+
+    public static void submitFirstPersonGlow(PlayerModel model, AvatarRenderState state, HumanoidArm arm, PoseStack poseStack, SubmitNodeCollector collector) {
+        FabricRenderState data = (FabricRenderState) state;
+        float amount = data.getDataOrDefault(AMOUNT, 0.0F);
+        if (amount <= 0.001F || arm != state.mainArm) return;
+
+        float pulse = 0.75F + 0.25F * Mth.sin(state.ageInTicks * 0.3F);
+        int color = ARGB.color(Math.round(GLOW_ALPHA * amount * pulse * 255), ARGB.opaque(data.getDataOrDefault(COLOR, LanternCorps.GREEN.color())));
+
+        poseStack.pushPose();
+        model.translateToHand(state, arm, poseStack);
+        poseStack.rotateDegrees(Axis.XP, -90.0F);
+        poseStack.rotateDegrees(Axis.YP, 180.0F);
+        poseStack.translate((arm == HumanoidArm.LEFT ? -1.0F : 1.0F) / 16.0F, 2.0F / 16.0F, -10.0F / 16.0F);
+        collector.submitCustomGeometry(poseStack, FlightRenderTypes.GLOW,
+                (pose, buffer) -> VoxelRenderer.cube(pose, buffer, Vec3.ZERO, GLOW_SIZE * (0.8F + 0.2F * pulse), color, false));
+        poseStack.popPose();
+    }
+
+    private ArmedPose() {}
+}

@@ -1,10 +1,9 @@
 package dev.amble.client.flight;
 
+import dev.amble.core.ringpowers.CorpsColors;
 import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranimcore.animation.layered.modifier.AdjustmentModifier;
 import com.zigythebird.playeranimcore.math.Vec3f;
-import dev.amble.core.items.PowerRingItem;
-import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
@@ -14,7 +13,6 @@ import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -28,11 +26,12 @@ public final class FlightAnimator {
 
     private static final float MAX_HOVER_LEAN = 30.0F;
     private static final float HOVER_LEAN_PER_SPEED = 30.0F;
-    private static final float FLIGHT_ENTER_TILT = 0.55F;
-    private static final float FLIGHT_EXIT_TILT = 0.3F;
+    private static final double FLIGHT_ENTER_SPEED = 0.35;
+    private static final double FLIGHT_EXIT_SPEED = 0.15;
     private static final float MAX_HEAD_PITCH = 50.0F;
     private static final float MAX_HEAD_YAW = 70.0F;
     public static final int TRANSITION_TICKS = 16;
+    private static final float FLIGHT_BODY_ANGLE = 87.5F;
     private static final float LIMB_SWING_FORWARD = 25.0F;
     private static final float LIMB_SWING_SIDE = 30.0F;
     private static final float LIMB_SWING_TURN = 1.5F;
@@ -45,7 +44,6 @@ public final class FlightAnimator {
     private static final float THIRD_PERSON_FOV_BOOST = 0.9F;
     public static final float MAX_FOV_MODIFIER = 2.0F;
     public static final float MAX_FOV = 120.0F;
-    private static final double TRAIL_SPEED = 0.6;
     private static final double SONIC_BOOM_SPEED = 3.0;
 
     private static final Map<Player, Motion> MOTIONS = new WeakHashMap<>();
@@ -55,10 +53,10 @@ public final class FlightAnimator {
 
     private static final class Motion {
         float flight, oFlight;
-        float tilt, oTilt;
         float pitch, oPitch;
         float roll, oRoll;
         float speed, oSpeed;
+        double forward;
         float bodyPitch, oBodyPitch;
         float flightBlend, oFlightBlend;
         float limbX, oLimbX;
@@ -97,7 +95,6 @@ public final class FlightAnimator {
         float turn = Mth.wrapDegrees(player.yBodyRot - player.yBodyRotO);
 
         motion.oFlight = motion.flight;
-        motion.oTilt = motion.tilt;
         motion.oPitch = motion.pitch;
         motion.oRoll = motion.roll;
         motion.oSpeed = motion.speed;
@@ -107,10 +104,8 @@ public final class FlightAnimator {
         motion.oLimbZ = motion.limbZ;
 
         motion.speed = (float) speed;
+        motion.forward = forward;
         motion.flight += ((flying ? 1.0F : 0.0F) - motion.flight) * 0.25F;
-
-        float targetTilt = flying ? Mth.clamp((float) (speed - 0.15) / 1.2F, 0.0F, 1.0F) : 0.0F;
-        motion.tilt += (targetTilt - motion.tilt) * 0.2F;
 
         float targetPitch = speed > 0.05
                 ? (float) Math.toDegrees(Math.atan2(-velocity.y, Math.max(forward, 0.0) + 0.05))
@@ -143,31 +138,13 @@ public final class FlightAnimator {
         }
 
         if (flying) {
-            int color = PowerRingItem.getWornCorps(player).orElse(LanternCorps.GREEN).color();
-            if (speed > TRAIL_SPEED) spawnTrail(client.level, player, velocity, speed, color);
+            int color = CorpsColors.of(player);
             if (speed > SONIC_BOOM_SPEED && motion.oSpeed <= SONIC_BOOM_SPEED) sonicBoom(client.level, player, velocity, color);
         }
 
         if (player == client.player && flying && (windSound == null || windSound.isStopped())) {
             windSound = new FlightWindSoundInstance(client.player);
             client.getSoundManager().play(windSound);
-        }
-    }
-
-    private static void spawnTrail(ClientLevel level, Player player, Vec3 velocity, double speed, int color) {
-        RandomSource random = level.getRandom();
-        Vec3 center = player.position().add(0.0, player.getBbHeight() * 0.5, 0.0);
-        int count = Math.min(6, Mth.ceil(speed * 1.5));
-        DustParticleOptions dust = new DustParticleOptions(color, Math.min(1.0F + (float) speed * 0.35F, 2.5F));
-
-        for (int i = 0; i < count; i++) {
-            double back = 1.0 + (i + random.nextDouble()) / count;
-            Vec3 pos = center.subtract(velocity.scale(back));
-            level.addParticle(dust,
-                    pos.x + (random.nextDouble() - 0.5) * 0.3,
-                    pos.y + (random.nextDouble() - 0.5) * 0.3,
-                    pos.z + (random.nextDouble() - 0.5) * 0.3,
-                    0.0, 0.0, 0.0);
         }
     }
 
@@ -208,13 +185,13 @@ public final class FlightAnimator {
                 motion.phase = Phase.HOVER;
             }
             case HOVER -> {
-                if (motion.tilt > FLIGHT_ENTER_TILT) {
+                if (player.isSprinting() && motion.forward > FLIGHT_ENTER_SPEED) {
                     FlightAnimations.loop(controller, FlightAnimations.FLIGHT);
                     motion.phase = Phase.FLIGHT;
                 }
             }
             case FLIGHT -> {
-                if (motion.tilt < FLIGHT_EXIT_TILT) {
+                if (!player.isSprinting() || motion.forward < FLIGHT_EXIT_SPEED) {
                     FlightAnimations.loop(controller, FlightAnimations.HOVER);
                     motion.phase = Phase.HOVER;
                 }
@@ -266,6 +243,15 @@ public final class FlightAnimator {
                 new Vec3f(x * Mth.DEG_TO_RAD, y * Mth.DEG_TO_RAD, z * Mth.DEG_TO_RAD),
                 Vec3f.ZERO
         ));
+    }
+
+    public static float bodyPitch(Player player, float partialTicks) {
+        Motion motion = MOTIONS.get(player);
+        if (motion == null) return 0.0F;
+
+        float flight = Mth.lerp(partialTicks, motion.oFlight, motion.flight);
+        float blend = ease(Mth.lerp(partialTicks, motion.oFlightBlend, motion.flightBlend));
+        return (blend * FLIGHT_BODY_ANGLE + Mth.lerp(partialTicks, motion.oBodyPitch, motion.bodyPitch)) * flight;
     }
 
     public static boolean isAnimating(Player player) {

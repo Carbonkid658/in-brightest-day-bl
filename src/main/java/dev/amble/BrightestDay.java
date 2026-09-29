@@ -3,12 +3,14 @@ package dev.amble;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayBlockEntityTypes;
 import dev.amble.core.BrightestDayBlocks;
+import dev.amble.core.BrightestDayCreativeTabs;
 import dev.amble.core.BrightestDayItems;
 import dev.amble.core.BrightestDayMenus;
 import dev.amble.core.networking.Networking;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.RingPowerTicker;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
+import dev.amble.core.shields.ShieldManager;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -29,11 +31,13 @@ public class BrightestDay implements ModInitializer {
 		BrightestDayBlocks.init();
 		BrightestDayBlockEntityTypes.init();
 		BrightestDayMenus.init();
+		BrightestDayCreativeTabs.init();
 		RingPowerRegistry.init();
 		BrightestDayAttachments.init();
 		RingPowerTicker.init();
 		Networking.init();
 		FlightRingPower.registerEvents();
+		ShieldManager.init();
 	}
 
 	public static Identifier id(String path) {

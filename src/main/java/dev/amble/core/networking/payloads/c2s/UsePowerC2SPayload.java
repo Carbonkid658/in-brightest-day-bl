@@ -30,7 +30,7 @@ public record UsePowerC2SPayload(int slot) implements CustomPacketPayload {
 
     public void handle(ServerPlayNetworking.Context context) {
         ServerPlayer player = context.player();
-        List<RingPowerInstance<?>> powers = BrightestDayAttachments.get(player);
+        List<RingPowerInstance<?>> powers = BrightestDayAttachments.slotted(player);
 
         if (slot < 0 || slot >= powers.size()) return;
         powers.get(slot).run(player);

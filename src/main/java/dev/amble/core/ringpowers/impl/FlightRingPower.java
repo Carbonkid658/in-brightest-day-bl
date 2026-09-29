@@ -4,8 +4,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.amble.BrightestDay;
 import dev.amble.core.BrightestDayAttachments;
+import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
+import dev.amble.core.ringpowers.RingPowerCategory;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,6 +26,8 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
     private static final double CRUISE_RESPONSE = 0.15;
     private static final double BOOST_RESPONSE = 0.06;
     private static final double BRAKE_RESPONSE = 0.12;
+    private static final int DRAIN_PER_SECOND = 15;
+    private static final int BOOST_DRAIN_PER_SECOND = 30;
 
     public record Data(boolean enabled) {
         public static final Codec<Data> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -33,6 +37,11 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
 
     public FlightRingPower() {
         super(BrightestDay.id("flight"), EnumSet.allOf(LanternCorps.class), Data.CODEC);
+    }
+
+    @Override
+    public RingPowerCategory category() {
+        return RingPowerCategory.MOVEMENT;
     }
 
     @Override
@@ -51,6 +60,17 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
         player.resetFallDistance();
     }
 
+    @Override
+    public int drainPerSecond(ServerPlayer player, Data data) {
+        if (!isFlying(player)) return 0;
+        return player.isSprinting() ? BOOST_DRAIN_PER_SECOND : DRAIN_PER_SECOND;
+    }
+
+    @Override
+    public void onDepleted(ServerPlayer player, Data data) {
+        setEnabled(player, false);
+    }
+
     public static boolean hasFlight(Player player) {
         return BrightestDayAttachments.has(player, RingPowerRegistry.FLIGHT);
     }
@@ -63,6 +83,7 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
 
     public static void setEnabled(Player player, boolean enabled) {
         if (!hasFlight(player)) return;
+        if (enabled && !PowerRingItem.hasCharge(player)) return;
 
         BrightestDayAttachments.setData(player, RingPowerRegistry.FLIGHT, new Data(enabled));
         if (enabled && player.getAbilities().flying) {

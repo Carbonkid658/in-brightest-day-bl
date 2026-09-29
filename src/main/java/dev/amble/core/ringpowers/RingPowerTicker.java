@@ -14,6 +14,8 @@ public final class RingPowerTicker {
     }
 
     private static void tick(MinecraftServer server) {
+        boolean drainTick = server.getTickCount() % 20 == 0;
+
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             ItemStack ring = BrightestDayAttachments.getRing(player);
             if (!ring.isEmpty() && PowerRingItem.tickCharge(ring, player.level())) {
@@ -24,7 +26,17 @@ public final class RingPowerTicker {
 
             for (RingPowerInstance<?> instance : BrightestDayAttachments.get(player)) {
                 instance.tick(player);
+                if (drainTick) drain(player, instance);
             }
+        }
+    }
+
+    private static void drain(ServerPlayer player, RingPowerInstance<?> instance) {
+        if (player.hasInfiniteMaterials()) return;
+
+        int drain = instance.drainPerSecond(player);
+        if (drain > 0 && !PowerRingItem.drainWorn(player, drain)) {
+            instance.onDepleted(player);
         }
     }
 

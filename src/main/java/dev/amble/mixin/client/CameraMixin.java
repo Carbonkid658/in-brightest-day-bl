@@ -1,8 +1,10 @@
 package dev.amble.mixin.client;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.flight.FlightAnimator;
 import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -48,9 +50,13 @@ public abstract class CameraMixin {
         if (!(this.entity instanceof Player player)) return;
 
         float roll = FlightAnimator.cameraRoll(player, partialTicks);
-        if (Math.abs(roll) < 0.01F) return;
+        float shake = player == Minecraft.getInstance().player ? BlastEffects.cameraShake(partialTicks) : 0.0F;
+        if (Math.abs(roll) < 0.01F && shake < 0.01F) return;
 
-        this.rotation.rotateZ(-roll * Mth.DEG_TO_RAD);
+        float time = player.tickCount + partialTicks;
+        this.rotation.rotateY(Mth.sin(time * 2.3F) * shake * Mth.DEG_TO_RAD);
+        this.rotation.rotateX(Mth.sin(time * 3.1F + 1.7F) * shake * Mth.DEG_TO_RAD);
+        this.rotation.rotateZ((-roll + Mth.sin(time * 2.7F + 0.6F) * shake * 0.5F) * Mth.DEG_TO_RAD);
         FORWARDS.rotate(this.rotation, this.forwards);
         UP.rotate(this.rotation, this.up);
         LEFT.rotate(this.rotation, this.left);

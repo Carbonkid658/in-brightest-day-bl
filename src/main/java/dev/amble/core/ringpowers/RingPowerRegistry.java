@@ -1,6 +1,11 @@
 package dev.amble.core.ringpowers;
 
+import dev.amble.core.ringpowers.constructs.AreaShieldConstruct;
+import dev.amble.core.ringpowers.constructs.BlastConstruct;
+import dev.amble.core.ringpowers.constructs.EntityShieldConstruct;
+import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
+import dev.amble.core.ringpowers.impl.LightRingPower;
 import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
@@ -14,6 +19,11 @@ public final class RingPowerRegistry {
     private static final Map<Identifier, RingPower<?>> REGISTRY = new LinkedHashMap<>();
 
     public static final FlightRingPower FLIGHT = register(new FlightRingPower());
+    public static final ArmedRingPower ARMED = register(new ArmedRingPower());
+    public static final LightRingPower LIGHT = register(new LightRingPower());
+    public static final BlastConstruct BLAST = register(new BlastConstruct());
+    public static final EntityShieldConstruct ENTITY_SHIELD = register(new EntityShieldConstruct());
+    public static final AreaShieldConstruct AREA_SHIELD = register(new AreaShieldConstruct());
 
     public static <T extends RingPower<?>> T register(T power) {
         if (REGISTRY.putIfAbsent(power.id(), power) != null) {

@@ -31,4 +31,12 @@ public record RingPowerInstance<D>(RingPower<D> power, D data) {
     public void tick(ServerPlayer player) {
         this.power.tick(player, this.data);
     }
+
+    public int drainPerSecond(ServerPlayer player) {
+        return this.power.drainPerSecond(player, this.data);
+    }
+
+    public void onDepleted(ServerPlayer player) {
+        this.power.onDepleted(player, this.data);
+    }
 }

@@ -1,7 +1,12 @@
 package dev.amble.client;
 
+import dev.amble.client.effects.ArmedPose;
+import dev.amble.client.effects.BlastEffects;
+import dev.amble.client.effects.ConstructClient;
+import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.flight.FlightAnimations;
 import dev.amble.client.flight.FlightAnimator;
+import dev.amble.client.flight.FlightTrail;
 import dev.amble.client.hud.RingChargeHud;
 import dev.amble.client.render.LanternBlockEntityRenderer;
 import dev.amble.client.render.SlottedRingLayer;
@@ -21,6 +26,11 @@ public class BrightestDayClient implements ClientModInitializer {
         BrightestDayKeybinds.init();
         FlightAnimator.init();
         FlightAnimations.init();
+        FlightTrail.init();
+        BlastEffects.init();
+        ShieldEffects.init();
+        ArmedPose.init();
+        ConstructClient.init();
         LanternButtons.init();
         RingChargeHud.init();
         MenuScreens.register(BrightestDayMenus.LANTERN, LanternScreen::new);

@@ -50,8 +50,12 @@ public abstract class RingPower<D> implements Identifiable, Translatable {
         return this.corps;
     }
 
+    public RingPowerCategory category() {
+        return RingPowerCategory.UTILITY;
+    }
+
     public boolean isAvailableTo(LanternCorps corps) {
-        return this.corps.contains(corps);
+        return this.corps.contains(corps) && corps.canUse(this.category());
     }
 
     public Codec<D> dataCodec() {
@@ -76,6 +80,16 @@ public abstract class RingPower<D> implements Identifiable, Translatable {
 
     @Environment(EnvType.CLIENT)
     public void tick(AbstractClientPlayer clientPlayer, D data) {}
+
+    public int useCost() {
+        return 0;
+    }
+
+    public int drainPerSecond(ServerPlayer player, D data) {
+        return 0;
+    }
+
+    public void onDepleted(ServerPlayer player, D data) {}
 
     public void onGranted(ServerPlayer player, D data) {}
 

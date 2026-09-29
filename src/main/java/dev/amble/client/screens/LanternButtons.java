@@ -22,7 +22,7 @@ public final class LanternButtons {
             if (!(screen instanceof InventoryScreen || screen instanceof CreativeModeInventoryScreen)) return;
 
             IconButton button = new IconButton(0, 0,
-                    new ItemStack(BrightestDayItems.POWER_RING),
+                    new ItemStack(BrightestDayItems.GREEN_POWER_RING),
                     Component.translatable("gui.brightestday.lantern"),
                     () -> ClientPlayNetworking.send(OpenLanternC2SPayload.INSTANCE));
 

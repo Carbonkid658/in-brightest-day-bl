@@ -9,6 +9,10 @@ repositories {
 		name = "RedlanceMinecraft"
 		url = uri("https://repo.redlance.org/public")
 	}
+	maven {
+		name = "Gegy"
+		url = uri("https://maven.gegy.dev/releases/")
+	}
 }
 
 fabricApi {
@@ -26,6 +30,7 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 	implementation("com.zigythebird.playeranim:PlayerAnimationLibFabric:${project.pal_version}")
+	compileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-api:${project.lambdynamiclights_version}")
 }
 
 processResources {

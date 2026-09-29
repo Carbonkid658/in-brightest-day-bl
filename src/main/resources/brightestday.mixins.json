@@ -13,7 +13,10 @@
 		"client.AvatarRendererMixin",
 		"client.CameraMixin",
 		"client.FirstPersonHandsAndItemsRendererMixin",
-		"client.LocalPlayerMixin"
+		"client.LocalPlayerMixin",
+		"client.MinecraftMixin",
+		"client.MouseHandlerMixin",
+		"client.PlayerModelArmedMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
