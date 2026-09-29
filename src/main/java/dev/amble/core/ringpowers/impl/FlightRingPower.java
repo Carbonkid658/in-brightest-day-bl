@@ -95,7 +95,6 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
     public static boolean isFlying(Player player) {
         return canFly(player)
                 && !player.onGround()
-                && !player.isInWater()
                 && !player.isPassenger()
                 && !player.isSpectator()
                 && !player.isSleeping()

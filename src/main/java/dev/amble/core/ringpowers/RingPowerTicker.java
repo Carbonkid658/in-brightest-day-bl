@@ -23,6 +23,7 @@ public final class RingPowerTicker {
             }
 
             BrightestDayAttachments.sync(player, PowerRingItem.getWornCorps(player).orElse(null));
+            RingBenefits.tick(player, server.getTickCount());
 
             for (RingPowerInstance<?> instance : BrightestDayAttachments.get(player)) {
                 instance.tick(player);

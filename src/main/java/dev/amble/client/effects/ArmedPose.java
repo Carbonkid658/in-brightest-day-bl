@@ -34,8 +34,13 @@ public final class ArmedPose {
 
     private static final float FIRST_PERSON_RAISE = 0.12F;
     private static final float FIRST_PERSON_FORWARD = 0.1F;
-    private static final float GLOW_SIZE = 3.0F * VoxelRenderer.PIXEL;
-    private static final float GLOW_ALPHA = 0.55F;
+    private static final float GLOW_SIZE = 1.5F * VoxelRenderer.PIXEL;
+    private static final float GLOW_CORE_WHITENESS = 0.6F;
+    private static final float GLOW_CORE_ALPHA = 0.9F;
+    private static final float GLOW_HALO_SCALE = 2.2F;
+    private static final float GLOW_HALO_ALPHA = 0.45F;
+    private static final float GLOW_OUTER_SCALE = 4.0F;
+    private static final float GLOW_OUTER_ALPHA = 0.15F;
 
     private static final Map<Player, float[]> AMOUNTS = new WeakHashMap<>();
 
@@ -97,22 +102,33 @@ public final class ArmedPose {
         poseStack.translate(0.0F, FIRST_PERSON_RAISE * amount, -FIRST_PERSON_FORWARD * amount);
     }
 
-    public static void submitFirstPersonGlow(PlayerModel model, AvatarRenderState state, HumanoidArm arm, PoseStack poseStack, SubmitNodeCollector collector) {
+    public static void submitRingGlow(PlayerModel model, AvatarRenderState state, HumanoidArm arm, PoseStack poseStack, SubmitNodeCollector collector) {
         FabricRenderState data = (FabricRenderState) state;
         float amount = data.getDataOrDefault(AMOUNT, 0.0F);
-        if (amount <= 0.001F || arm != state.mainArm) return;
+        if (amount <= 0.001F || arm != state.mainArm || state.isInvisible) return;
 
         float pulse = 0.75F + 0.25F * Mth.sin(state.ageInTicks * 0.3F);
-        int color = ARGB.color(Math.round(GLOW_ALPHA * amount * pulse * 255), ARGB.opaque(data.getDataOrDefault(COLOR, LanternCorps.GREEN.color())));
+        int color = ARGB.opaque(data.getDataOrDefault(COLOR, LanternCorps.GREEN.color()));
+        int core = glowColor(VoxelRenderer.toWhite(color, GLOW_CORE_WHITENESS), GLOW_CORE_ALPHA * amount);
+        int halo = glowColor(color, GLOW_HALO_ALPHA * amount * pulse);
+        int outer = glowColor(color, GLOW_OUTER_ALPHA * amount * pulse);
+        float size = GLOW_SIZE * amount * (0.85F + 0.15F * pulse);
 
         poseStack.pushPose();
         model.translateToHand(state, arm, poseStack);
         poseStack.rotateDegrees(Axis.XP, -90.0F);
         poseStack.rotateDegrees(Axis.YP, 180.0F);
-        poseStack.translate((arm == HumanoidArm.LEFT ? -1.0F : 1.0F) / 16.0F, 2.0F / 16.0F, -10.0F / 16.0F);
-        collector.submitCustomGeometry(poseStack, FlightRenderTypes.GLOW,
-                (pose, buffer) -> VoxelRenderer.cube(pose, buffer, Vec3.ZERO, GLOW_SIZE * (0.8F + 0.2F * pulse), color, false));
+        poseStack.translate((arm == HumanoidArm.LEFT ? -1.0F : 1.0F) / 16.0F, 0.5 / 16.0F, -12.5F / 16.0F);
+        collector.submitCustomGeometry(poseStack, FlightRenderTypes.GLOW, (pose, buffer) -> {
+            VoxelRenderer.cube(pose, buffer, Vec3.ZERO, size * GLOW_OUTER_SCALE, outer, false);
+            VoxelRenderer.cube(pose, buffer, Vec3.ZERO, size * GLOW_HALO_SCALE, halo, false);
+            VoxelRenderer.cube(pose, buffer, Vec3.ZERO, size, core, false);
+        });
         poseStack.popPose();
+    }
+
+    private static int glowColor(int color, float alpha) {
+        return ARGB.color(Math.round(Mth.clamp(alpha, 0.0F, 1.0F) * 255), color);
     }
 
     private ArmedPose() {}

@@ -3,7 +3,9 @@
 	"package": "dev.amble.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
+		"EntityMixin",
 		"ExampleMixin",
+		"LivingEntityMixin",
 		"PlayerMixin",
 		"ServerGamePacketListenerImplMixin"
 	],

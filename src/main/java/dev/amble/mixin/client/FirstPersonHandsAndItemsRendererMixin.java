@@ -34,6 +34,6 @@ public abstract class FirstPersonHandsAndItemsRendererMixin {
 
         AvatarRenderer<?> renderer = this.minecraft.getEntityRenderDispatcher().getRenderer(state);
         SlottedRingRenderer.submit(renderer.getModel(), state, arm, poseStack, submitNodeCollector, lightCoords, 0);
-        ArmedPose.submitFirstPersonGlow(renderer.getModel(), state, arm, poseStack, submitNodeCollector);
+        ArmedPose.submitRingGlow(renderer.getModel(), state, arm, poseStack, submitNodeCollector);
     }
 }

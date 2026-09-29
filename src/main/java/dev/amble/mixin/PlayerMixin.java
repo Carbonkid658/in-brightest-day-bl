@@ -35,4 +35,13 @@ public abstract class PlayerMixin extends LivingEntity {
             cir.setReturnValue(Pose.STANDING);
         }
     }
+
+    @Inject(method = "updateSwimming", at = @At("HEAD"), cancellable = true)
+    private void brightestday$noSwimmingWhileFlying(CallbackInfo ci) {
+        Player self = (Player) (Object) this;
+        if (FlightRingPower.isFlying(self)) {
+            self.setSwimming(false);
+            ci.cancel();
+        }
+    }
 }
