@@ -2,7 +2,7 @@ package dev.amble.core.items;
 
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
-import dev.amble.core.blocks.GreenLanternBlock;
+import dev.amble.core.blocks.LanternBlock;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -30,7 +30,7 @@ public class PowerRingItem extends Item {
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Block block = context.getLevel().getBlockState(context.getClickedPos()).getBlock();
-        if (block instanceof GreenLanternBlock) {
+        if (block instanceof LanternBlock) {
             if (!(context.getLevel() instanceof ServerLevel)) return InteractionResult.CONSUME;
             if (PowerRingItem.getRingPower(context.getItemInHand()) >= BrightestDayComponents.MAX_POWER) {
                 return InteractionResult.CONSUME;

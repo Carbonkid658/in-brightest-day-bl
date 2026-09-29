@@ -18,6 +18,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
     public void generateTranslations(HolderLookup.Provider registryLookup, TranslationBuilder builder) {
         builder.add(BrightestDayItems.POWER_RING, "Green Power Ring");
         builder.add(BrightestDayBlocks.GREEN_LANTERN_BLOCK, "Green Lantern");
+        builder.add(BrightestDayBlocks.YELLOW_LANTERN_BLOCK, "Yellow Lantern");
 
         builder.add("container.brightestday.lantern", "Lantern");
         builder.add("gui.brightestday.lantern", "Lantern");

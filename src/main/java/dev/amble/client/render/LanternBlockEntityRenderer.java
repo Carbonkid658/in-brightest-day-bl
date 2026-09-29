@@ -3,8 +3,8 @@ package dev.amble.client.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import dev.amble.client.render.renderstates.GreenLanternBlockEntityRenderState;
-import dev.amble.core.blockentities.GreenLanternBlockEntity;
-import dev.amble.core.blocks.GreenLanternBlock;
+import dev.amble.core.blockentities.LanternBlockEntity;
+import dev.amble.core.blocks.LanternBlock;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.block.BlockModelResolver;
 import net.minecraft.client.renderer.block.model.BlockDisplayContext;
@@ -17,12 +17,12 @@ import net.minecraft.world.level.block.state.properties.RotationSegment;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-public class GreenLanternBlockEntityRenderer
-        implements BlockEntityRenderer<GreenLanternBlockEntity, GreenLanternBlockEntityRenderState> {
+public class LanternBlockEntityRenderer
+        implements BlockEntityRenderer<LanternBlockEntity, GreenLanternBlockEntityRenderState> {
 
     private final BlockModelResolver blockModelResolver;
 
-    public GreenLanternBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
+    public LanternBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
         this.blockModelResolver = context.blockModelResolver();
     }
 
@@ -32,12 +32,12 @@ public class GreenLanternBlockEntityRenderer
     }
 
     @Override
-    public void extractRenderState(GreenLanternBlockEntity blockEntity, GreenLanternBlockEntityRenderState state,
+    public void extractRenderState(LanternBlockEntity blockEntity, GreenLanternBlockEntityRenderState state,
                                    float partialTick, Vec3 cameraPos,
                                    ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTick, cameraPos, breakProgress);
 
-        state.yRot = RotationSegment.convertToDegrees(blockEntity.getBlockState().getValue(GreenLanternBlock.ROTATION));
+        state.yRot = RotationSegment.convertToDegrees(blockEntity.getBlockState().getValue(LanternBlock.ROTATION));
 
         this.blockModelResolver.update(state.model, blockEntity.getBlockState(), BlockDisplayContext.create());
     }

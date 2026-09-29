@@ -1,7 +1,7 @@
 package dev.amble.core;
 
 import dev.amble.BrightestDay;
-import dev.amble.core.blocks.GreenLanternBlock;
+import dev.amble.core.blocks.LanternBlock;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -19,8 +19,16 @@ import net.minecraft.world.level.material.PushReaction;
 import java.util.function.Function;
 
 public class BrightestDayBlocks {
+
+
     public static final Block GREEN_LANTERN_BLOCK = registerBlockWithItem("green_lantern",
-            properties -> new GreenLanternBlock(properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
+            properties -> new LanternBlock(properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
+                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
+            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
+
+
+    public static final Block YELLOW_LANTERN_BLOCK = registerBlockWithItem("yellow_lantern",
+            properties -> new LanternBlock(properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
                     .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
             new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
 

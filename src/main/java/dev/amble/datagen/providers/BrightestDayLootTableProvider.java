@@ -16,5 +16,6 @@ public class BrightestDayLootTableProvider extends FabricBlockLootSubProvider {
     @Override
     public void generate() {
         this.dropSelf(BrightestDayBlocks.GREEN_LANTERN_BLOCK);
+        this.dropSelf(BrightestDayBlocks.YELLOW_LANTERN_BLOCK);
     }
 }

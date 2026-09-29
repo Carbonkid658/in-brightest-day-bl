@@ -1,6 +1,6 @@
 package dev.amble.core.blocks;
 
-import dev.amble.core.blockentities.GreenLanternBlockEntity;
+import dev.amble.core.blockentities.LanternBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -16,13 +16,13 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
 
-public class GreenLanternBlock extends BaseEntityBlock {
+public class LanternBlock extends BaseEntityBlock {
     public static final int MAX = RotationSegment.getMaxSegmentIndex();
     private static final int ROTATIONS = MAX + 1;
     public static final IntegerProperty ROTATION = BlockStateProperties.ROTATION_16;
     private static final VoxelShape SHAPE = Shapes.or(Block.column(2.0F, 8.2F, 9.2F), Block.column(4.0F, 0.0F, 9.25F));
 
-    public GreenLanternBlock(Properties properties) {
+    public LanternBlock(Properties properties) {
         super(properties);
         this.registerDefaultState(this.defaultBlockState().setValue(ROTATION, 0));
     }
@@ -54,6 +54,6 @@ public class GreenLanternBlock extends BaseEntityBlock {
 
     @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos worldPosition, BlockState blockState) {
-        return new GreenLanternBlockEntity(worldPosition, blockState);
+        return new LanternBlockEntity(worldPosition, blockState);
     }
 }

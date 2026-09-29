@@ -2,7 +2,7 @@ package dev.amble.client;
 
 import dev.amble.client.flight.FlightAnimator;
 import dev.amble.client.hud.RingChargeHud;
-import dev.amble.client.render.GreenLanternBlockEntityRenderer;
+import dev.amble.client.render.LanternBlockEntityRenderer;
 import dev.amble.client.render.SlottedRingLayer;
 import dev.amble.client.screens.LanternButtons;
 import dev.amble.client.screens.LanternScreen;
@@ -31,6 +31,6 @@ public class BrightestDayClient implements ClientModInitializer {
     }
 
     private void registerBlockEntityRenderers() {
-        BlockEntityRendererRegistry.register(BrightestDayBlockEntityTypes.GREEN_LANTERN_BLOCK_ENTITY_TYPE, GreenLanternBlockEntityRenderer::new);
+        BlockEntityRendererRegistry.register(BrightestDayBlockEntityTypes.LANTERN_BLOCK_ENTITY_TYPE, LanternBlockEntityRenderer::new);
     }
 }
