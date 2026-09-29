@@ -1,0 +1,7 @@
+{
+	"parent": "brightestday:block/lantern_base",
+	"textures": {
+		"0": "brightestday:block/white_lantern",
+		"1": "brightestday:block/white_lantern_emission"
+	}
+}

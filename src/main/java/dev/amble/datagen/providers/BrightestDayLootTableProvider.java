@@ -17,5 +17,12 @@ public class BrightestDayLootTableProvider extends FabricBlockLootSubProvider {
     public void generate() {
         this.dropSelf(BrightestDayBlocks.GREEN_LANTERN_BLOCK);
         this.dropSelf(BrightestDayBlocks.YELLOW_LANTERN_BLOCK);
+        this.dropSelf(BrightestDayBlocks.BLACK_LANTERN_BLOCK);
+        this.dropSelf(BrightestDayBlocks.WHITE_LANTERN_BLOCK);
+        this.dropSelf(BrightestDayBlocks.RED_LANTERN_BLOCK);
+        this.dropSelf(BrightestDayBlocks.ORANGE_LANTERN_BLOCK);
+        this.dropSelf(BrightestDayBlocks.BLUE_LANTERN_BLOCK);
+        this.dropSelf(BrightestDayBlocks.INDIGO_LANTERN_BLOCK);
+        this.dropSelf(BrightestDayBlocks.STAR_SAPPHIRE_LANTERN_BLOCK);
     }
 }

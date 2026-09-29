@@ -26,8 +26,42 @@ public class BrightestDayBlocks {
                     .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
             new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
 
-
     public static final Block YELLOW_LANTERN_BLOCK = registerBlockWithItem("yellow_lantern",
+            properties -> new LanternBlock(properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
+                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
+            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
+
+    public static final Block BLACK_LANTERN_BLOCK = registerBlockWithItem("black_lantern",
+            properties -> new LanternBlock(properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
+                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
+            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
+
+    public static final Block WHITE_LANTERN_BLOCK = registerBlockWithItem("white_lantern",
+            properties -> new LanternBlock(properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
+                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
+            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
+
+    public static final Block RED_LANTERN_BLOCK = registerBlockWithItem("red_lantern",
+            properties -> new LanternBlock(properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
+                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
+            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
+
+    public static final Block ORANGE_LANTERN_BLOCK = registerBlockWithItem("orange_lantern",
+            properties -> new LanternBlock(properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
+                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
+            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
+
+    public static final Block BLUE_LANTERN_BLOCK = registerBlockWithItem("blue_lantern",
+            properties -> new LanternBlock(properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
+                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
+            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
+
+    public static final Block INDIGO_LANTERN_BLOCK = registerBlockWithItem("indigo_lantern",
+            properties -> new LanternBlock(properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
+                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
+            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
+
+    public static final Block STAR_SAPPHIRE_LANTERN_BLOCK = registerBlockWithItem("sapphire_lantern",
             properties -> new LanternBlock(properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
                     .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
             new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));

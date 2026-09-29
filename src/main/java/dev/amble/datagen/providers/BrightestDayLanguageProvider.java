@@ -19,6 +19,13 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(BrightestDayItems.POWER_RING, "Green Power Ring");
         builder.add(BrightestDayBlocks.GREEN_LANTERN_BLOCK, "Green Lantern");
         builder.add(BrightestDayBlocks.YELLOW_LANTERN_BLOCK, "Yellow Lantern");
+        builder.add(BrightestDayBlocks.BLACK_LANTERN_BLOCK, "Black Lantern");
+        builder.add(BrightestDayBlocks.WHITE_LANTERN_BLOCK, "White Lantern");
+        builder.add(BrightestDayBlocks.RED_LANTERN_BLOCK, "Red Lantern");
+        builder.add(BrightestDayBlocks.ORANGE_LANTERN_BLOCK, "Orange Lantern");
+        builder.add(BrightestDayBlocks.BLUE_LANTERN_BLOCK, "Blue Lantern");
+        builder.add(BrightestDayBlocks.INDIGO_LANTERN_BLOCK, "Indigo Lantern");
+        builder.add(BrightestDayBlocks.STAR_SAPPHIRE_LANTERN_BLOCK, "Star Sapphire Lantern");
 
         builder.add("container.brightestday.lantern", "Lantern");
         builder.add("gui.brightestday.lantern", "Lantern");

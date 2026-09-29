@@ -2,7 +2,7 @@ package dev.amble.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import dev.amble.client.render.renderstates.GreenLanternBlockEntityRenderState;
+import dev.amble.client.render.renderstates.LanternBlockEntityRenderState;
 import dev.amble.core.blockentities.LanternBlockEntity;
 import dev.amble.core.blocks.LanternBlock;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -18,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 public class LanternBlockEntityRenderer
-        implements BlockEntityRenderer<LanternBlockEntity, GreenLanternBlockEntityRenderState> {
+        implements BlockEntityRenderer<LanternBlockEntity, LanternBlockEntityRenderState> {
 
     private final BlockModelResolver blockModelResolver;
 
@@ -27,12 +27,12 @@ public class LanternBlockEntityRenderer
     }
 
     @Override
-    public GreenLanternBlockEntityRenderState createRenderState() {
-        return new GreenLanternBlockEntityRenderState();
+    public LanternBlockEntityRenderState createRenderState() {
+        return new LanternBlockEntityRenderState();
     }
 
     @Override
-    public void extractRenderState(LanternBlockEntity blockEntity, GreenLanternBlockEntityRenderState state,
+    public void extractRenderState(LanternBlockEntity blockEntity, LanternBlockEntityRenderState state,
                                    float partialTick, Vec3 cameraPos,
                                    ModelFeatureRenderer.@Nullable CrumblingOverlay breakProgress) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTick, cameraPos, breakProgress);
@@ -43,7 +43,7 @@ public class LanternBlockEntityRenderer
     }
 
     @Override
-    public void submit(GreenLanternBlockEntityRenderState state, PoseStack poseStack,
+    public void submit(LanternBlockEntityRenderState state, PoseStack poseStack,
                        SubmitNodeCollector collector, CameraRenderState camera) {
         poseStack.pushPose();
 
