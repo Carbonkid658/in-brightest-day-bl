@@ -111,6 +111,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.arm_to_charge", "Raise your ring to the lantern to charge it.");
         builder.add("message.brightestday.no_constructs", "Your ring cannot manifest constructs.");
         builder.add("message.brightestday.ring_depleted", "Your ring is out of charge.");
+        builder.add("subtitles.brightestday.ring.charge_5_percent", "Power ring charge at 5%");
         builder.add("message.brightestday.construct_selected", "Construct: %s");
         builder.add("message.brightestday.shield_radius", "Shield radius: %s");
 
@@ -120,6 +121,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(RingPowerRegistry.BLAST.getTranslationKey(), "Blast");
         builder.add(RingPowerRegistry.ENTITY_SHIELD.getTranslationKey(), "Bubble Shield");
         builder.add(RingPowerRegistry.AREA_SHIELD.getTranslationKey(), "Dome Shield");
+        builder.add(RingPowerRegistry.WALL.getTranslationKey(), "Wall");
+        builder.add("message.brightestday.construct_size", "%s size: %s");
+        builder.add("message.brightestday.wall_blocked", "There's no room for a wall there.");
+        builder.add("block.brightestday.hard_light", "Hard Light");
         builder.add(RingPowerRegistry.TOOL_FORGE.getTranslationKey(), "Forge");
 
         builder.add("item.brightestday.construct_pickaxe", "Construct Pickaxe");
@@ -141,6 +146,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.scan_cooldown", "Scanner recharging: %ss");
         builder.add("message.brightestday.raise_ring_first", "Raise your ring first.");
         builder.add("key.brightestday.scan", "Scan (hold)");
+        builder.add("key.brightestday.dismiss_construct", "Dismiss Construct");
+        builder.add("message.brightestday.no_constructs_to_dismiss", "No constructs to dismiss.");
         builder.add("scan.brightestday.scanning", "SCANNING");
         builder.add("scan.brightestday.type", "Type: %s");
         builder.add("scan.brightestday.health", "Health: %s / %s");

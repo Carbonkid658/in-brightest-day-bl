@@ -4,9 +4,11 @@ import com.mojang.serialization.MapCodec;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerCategory;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.util.Unit;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
@@ -39,8 +41,28 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
         return this.useCost();
     }
 
-    public boolean usesRadius() {
+    public boolean usesSize() {
         return false;
+    }
+
+    public int minSize() {
+        return 1;
+    }
+
+    public int maxSize() {
+        return 1;
+    }
+
+    public int defaultSize() {
+        return this.minSize();
+    }
+
+    public int clampSize(int size) {
+        return Mth.clamp(size, this.minSize(), this.maxSize());
+    }
+
+    public Component describeSize(int size) {
+        return Component.literal(String.valueOf(this.clampSize(size)));
     }
 
     public boolean usesGesture() {

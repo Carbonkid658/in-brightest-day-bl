@@ -3,6 +3,7 @@ package dev.amble.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.BrightestDay;
 import dev.amble.client.effects.ConstructClient;
+import dev.amble.core.networking.payloads.c2s.DismissConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ToggleLightC2SPayload;
 import dev.amble.core.networking.payloads.c2s.UsePowerC2SPayload;
 import dev.amble.core.ringpowers.impl.LightRingPower;
@@ -26,6 +27,7 @@ public final class BrightestDayKeybinds {
 
     public static final KeyMapping CYCLE_CONSTRUCT = register("cycle_construct", InputConstants.KEY_R);
     public static final KeyMapping SCAN = register("scan", InputConstants.KEY_V);
+    public static final KeyMapping DISMISS_CONSTRUCT = register("dismiss_construct", InputConstants.KEY_G);
 
     private static final KeyMapping[] POWER_KEYS = {POWER_1, POWER_2, POWER_3, POWER_4};
 
@@ -57,6 +59,10 @@ public final class BrightestDayKeybinds {
 
         while (CYCLE_CONSTRUCT.consumeClick()) {
             ConstructClient.cycle();
+        }
+
+        while (DISMISS_CONSTRUCT.consumeClick()) {
+            ClientPlayNetworking.send(DismissConstructC2SPayload.INSTANCE);
         }
 
         if (TOGGLE_LIGHT != null) {

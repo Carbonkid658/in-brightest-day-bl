@@ -50,6 +50,7 @@ public final class ShieldManager {
         final Vec3 center;
         final float radius;
         final UUID caster;
+        final long createdAt;
         final int color;
         final int duration;
         final Set<ServerPlayer> watchers = Collections.newSetFromMap(new WeakHashMap<>());
@@ -66,6 +67,7 @@ public final class ShieldManager {
             this.color = color;
             this.duration = duration;
             this.strength = strength;
+            this.createdAt = level.getGameTime();
         }
 
         Vec3 center() {
@@ -200,6 +202,38 @@ public final class ShieldManager {
             if (gone && !player.hasDisconnected()) ServerPlayNetworking.send(player, new ShieldRemoveS2CPayload(shield.id));
             return gone;
         });
+    }
+
+    public static long latestCreatedAt(UUID caster) {
+        return SHIELDS.stream().filter(shield -> shield.caster.equals(caster)).mapToLong(shield -> shield.createdAt).max().orElse(Long.MIN_VALUE);
+    }
+
+    public static boolean dismissLatest(UUID caster) {
+        Shield latest = null;
+        for (Shield shield : SHIELDS) {
+            if (shield.caster.equals(caster) && (latest == null || shield.id > latest.id)) latest = shield;
+        }
+        if (latest == null) return false;
+
+        SHIELDS.remove(latest);
+        dismissed(latest);
+        return true;
+    }
+
+    public static void dismissAll(UUID caster) {
+        Iterator<Shield> iterator = SHIELDS.iterator();
+        while (iterator.hasNext()) {
+            Shield shield = iterator.next();
+            if (!shield.caster.equals(caster)) continue;
+            iterator.remove();
+            dismissed(shield);
+        }
+    }
+
+    private static void dismissed(Shield shield) {
+        forget(shield);
+        Vec3 center = shield.center();
+        shield.level.playSound(null, center.x, center.y, center.z, SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 1.0F, 1.2F);
     }
 
     private static void forget(Shield shield) {

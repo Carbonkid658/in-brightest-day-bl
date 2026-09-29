@@ -11,6 +11,7 @@ import net.minecraft.client.data.models.model.ItemModelUtils;
 import net.minecraft.client.renderer.item.ClientItem;
 import net.minecraft.client.renderer.item.ItemModel;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Blocks;
 import dev.amble.core.ringpowers.constructs.ConstructTool;
 import net.minecraft.client.data.models.model.ModelTemplates;
 import net.minecraft.client.data.models.model.TexturedModel;
@@ -21,7 +22,9 @@ public class BrightestDayModelProvider extends FabricModelProvider {
     }
 
     @Override
-    public void generateBlockStateModels(BlockModelGenerators blockModelGenerators) {}
+    public void generateBlockStateModels(BlockModelGenerators blockModelGenerators) {
+        blockModelGenerators.createNonTemplateModelBlock(BrightestDayBlocks.HARD_LIGHT, Blocks.BARRIER);
+    }
 
     @Override
     public void generateItemModels(ItemModelGenerators itemModelGenerators) {
@@ -43,6 +46,16 @@ public class BrightestDayModelProvider extends FabricModelProvider {
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.BLUE_LANTERN_BLOCK.asItem());
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.INDIGO_LANTERN_BLOCK.asItem());
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.STAR_SAPPHIRE_LANTERN_BLOCK.asItem());
+
+        for (ConstructTool tool : ConstructTool.values()) {
+            if (tool == ConstructTool.SPEAR) {
+                itemModelGenerators.itemModelOutput.accept(tool.item(), ItemModelGenerators.createFlatModelDispatch(
+                        constructModel(tool.vanillaModel()), constructModel(tool.vanillaModel() + "_in_hand")
+                ), new ClientItem.Properties(true, false, 1.95F));
+            } else {
+                itemModelGenerators.itemModelOutput.accept(tool.item(), constructModel(tool.vanillaModel()));
+            }
+        }
     }
 
     private static ItemModel.Unbaked constructModel(String vanillaModel) {

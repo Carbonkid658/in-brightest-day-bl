@@ -1,6 +1,7 @@
 package dev.amble.core;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.blocks.HardLightBlock;
 import dev.amble.core.blocks.LanternBlock;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.core.Registry;
@@ -66,6 +67,12 @@ public class BrightestDayBlocks {
             properties -> new LanternBlock(LanternCorps.STAR_SAPPHIRE, properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
                     .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
             new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
+
+    public static final Block HARD_LIGHT = registerBlock("hard_light",
+            properties -> new HardLightBlock(properties.strength(-1.0F, 3600000.0F).noLootTable().noOcclusion()
+                    .lightLevel(_ -> 8).sound(SoundType.AMETHYST).pushReaction(PushReaction.IMMOVEABLE)
+                    .isValidSpawn((state, level, pos, type) -> false).isSuffocating((state, level, pos) -> false)
+                    .isViewBlocking((state, level, pos, box) -> false)));
 
     private static <T extends Block> T registerBlockWithItem(String name, Function<BlockBehaviour.Properties, T> function, Item.Properties itemProperties) {
         T block = registerBlock(name, function);

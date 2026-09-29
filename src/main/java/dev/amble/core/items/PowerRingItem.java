@@ -58,6 +58,14 @@ public class PowerRingItem extends Item {
         return (float) getRingPower(ring) / BrightestDayComponents.MAX_POWER;
     }
 
+    public static void refund(Player player, int amount) {
+        ItemStack ring = getWornRing(player);
+        if (ring.isEmpty() || player.hasInfiniteMaterials()) return;
+
+        chargeRing(ring, amount);
+        if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
+    }
+
     public static boolean hasCharge(Player player) {
         return player.hasInfiniteMaterials() || getRingPower(getWornRing(player)) > 0;
     }

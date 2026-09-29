@@ -42,6 +42,16 @@ public final class ConstructTools {
         return stack;
     }
 
+    public static long latestCreatedAt(ServerPlayer player) {
+        long latest = Long.MIN_VALUE;
+        Inventory inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            ConstructToolData data = inventory.getItem(slot).get(BrightestDayComponents.CONSTRUCT_TOOL);
+            if (data != null && data.owner().equals(player.getUUID())) latest = Math.max(latest, data.expiresAt() - LIFETIME_TICKS);
+        }
+        return latest;
+    }
+
     public static void dissolveAll(ServerPlayer player) {
         Inventory inventory = player.getInventory();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {

@@ -6,6 +6,7 @@ import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.BrightestDayCreativeTabs;
 import dev.amble.core.BrightestDayItems;
 import dev.amble.core.BrightestDayMenus;
+import dev.amble.core.BrightestDaySounds;
 import dev.amble.core.networking.Networking;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.RingPowerTicker;
@@ -13,6 +14,7 @@ import dev.amble.core.ringpowers.impl.FlightRingPower;
 import dev.amble.core.shields.ShieldManager;
 import dev.amble.core.tractor.TractorManager;
 import dev.amble.core.ringpowers.constructs.ConstructTools;
+import dev.amble.core.walls.WallManager;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -33,6 +35,7 @@ public class BrightestDay implements ModInitializer {
 		BrightestDayBlocks.init();
 		BrightestDayBlockEntityTypes.init();
 		BrightestDayMenus.init();
+		BrightestDaySounds.init();
 		BrightestDayCreativeTabs.init();
 		RingPowerRegistry.init();
 		BrightestDayAttachments.init();
@@ -42,6 +45,7 @@ public class BrightestDay implements ModInitializer {
 		ShieldManager.init();
 		TractorManager.init();
 		ConstructTools.init();
+		WallManager.init();
 	}
 
 	public static Identifier id(String path) {

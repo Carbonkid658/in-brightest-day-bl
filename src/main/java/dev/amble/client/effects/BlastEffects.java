@@ -115,7 +115,7 @@ public final class BlastEffects {
         }
 
         if (++charge >= CHARGE_TICKS) {
-            ClientPlayNetworking.send(new FireConstructC2SPayload(ConstructClient.radius()));
+            ClientPlayNetworking.send(new FireConstructC2SPayload(ConstructClient.selectedSize(player)));
             charge = 0;
             oCharge = 0;
             chargeSound = null;

@@ -7,6 +7,7 @@ import dev.amble.client.effects.ElementAura;
 import dev.amble.client.effects.ScanEffects;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.TractorEffects;
+import dev.amble.client.effects.WallEffects;
 import dev.amble.client.forge.ForgeClient;
 import dev.amble.client.flight.FlightAnimations;
 import dev.amble.client.flight.FlightAnimator;
@@ -33,6 +34,7 @@ public class BrightestDayClient implements ClientModInitializer {
         FlightTrail.init();
         BlastEffects.init();
         ShieldEffects.init();
+        WallEffects.init();
         ArmedPose.init();
         ElementAura.init();
         TractorEffects.init();

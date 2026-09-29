@@ -1,6 +1,7 @@
 package dev.amble.client.compat;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.impl.LightRingPower;
 import dev.lambdaurora.lambdynlights.api.entity.luminance.EntityLuminance;
 import dev.lambdaurora.lambdynlights.api.item.ItemLightSourceManager;
@@ -20,7 +21,7 @@ public final class RingLightLuminance implements EntityLuminance {
 
     @Override
     public int getLuminance(ItemLightSourceManager itemLightSourceManager, Entity entity) {
-        return entity instanceof Player player && LightRingPower.isEmitting(player) ? LUMINANCE : 0;
+        return entity instanceof Player player && LightRingPower.isEmitting(player) && PowerRingItem.hasCharge(player) ? LUMINANCE : 0;
     }
 
     private RingLightLuminance() {}
