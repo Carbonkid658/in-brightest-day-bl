@@ -2,6 +2,7 @@ package dev.amble.core.tractor;
 
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.TractorS2CPayload;
+import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.ringpowers.impl.TractorBeamRingPower;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -58,7 +59,7 @@ public final class TractorManager {
     }
 
     public static void grab(ServerPlayer player) {
-        if (GRIPS.containsKey(player) || !TractorBeamRingPower.isActive(player) || !PowerRingItem.hasCharge(player)) return;
+        if (GRIPS.containsKey(player) || !TractorBeamRingPower.isActive(player) || !ArmedRingPower.isArmed(player) || !PowerRingItem.hasCharge(player)) return;
 
         Entity target = findTarget(player);
         if (target == null) return;
@@ -120,7 +121,7 @@ public final class TractorManager {
             Vec3 center = target.getBoundingBox().getCenter();
 
             boolean invalid = player.isRemoved() || !player.isAlive() || !target.isAlive() || target.isRemoved()
-                    || target.level() != player.level() || !TractorBeamRingPower.isActive(player)
+                    || target.level() != player.level() || !TractorBeamRingPower.isActive(player) || !ArmedRingPower.isArmed(player)
                     || center.distanceTo(eye) > BREAK_DISTANCE;
             boolean outOfCharge = drainTick && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, DRAIN_PER_SECOND);
             if (invalid || outOfCharge) {

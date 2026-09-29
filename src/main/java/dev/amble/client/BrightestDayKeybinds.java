@@ -22,9 +22,10 @@ public final class BrightestDayKeybinds {
     public static final KeyMapping POWER_1 = register("power_1", InputConstants.KEY_Z);
     public static final KeyMapping POWER_2 = register("power_2", InputConstants.KEY_X);
     public static final KeyMapping POWER_3 = register("power_3", InputConstants.KEY_C);
-    public static final KeyMapping POWER_4 = register("power_4", InputConstants.KEY_V);
+    public static final KeyMapping POWER_4 = register("power_4", InputConstants.UNKNOWN.getValue());
 
     public static final KeyMapping CYCLE_CONSTRUCT = register("cycle_construct", InputConstants.KEY_R);
+    public static final KeyMapping SCAN = register("scan", InputConstants.KEY_V);
 
     private static final KeyMapping[] POWER_KEYS = {POWER_1, POWER_2, POWER_3, POWER_4};
 

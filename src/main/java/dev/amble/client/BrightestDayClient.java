@@ -4,6 +4,7 @@ import dev.amble.client.effects.ArmedPose;
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.ConstructClient;
 import dev.amble.client.effects.ElementAura;
+import dev.amble.client.effects.ScanEffects;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.TractorEffects;
 import dev.amble.client.flight.FlightAnimations;
@@ -34,6 +35,7 @@ public class BrightestDayClient implements ClientModInitializer {
         ArmedPose.init();
         ElementAura.init();
         TractorEffects.init();
+        ScanEffects.init();
         ConstructClient.init();
         LanternButtons.init();
         RingChargeHud.init();

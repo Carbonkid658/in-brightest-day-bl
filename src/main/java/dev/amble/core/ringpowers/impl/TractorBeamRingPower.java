@@ -9,6 +9,7 @@ import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerCategory;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.tractor.TractorManager;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
@@ -44,6 +45,10 @@ public class TractorBeamRingPower extends RingPower<TractorBeamRingPower.Data> {
     @Override
     public boolean run(ServerPlayer player, Data data) {
         boolean active = !data.active();
+        if (active && !ArmedRingPower.isArmed(player)) {
+            player.sendOverlayMessage(Component.translatable("message.brightestday.raise_ring_first"));
+            return false;
+        }
         this.setData(player, new Data(active));
         if (!active) TractorManager.release(player);
         return true;

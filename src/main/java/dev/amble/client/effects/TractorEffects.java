@@ -4,6 +4,7 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.TractorC2SPayload;
 import dev.amble.core.networking.payloads.s2c.TractorS2CPayload;
 import dev.amble.core.ringpowers.CorpsColors;
+import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.ringpowers.impl.TractorBeamRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -59,8 +60,12 @@ public final class TractorEffects {
         LevelRenderEvents.COLLECT_SUBMITS.register(TractorEffects::render);
     }
 
+    public static boolean isBeaming(Player player) {
+        return BEAMS.containsKey(player.getId());
+    }
+
     public static boolean isTractorMode(Player player) {
-        return TractorBeamRingPower.isActive(player) && PowerRingItem.hasCharge(player);
+        return TractorBeamRingPower.isActive(player) && ArmedRingPower.isArmed(player) && PowerRingItem.hasCharge(player);
     }
 
     public static boolean onScroll(int wheel) {
@@ -118,7 +123,7 @@ public final class TractorEffects {
         }
     }
 
-    private static void beam(Vec3 from, Vec3 to, float time, int color, List<ShieldEffects.Voxel> out) {
+    public static void beam(Vec3 from, Vec3 to, float time, int color, List<ShieldEffects.Voxel> out) {
         Vec3 path = to.subtract(from);
         double length = path.length();
         if (length < 1.0E-3) return;

@@ -12,6 +12,7 @@ import dev.amble.core.ringpowers.RingPowerCategory;
 import dev.amble.core.ringpowers.RingPowerInstance;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
+import dev.amble.core.tractor.TractorManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
@@ -68,7 +69,12 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
 
     @Override
     public boolean run(ServerPlayer player, Data data) {
-        this.setData(player, data.withActive(!data.active()));
+        boolean active = !data.active();
+        this.setData(player, data.withActive(active));
+        if (!active) {
+            BrightestDayAttachments.setData(player, RingPowerRegistry.TRACTOR_BEAM, new TractorBeamRingPower.Data(false));
+            TractorManager.release(player);
+        }
         return true;
     }
 

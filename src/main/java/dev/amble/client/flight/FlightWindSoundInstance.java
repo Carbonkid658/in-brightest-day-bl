@@ -25,6 +25,11 @@ public class FlightWindSoundInstance extends AbstractTickableSoundInstance {
     }
 
     @Override
+    public boolean canStartSilent() {
+        return true;
+    }
+
+    @Override
     public void tick() {
         float blend = FlightAnimator.flightBlend(this.player);
         if (this.player.isRemoved() || !FlightRingPower.isFlying(this.player) || (this.time++ > FADE_IN_TICKS && blend < 0.01F)) {

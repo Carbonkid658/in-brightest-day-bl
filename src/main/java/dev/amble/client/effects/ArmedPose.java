@@ -7,6 +7,7 @@ import com.mojang.math.Axis;
 import dev.amble.client.flight.FlightRenderTypes;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
+import dev.amble.core.ringpowers.impl.LightRingPower;
 import dev.amble.core.ringpowers.impl.TractorBeamRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState;
@@ -31,9 +32,11 @@ public final class ArmedPose {
     public static final RenderStateDataKey<Float> AMOUNT = RenderStateDataKey.create(() -> "brightestday:armed_amount");
     public static final RenderStateDataKey<Integer> COLOR = RenderStateDataKey.create(() -> "brightestday:armed_color");
     public static final RenderStateDataKey<Boolean> CHARGED = RenderStateDataKey.create(() -> "brightestday:ring_charged");
+    public static final RenderStateDataKey<Float> ACTIVITY = RenderStateDataKey.create(() -> "brightestday:ring_activity");
 
     public static final float AIM_INWARD = 0.1F;
     private static final float RAISE_SPEED = 0.25F;
+    private static final float ACTIVITY_SPEED = 0.3F;
 
     private static final float FIRST_PERSON_RAISE = 0.12F;
     private static final float FIRST_PERSON_FORWARD = 0.1F;
@@ -57,17 +60,30 @@ public final class ArmedPose {
         if (client.level == null || client.isPaused()) return;
 
         for (AbstractClientPlayer player : client.level.players()) {
-            boolean armed = ArmedRingPower.isArmed(player) || TractorBeamRingPower.isActive(player);
+            boolean armed = ArmedRingPower.isArmed(player);
+            boolean active = armed && isUsingPower(client, player);
             float[] amount = AMOUNTS.get(player);
             if (amount == null) {
                 if (!armed) continue;
-                amount = new float[2];
+                amount = new float[4];
                 AMOUNTS.put(player, amount);
             }
             amount[1] = amount[0];
             amount[0] += ((armed ? 1.0F : 0.0F) - amount[0]) * RAISE_SPEED;
-            if (!armed && amount[0] < 0.001F) AMOUNTS.remove(player);
+            amount[3] = amount[2];
+            amount[2] += ((active ? 1.0F : 0.0F) - amount[2]) * ACTIVITY_SPEED;
+            if (!armed && amount[0] < 0.001F && amount[2] < 0.001F) AMOUNTS.remove(player);
         }
+    }
+
+    private static boolean isUsingPower(Minecraft client, Player player) {
+        if (TractorEffects.isBeaming(player) || TractorBeamRingPower.isActive(player) || LightRingPower.isEmitting(player)) return true;
+        return player == client.player && (BlastEffects.firingAmount(1.0F) > 0.01F || ScanEffects.isScanning());
+    }
+
+    public static float activity(Player player, float partialTicks) {
+        float[] amount = AMOUNTS.get(player);
+        return amount == null ? 0.0F : Mth.lerp(partialTicks, amount[3], amount[2]);
     }
 
     public static float amount(Player player, float partialTicks) {
@@ -85,6 +101,7 @@ public final class ArmedPose {
             data.setData(AMOUNT, amount(player, partialTicks));
             data.setData(COLOR, CorpsColors.of(player));
             data.setData(CHARGED, PowerRingItem.hasCharge(player));
+            data.setData(ACTIVITY, activity(player, partialTicks));
         } else {
             data.setData(AMOUNT, 0.0F);
         }
@@ -117,7 +134,7 @@ public final class ArmedPose {
 
     public static void submitRingGlow(PlayerModel model, AvatarRenderState state, HumanoidArm arm, PoseStack poseStack, SubmitNodeCollector collector) {
         FabricRenderState data = state;
-        float amount = data.getDataOrDefault(AMOUNT, 0.0F);
+        float amount = Math.min(data.getDataOrDefault(AMOUNT, 0.0F), data.getDataOrDefault(ACTIVITY, 0.0F));
         if (amount <= 0.001F || arm != state.mainArm || state.isInvisible || !data.getDataOrDefault(CHARGED, false)) return;
 
         float pulse = 0.75F + 0.25F * Mth.sin(state.ageInTicks * 0.3F);

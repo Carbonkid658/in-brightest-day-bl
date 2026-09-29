@@ -132,7 +132,7 @@ public final class BlastEffects {
     public static float firingAmount(float partialTicks) {
         float chargeProgress = Mth.lerp(partialTicks, oCharge, charge) / CHARGE_TICKS;
         float easedCharge = chargeProgress * chargeProgress * (3.0F - 2.0F * chargeProgress);
-        return Math.max(Math.max(easedCharge, Mth.lerp(partialTicks, oKick, kick)), TractorEffects.holdAmount(partialTicks));
+        return Math.max(Math.max(easedCharge, Mth.lerp(partialTicks, oKick, kick)), Math.max(TractorEffects.holdAmount(partialTicks), ScanEffects.scanAmount(partialTicks)));
     }
 
     public static float cameraShake(float partialTicks) {
