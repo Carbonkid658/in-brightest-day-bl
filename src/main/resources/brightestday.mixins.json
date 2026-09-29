@@ -19,6 +19,7 @@
 		"client.ItemStackLayerRenderStateMixin",
 		"client.LocalPlayerMixin",
 		"client.MinecraftMixin",
+		"client.RenderTargetMixin",
 		"client.MouseHandlerMixin",
 		"client.PlayerModelArmedMixin"
 	],

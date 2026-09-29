@@ -35,7 +35,7 @@ public final class CorpsColors {
         float saturation = max <= 0.0F ? 0.0F : delta / max;
         float value = max;
 
-        float s = tweak.saturation();
+        float s = Math.max(tweak.saturation(), ColorTweak.MIN_SATURATION);
         saturation *= s >= 0.0F ? 1.0F + s * MAX_SATURATION_BOOST : 1.0F + s;
 
         float v = tweak.brightness();

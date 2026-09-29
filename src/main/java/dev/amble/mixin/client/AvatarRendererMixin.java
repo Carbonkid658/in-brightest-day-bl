@@ -1,6 +1,7 @@
 package dev.amble.mixin.client;
 
 import dev.amble.client.effects.ArmedPose;
+import dev.amble.client.render.GlowAura;
 import dev.amble.client.render.SlottedRingRenderer;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
@@ -17,5 +18,6 @@ public abstract class AvatarRendererMixin {
     private void brightestday$extractSlottedRing(Avatar entity, AvatarRenderState state, float partialTicks, CallbackInfo ci) {
         SlottedRingRenderer.extract(entity, state);
         ArmedPose.extract(entity, state, partialTicks);
+        GlowAura.extract(entity, state);
     }
 }

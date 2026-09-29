@@ -43,6 +43,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.no_ring", "No ring equipped");
         builder.add("gui.brightestday.brightness", "Brightness: %s");
         builder.add("gui.brightestday.saturation", "Saturation: %s");
+        builder.add("gui.brightestday.aura", "Aura");
 
         builder.add(LanternCorps.GREEN.getTranslationKey(), "Green Lantern Corps");
         builder.add(LanternCorps.BLUE.getTranslationKey(), "Blue Lantern Corps");

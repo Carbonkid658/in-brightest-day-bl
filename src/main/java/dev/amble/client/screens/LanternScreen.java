@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import dev.amble.core.menus.LanternMenu;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -32,6 +33,8 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
     private static final int SLIDER_HEIGHT = 16;
     private static final int BRIGHTNESS_Y = 50;
     private static final int SATURATION_Y = 70;
+    private static final int AURA_Y = 4;
+    private static final int AURA_MARGIN = 7;
     private static final int INFO_X = 50;
     private static final int BAR_Y = 36;
     private static final int BAR_WIDTH = 118;
@@ -45,6 +48,7 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
 
     private @Nullable ColorTweakSlider brightness;
     private @Nullable ColorTweakSlider saturation;
+    private @Nullable Checkbox aura;
 
     public LanternScreen(LanternMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, IMAGE_WIDTH, IMAGE_HEIGHT);
@@ -64,16 +68,24 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
         ColorTweak tweak = BrightestDayAttachments.getColorTweak(this.minecraft.player);
         this.brightness = this.addRenderableWidget(new ColorTweakSlider(
                 this.leftPos + SLIDER_X, this.topPos + BRIGHTNESS_Y, SLIDER_WIDTH, SLIDER_HEIGHT,
-                "gui.brightestday.brightness", tweak.brightness(), value -> this.updateTweak()));
+                "gui.brightestday.brightness", tweak.brightness(), -1.0F, 1.0F, value -> this.updateTweak()));
         this.saturation = this.addRenderableWidget(new ColorTweakSlider(
                 this.leftPos + SLIDER_X, this.topPos + SATURATION_Y, SLIDER_WIDTH, SLIDER_HEIGHT,
-                "gui.brightestday.saturation", tweak.saturation(), value -> this.updateTweak()));
+                "gui.brightestday.saturation", tweak.saturation(), ColorTweak.MIN_SATURATION, 1.0F, value -> this.updateTweak()));
+
+        Component auraLabel = Component.translatable("gui.brightestday.aura");
+        int auraWidth = Checkbox.getBoxSize(this.font) + 4 + this.font.width(auraLabel);
+        this.aura = this.addRenderableWidget(Checkbox.builder(auraLabel, this.font)
+                .pos(this.leftPos + IMAGE_WIDTH - AURA_MARGIN - auraWidth, this.topPos + AURA_Y)
+                .selected(tweak.aura())
+                .onValueChange((checkbox, value) -> this.updateTweak())
+                .build());
     }
 
     private void updateTweak() {
-        if (this.brightness == null || this.saturation == null) return;
+        if (this.brightness == null || this.saturation == null || this.aura == null) return;
 
-        ColorTweak tweak = new ColorTweak(this.brightness.tweak(), this.saturation.tweak());
+        ColorTweak tweak = new ColorTweak(this.brightness.tweak(), this.saturation.tweak(), this.aura.selected());
         if (tweak.equals(BrightestDayAttachments.getColorTweak(this.minecraft.player))) return;
 
         BrightestDayAttachments.setColorTweak(this.minecraft.player, tweak);

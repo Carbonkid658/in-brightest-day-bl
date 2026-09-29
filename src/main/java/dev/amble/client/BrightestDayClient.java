@@ -16,6 +16,7 @@ import dev.amble.client.flight.FlightAnimator;
 import dev.amble.client.flight.FlightTrail;
 import dev.amble.client.hud.RingChargeHud;
 import dev.amble.client.render.LanternBlockEntityRenderer;
+import dev.amble.client.render.GlowAura;
 import dev.amble.client.render.SlottedRingLayer;
 import dev.amble.client.screens.LanternButtons;
 import dev.amble.client.screens.LanternScreen;
@@ -43,6 +44,7 @@ public class BrightestDayClient implements ClientModInitializer {
         ElementAura.init();
         TractorEffects.init();
         ScanEffects.init();
+        GlowAura.init();
         ForgeClient.init();
         ConstructClient.init();
         LanternButtons.init();
