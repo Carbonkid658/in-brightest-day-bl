@@ -1,5 +1,6 @@
 package dev.amble.client;
 
+import dev.amble.client.flight.FlightAnimations;
 import dev.amble.client.flight.FlightAnimator;
 import dev.amble.client.hud.RingChargeHud;
 import dev.amble.client.render.LanternBlockEntityRenderer;
@@ -19,6 +20,7 @@ public class BrightestDayClient implements ClientModInitializer {
     public void onInitializeClient() {
         BrightestDayKeybinds.init();
         FlightAnimator.init();
+        FlightAnimations.init();
         LanternButtons.init();
         RingChargeHud.init();
         MenuScreens.register(BrightestDayMenus.LANTERN, LanternScreen::new);
