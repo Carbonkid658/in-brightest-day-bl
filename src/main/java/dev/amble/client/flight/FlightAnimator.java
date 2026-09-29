@@ -31,7 +31,7 @@ public final class FlightAnimator {
     private static final float FIRST_PERSON_FOV_BOOST = 0.4F;
     private static final float THIRD_PERSON_FOV_BOOST = 0.9F;
     public static final float MAX_FOV_MODIFIER = 2.0F;
-    public static final float MAX_FOV = 170.0F;
+    public static final float MAX_FOV = 120.0F;
     private static final double TRAIL_SPEED = 0.6;
     private static final double SONIC_BOOM_SPEED = 3.0;
 
