@@ -3,6 +3,7 @@ package dev.amble.core;
 import dev.amble.BrightestDay;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.ringpowers.constructs.ConstructTool;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -10,11 +11,17 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.MaceItem;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.component.Weapon;
+import net.minecraft.util.Unit;
 
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public class BrightestDayItems {
     private static final Map<LanternCorps, Item> RINGS = new EnumMap<>(LanternCorps.class);
@@ -28,6 +35,35 @@ public class BrightestDayItems {
     public static final Item STAR_SAPPHIRE_POWER_RING = registerRing("star_sapphire_power_ring", LanternCorps.STAR_SAPPHIRE);
     public static final Item WHITE_POWER_RING = registerRing("white_power_ring", LanternCorps.WHITE);
     public static final Item BLACK_POWER_RING = registerRing("black_power_ring", LanternCorps.BLACK);
+
+    private static final Map<ConstructTool, Item> CONSTRUCT_TOOLS = new EnumMap<>(ConstructTool.class);
+
+    public static final Item CONSTRUCT_PICKAXE = registerConstructTool(ConstructTool.PICKAXE, properties -> properties.pickaxe(ToolMaterial.DIAMOND, 1.0F, -2.8F), Item::new);
+    public static final Item CONSTRUCT_AXE = registerConstructTool(ConstructTool.AXE, properties -> properties.axe(ToolMaterial.DIAMOND, 5.0F, -3.0F), Item::new);
+    public static final Item CONSTRUCT_BATTLEAXE = registerConstructTool(ConstructTool.BATTLEAXE, properties -> properties.axe(ToolMaterial.NETHERITE, 8.0F, -3.2F), Item::new);
+    public static final Item CONSTRUCT_SWORD = registerConstructTool(ConstructTool.SWORD, properties -> properties.sword(ToolMaterial.DIAMOND, 3.0F, -2.4F), Item::new);
+    public static final Item CONSTRUCT_SHOVEL = registerConstructTool(ConstructTool.SHOVEL, properties -> properties.shovel(ToolMaterial.DIAMOND, 1.5F, -3.0F), Item::new);
+    public static final Item CONSTRUCT_HOE = registerConstructTool(ConstructTool.HOE, properties -> properties.hoe(ToolMaterial.DIAMOND, -3.0F, 0.0F), Item::new);
+    public static final Item CONSTRUCT_SPEAR = registerConstructTool(ConstructTool.SPEAR, properties -> properties.spear(ToolMaterial.DIAMOND, 0.95F, 0.95F, 0.6F, 2.5F, 11.0F, 6.75F, 5.1F, 11.25F, 4.6F), Item::new);
+    public static final Item CONSTRUCT_MACE = registerConstructTool(ConstructTool.MACE, properties -> properties
+            .durability(500)
+            .component(DataComponents.TOOL, MaceItem.createToolProperties())
+            .attributes(MaceItem.createAttributes())
+            .component(DataComponents.WEAPON, new Weapon(1)), MaceItem::new);
+
+    public static Item constructTool(ConstructTool tool) {
+        return CONSTRUCT_TOOLS.get(tool);
+    }
+
+    private static Item registerConstructTool(ConstructTool tool, UnaryOperator<Item.Properties> configure, Function<Item.Properties, Item> factory) {
+        Item item = register(tool.id(), id -> factory.apply(configure.apply(new Item.Properties()
+                .setId(ResourceKey.create(Registries.ITEM, id))
+                .rarity(Rarity.EPIC)
+                .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                .component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true))));
+        CONSTRUCT_TOOLS.put(tool, item);
+        return item;
+    }
 
     public static Item ring(LanternCorps corps) {
         return RINGS.get(corps);

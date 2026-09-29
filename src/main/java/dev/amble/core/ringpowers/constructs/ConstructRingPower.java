@@ -43,6 +43,10 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
         return false;
     }
 
+    public boolean usesGesture() {
+        return false;
+    }
+
     public abstract void fire(ServerPlayer player, int radius, int color);
 
     public record Aim(Vec3 eye, Vec3 look, Vec3 end, @Nullable Entity entity) {}

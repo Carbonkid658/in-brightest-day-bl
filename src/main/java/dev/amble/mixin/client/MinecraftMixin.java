@@ -2,6 +2,7 @@ package dev.amble.mixin.client;
 
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.TractorEffects;
+import dev.amble.client.forge.ForgeClient;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -30,6 +31,6 @@ public abstract class MinecraftMixin {
 
     @Inject(method = "startUseItem", at = @At("HEAD"), cancellable = true)
     private void brightestday$fireBlast(CallbackInfo ci) {
-        if (this.player != null && BlastEffects.wantsToCharge(this.player)) ci.cancel();
+        if (this.player != null && (BlastEffects.wantsToCharge(this.player) || ForgeClient.wantsToDraw(this.player))) ci.cancel();
     }
 }

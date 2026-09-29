@@ -3,6 +3,7 @@ package dev.amble.core.ringpowers;
 import dev.amble.core.ringpowers.constructs.AreaShieldConstruct;
 import dev.amble.core.ringpowers.constructs.BlastConstruct;
 import dev.amble.core.ringpowers.constructs.EntityShieldConstruct;
+import dev.amble.core.ringpowers.constructs.ToolForgeConstruct;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import dev.amble.core.ringpowers.impl.LightRingPower;
@@ -26,6 +27,7 @@ public final class RingPowerRegistry {
     public static final BlastConstruct BLAST = register(new BlastConstruct());
     public static final EntityShieldConstruct ENTITY_SHIELD = register(new EntityShieldConstruct());
     public static final AreaShieldConstruct AREA_SHIELD = register(new AreaShieldConstruct());
+    public static final ToolForgeConstruct TOOL_FORGE = register(new ToolForgeConstruct());
     public static final TractorBeamRingPower TRACTOR_BEAM = register(new TractorBeamRingPower());
     public static final ScanRingPower SCAN = register(new ScanRingPower());
 

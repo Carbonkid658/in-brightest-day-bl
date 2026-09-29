@@ -6,6 +6,12 @@ import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.ItemModelGenerators;
+import net.minecraft.client.color.item.Dye;
+import net.minecraft.client.data.models.model.ItemModelUtils;
+import net.minecraft.client.renderer.item.ClientItem;
+import net.minecraft.client.renderer.item.ItemModel;
+import net.minecraft.resources.Identifier;
+import dev.amble.core.ringpowers.constructs.ConstructTool;
 import net.minecraft.client.data.models.model.ModelTemplates;
 import net.minecraft.client.data.models.model.TexturedModel;
 
@@ -37,5 +43,9 @@ public class BrightestDayModelProvider extends FabricModelProvider {
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.BLUE_LANTERN_BLOCK.asItem());
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.INDIGO_LANTERN_BLOCK.asItem());
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.STAR_SAPPHIRE_LANTERN_BLOCK.asItem());
+    }
+
+    private static ItemModel.Unbaked constructModel(String vanillaModel) {
+        return ItemModelUtils.tintedModel(Identifier.withDefaultNamespace("item/" + vanillaModel), new Dye(-1));
     }
 }

@@ -120,6 +120,20 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(RingPowerRegistry.BLAST.getTranslationKey(), "Blast");
         builder.add(RingPowerRegistry.ENTITY_SHIELD.getTranslationKey(), "Bubble Shield");
         builder.add(RingPowerRegistry.AREA_SHIELD.getTranslationKey(), "Dome Shield");
+        builder.add(RingPowerRegistry.TOOL_FORGE.getTranslationKey(), "Forge");
+
+        builder.add("item.brightestday.construct_pickaxe", "Construct Pickaxe");
+        builder.add("item.brightestday.construct_axe", "Construct Axe");
+        builder.add("item.brightestday.construct_battleaxe", "Construct Battleaxe");
+        builder.add("item.brightestday.construct_sword", "Construct Sword");
+        builder.add("item.brightestday.construct_shovel", "Construct Shovel");
+        builder.add("item.brightestday.construct_hoe", "Construct Hoe");
+        builder.add("item.brightestday.construct_spear", "Construct Spear");
+        builder.add("item.brightestday.construct_mace", "Construct Mace");
+        builder.add("message.brightestday.forged", "Forged %s");
+        builder.add("message.brightestday.forge_no_room", "No room for the construct.");
+        builder.add("message.brightestday.unknown_pattern", "The ring doesn't recognize that pattern.");
+
         builder.add(RingPowerRegistry.TRACTOR_BEAM.getTranslationKey(), "Tractor Beam");
         builder.add(RingPowerRegistry.SCAN.getTranslationKey(), "Scan");
 

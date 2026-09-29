@@ -2,6 +2,7 @@ package dev.amble.core.ringpowers;
 
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.ringpowers.constructs.ConstructTools;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,6 +30,7 @@ public final class RingPowerTicker {
 
             BrightestDayAttachments.sync(player, PowerRingItem.getWornCorps(player).orElse(null));
             RingBenefits.tick(player, server.getTickCount());
+            ConstructTools.tick(player, server.getTickCount());
             depleteOnEmpty(player);
 
             for (RingPowerInstance<?> instance : BrightestDayAttachments.get(player)) {

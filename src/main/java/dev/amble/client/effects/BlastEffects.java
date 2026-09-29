@@ -3,6 +3,7 @@ package dev.amble.client.effects;
 import dev.amble.core.ringpowers.CorpsColors;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import dev.amble.client.forge.ForgeClient;
 import dev.amble.client.flight.FlightRenderTypes;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.FireConstructC2SPayload;
@@ -91,7 +92,7 @@ public final class BlastEffects {
         return player.getMainHandItem().isEmpty()
                 && ArmedRingPower.isArmed(player)
                 && PowerRingItem.hasCharge(player)
-                && ArmedRingPower.selectedConstruct(player).isPresent()
+                && ArmedRingPower.selectedConstruct(player).map(construct -> !construct.usesGesture()).orElse(false)
                 && !ConstructClient.isLookingAtLantern();
     }
 
@@ -132,7 +133,8 @@ public final class BlastEffects {
     public static float firingAmount(float partialTicks) {
         float chargeProgress = Mth.lerp(partialTicks, oCharge, charge) / CHARGE_TICKS;
         float easedCharge = chargeProgress * chargeProgress * (3.0F - 2.0F * chargeProgress);
-        return Math.max(Math.max(easedCharge, Mth.lerp(partialTicks, oKick, kick)), Math.max(TractorEffects.holdAmount(partialTicks), ScanEffects.scanAmount(partialTicks)));
+        float forge = ForgeClient.drawAmount();
+        return Math.max(Math.max(easedCharge, Mth.lerp(partialTicks, oKick, kick)), Math.max(Math.max(TractorEffects.holdAmount(partialTicks), ScanEffects.scanAmount(partialTicks)), forge));
     }
 
     public static float cameraShake(float partialTicks) {

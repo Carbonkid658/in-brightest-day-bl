@@ -69,13 +69,18 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
 
     @Override
     public boolean run(ServerPlayer player, Data data) {
-        boolean active = !data.active();
-        this.setData(player, data.withActive(active));
-        if (!active) {
-            BrightestDayAttachments.setData(player, RingPowerRegistry.TRACTOR_BEAM, new TractorBeamRingPower.Data(false));
-            TractorManager.release(player);
+        if (data.active()) {
+            lower(player);
+        } else {
+            this.setData(player, data.withActive(true));
         }
         return true;
+    }
+
+    public static void lower(ServerPlayer player) {
+        data(player).ifPresent(data -> BrightestDayAttachments.setData(player, RingPowerRegistry.ARMED, data.withActive(false)));
+        BrightestDayAttachments.setData(player, RingPowerRegistry.TRACTOR_BEAM, new TractorBeamRingPower.Data(false));
+        TractorManager.release(player);
     }
 
     public static boolean isArmed(Player player) {
