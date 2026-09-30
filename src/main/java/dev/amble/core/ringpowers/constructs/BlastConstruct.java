@@ -99,10 +99,6 @@ public class BlastConstruct extends ConstructRingPower {
         }
     }
 
-    /**
-     * Picks the target closest to the crosshair within a small aim-assist cone, or a much wider
-     * cone for airborne targets so the blast homes in on things in the air.
-     */
     private static @Nullable Entity seek(ServerPlayer player, Vec3 eye, Vec3 look, BrightestDayConfig config) {
         double range = config.blastRange;
         double assistCone = Math.cos(config.blastAssistConeDegrees * Mth.DEG_TO_RAD);

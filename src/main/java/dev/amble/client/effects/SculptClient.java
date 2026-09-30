@@ -63,7 +63,6 @@ public final class SculptClient {
         ClientPlayNetworking.send(new SculptShapeC2SPayload(next.ordinal()));
     }
 
-    /** Sneak + scroll cycles the shape; plain scroll is left to the width control. */
     public static boolean onScroll(int wheel) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
@@ -75,7 +74,6 @@ public final class SculptClient {
         return true;
     }
 
-    /** Mirrors the server's trace while a cage or tube is held, so its outline can be previewed before release. */
     private static void tick(Minecraft client) {
         LocalPlayer player = client.player;
         boolean tracing = player != null && client.level != null && (shape == SculptShape.CAGE || shape == SculptShape.TUBE)

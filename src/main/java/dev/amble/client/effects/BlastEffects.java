@@ -190,7 +190,6 @@ public final class BlastEffects {
         Entity shooter = client.level.getEntity(payload.shooterId());
         Vec3 end = payload.impact();
         Vec3 start = shooter instanceof Player player ? hand(player) : end;
-        // bend the beam out along the shooter's aim so homing shots visibly curve onto their target
         Vec3 control = shooter instanceof Player player
                 ? start.add(player.getViewVector(1.0F).scale(start.distanceTo(end) * 0.5))
                 : start.lerp(end, 0.5);

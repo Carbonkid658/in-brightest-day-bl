@@ -39,7 +39,6 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
     private static final int BAR_Y = 36;
     private static final int INFO_WIDTH = 118;
     private static final int PERCENT_GAP = 4;
-    // leaves room right of the bar for "100%", so the corps name above gets the full width
     private static final int BAR_WIDTH = 90;
     private static final int BAR_HEIGHT = 5;
 

@@ -53,7 +53,6 @@ public final class RingBenefits {
         if (!active) return;
 
         if (player.isOnFire()) player.clearFire();
-        // exhaustion is blocked in PlayerMixin; this only rescues someone who put the ring on already starving
         if (player.getFoodData().getFoodLevel() < 1) player.getFoodData().setFoodLevel(1);
 
         if (serverTick % REGEN_INTERVAL == 0 && player.isAlive() && player.getHealth() < player.getMaxHealth()) {

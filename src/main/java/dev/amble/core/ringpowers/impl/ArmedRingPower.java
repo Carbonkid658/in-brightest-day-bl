@@ -123,7 +123,6 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         player.sendOverlayMessage(Component.translatable("message.brightestday.construct_selected", Component.translatable(next.getTranslationKey())));
     }
 
-    /** Selects a specific construct, as picked from the construct wheel. */
     public static void select(ServerPlayer player, Identifier id) {
         if (!PowerRingItem.hasCharge(player)) {
             player.sendOverlayMessage(Component.translatable("message.brightestday.ring_depleted"));

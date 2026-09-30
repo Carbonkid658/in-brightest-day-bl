@@ -1,5 +1,6 @@
 package dev.amble.core;
 
+import com.mojang.serialization.Codec;
 import dev.amble.BrightestDay;
 import dev.amble.core.ringpowers.ColorTweak;
 import dev.amble.core.ringpowers.CorpsSynergy;
@@ -46,6 +47,12 @@ public class BrightestDayAttachments {
                     .copyOnDeath()
                     .syncWith(ColorTweak.STREAM_CODEC, AttachmentSyncPredicate.all())
                     .buildAndRegister(BrightestDay.id("color_tweak"));
+
+    public static final AttachmentType<Long> LAST_JUMPSTART =
+            AttachmentRegistry.<Long>builder()
+                    .persistent(Codec.LONG)
+                    .copyOnDeath()
+                    .buildAndRegister(BrightestDay.id("last_jumpstart"));
 
     public static final int MAX_SLOTS = 4;
 

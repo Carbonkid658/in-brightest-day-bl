@@ -107,7 +107,6 @@ public final class WallEffects {
         }
     }
 
-    /** Follows the caster's current colour tweak while they're around, falling back to the colour it was raised with. */
     private static int liveColor(ClientLevel level, ClientWall wall) {
         if (level.getEntity(wall.casterId) instanceof Player caster && PowerRingItem.getWornCorps(caster).isPresent()) {
             return ARGB.opaque(CorpsColors.of(caster));
@@ -115,7 +114,6 @@ public final class WallEffects {
         return wall.color;
     }
 
-    /** Translucent outlines for hard light that doesn't exist yet, in the same style as raised walls. */
     public static void submitPreview(LevelRenderContext context, Vec3 camera, Iterable<BlockPos> cells, int color, float alpha) {
         int opaque = ARGB.opaque(color);
         List<ShieldEffects.Voxel> voxels = new ArrayList<>();

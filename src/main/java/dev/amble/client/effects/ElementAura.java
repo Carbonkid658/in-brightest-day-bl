@@ -51,7 +51,6 @@ public final class ElementAura {
         }
     }
 
-    /** True once the fluid reaches the top of the player's hitbox, not merely their feet or eyes. */
     private static boolean isSubmerged(Player player, TagKey<Fluid> fluid) {
         return player.getFluidHeight(fluid) >= player.getBbHeight();
     }

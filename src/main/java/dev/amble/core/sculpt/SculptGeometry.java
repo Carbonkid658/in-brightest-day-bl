@@ -24,16 +24,10 @@ public final class SculptGeometry {
     private static final int MIN_CAGE_POINTS = 6;
     private static final double MIN_CAGE_RADIUS = 2.0;
     private static final double MAX_CAGE_RADIUS = 12.0;
-    // a touch over one block so diagonal walls stay edge-connected instead of corner-touching
     private static final double TUBE_WALL = 1.4;
 
     public record Cage(Vec3 center, double radius) {}
 
-    /**
-     * Where the crosshair draws: the air cell against whatever surface is hit, or {@code depth}
-     * blocks into open air so sweeping across a gap keeps a steady distance. Returns null while
-     * looking at hard light, so gazing down at a bridge you stand on doesn't stack a layer onto it.
-     */
     public static @Nullable Vec3 trace(Level level, Entity viewer, Vec3 eye, Vec3 look, double depth) {
         BlockHitResult hit = level.clip(new ClipContext(eye, eye.add(look.scale(RANGE)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, viewer));
         if (hit.getType() == HitResult.Type.BLOCK) {
@@ -51,7 +45,6 @@ public final class SculptGeometry {
         return Vec3.directionFromRotation(0.0F, yaw);
     }
 
-    /** A flat strip {@code width} blocks wide at height {@code y}, across the direction of travel. */
     public static void ribbon(Vec3 point, int y, Vec3 direction, int width, Set<BlockPos> out) {
         Vec3 right = new Vec3(-direction.z, 0.0, direction.x);
         double half = width / 2.0;
@@ -64,11 +57,6 @@ public final class SculptGeometry {
         return Math.max(width, 2);
     }
 
-    /**
-     * A straight hollow tunnel from {@code from} to {@code to}, open at both ends. Cells are picked by
-     * their offset from the axis rather than stamped along it, so diagonal tubes stay clean. The
-     * interior floor follows the axis height; near-vertical runs become a square shaft.
-     */
     public static void tube(Vec3 from, Vec3 to, int width, Set<BlockPos> shell, Set<BlockPos> interior) {
         Vec3 a = new Vec3(Mth.floor(from.x) + 0.5, from.y, Mth.floor(from.z) + 0.5);
         Vec3 b = new Vec3(Mth.floor(to.x) + 0.5, to.y, Mth.floor(to.z) + 0.5);
@@ -120,7 +108,6 @@ public final class SculptGeometry {
         shell.removeAll(interior);
     }
 
-    /** The dome that best fits a traced ring: centred on its middle, sized by its average spread. */
     public static @Nullable Cage cage(List<Vec3> ring) {
         if (ring.size() < MIN_CAGE_POINTS) return null;
 
@@ -141,7 +128,6 @@ public final class SculptGeometry {
         return new Cage(new Vec3(Mth.floor(x) + 0.5, Mth.floor(y), Mth.floor(z) + 0.5), radius);
     }
 
-    /** A one-block hemispherical shell, ordered bottom-up so it rises out of the ground. */
     public static List<BlockPos> dome(Cage cage) {
         Vec3 center = cage.center();
         double radius = cage.radius();

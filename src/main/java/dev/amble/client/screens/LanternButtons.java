@@ -44,7 +44,6 @@ public final class LanternButtons {
         });
     }
 
-    /** Keeps the charge line under the button's name current; the tooltip is only rebuilt when the percentage changes. */
     private static void updateTooltip(Minecraft client, IconButton button, int[] shownCharge) {
         if (client.player == null) return;
         ItemStack ring = PowerRingItem.getWornRing(client.player);

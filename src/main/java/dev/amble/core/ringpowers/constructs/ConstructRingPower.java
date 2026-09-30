@@ -103,7 +103,6 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
         return false;
     }
 
-    /** How long the ring winds up before this construct fires; 0 fires the moment use is pressed. */
     public int chargeTicks() {
         return 25;
     }

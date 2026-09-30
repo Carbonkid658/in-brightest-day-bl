@@ -27,7 +27,6 @@ import java.util.UUID;
 import java.util.WeakHashMap;
 
 public final class WallManager {
-    /** Sent as the duration of walls that only collapse when told to. */
     public static final int NO_EXPIRY = -1;
     private static final int WATCH_INTERVAL = 10;
 
@@ -67,7 +66,6 @@ public final class WallManager {
         return place(level, candidates, color, caster, false) != null;
     }
 
-    /** Raises hard light that never expires on its own; returns the wall id, or -1 if nothing fit. */
     public static int raiseSustained(ServerLevel level, List<BlockPos> candidates, int color, ServerPlayer caster) {
         Wall wall = place(level, candidates, color, caster, true);
         return wall == null ? -1 : wall.id;
@@ -140,7 +138,6 @@ public final class WallManager {
                 collapse(wall, true);
                 continue;
             }
-            // spawns are sent as soon as a wall is placed, so this only catches players wandering into range
             if (wall.age % WATCH_INTERVAL == 0) syncWatchers(wall);
         }
     }

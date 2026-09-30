@@ -37,16 +37,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 
-/**
- * The hold-R construct picker: a semicircle on the left edge steered by the mouse while the camera
- * is frozen. Pushing past the rim of a slice with sub-modes latches it and fans out a sub-arc.
- */
 public final class ConstructWheel {
     private static final int INNER = 30;
     private static final int OUTER = 92;
     private static final int SUB_INNER = 98;
     private static final int SUB_OUTER = 146;
-    // pulling the cursor back inside this radius unlatches the sub-arc
     private static final int SUB_LATCH = SUB_INNER - 4;
     private static final double SUB_SLICE_DEGREES = 32.0;
     private static final double GAP_DEGREES = 1.2;
@@ -58,7 +53,6 @@ public final class ConstructWheel {
     private static final int HUD_MARGIN = 4;
     private static final int HUD_PADDING = 4;
 
-    // items, not stacks: an ItemStack can't be built until item components are bound, well after client init
     private static final Map<ConstructRingPower, Item> ICONS = Map.of(
             RingPowerRegistry.BLAST, Items.FIRE_CHARGE,
             RingPowerRegistry.BEAM, Items.END_ROD,
@@ -110,7 +104,6 @@ public final class ConstructWheel {
         return open;
     }
 
-    /** Takes over mouse movement while the wheel is open; returns true when the camera shouldn't turn. */
     public static boolean onMouse(double dx, double dy) {
         if (!open) return false;
 
@@ -137,7 +130,6 @@ public final class ConstructWheel {
 
         if (!open) {
             if (!pressed && !down) return;
-            // with nothing to pick, fall back to the server's cycle so it can explain why
             if (entries.isEmpty()) {
                 ConstructClient.cycle();
                 return;
@@ -269,7 +261,6 @@ public final class ConstructWheel {
         return Mth.clamp((int) Math.floor((angle + 90.0) / sliceWidth(count)), 0, count - 1);
     }
 
-    /** Where a latched entry's sub-arc begins: centred on the entry, but kept on screen. */
     private static double subStart(int index, int subs) {
         double span = subs * SUB_SLICE_DEGREES;
         return Mth.clamp(sliceCenter(index, entries.size()) - span / 2.0, -90.0, Math.max(90.0 - span, -90.0));
@@ -300,7 +291,6 @@ public final class ConstructWheel {
         boolean[] currentSub = new boolean[focused == null ? 0 : focused.subs().size()];
         for (int j = 0; j < currentSub.length; j++) currentSub[j] = focused.subs().get(j).current().getAsBoolean();
 
-        // the rings are painted as merged horizontal runs of small cells, sliced by angle
         for (int y = -SUB_OUTER; y < SUB_OUTER; y += CELL) {
             int runStart = 0;
             int runColor = 0;
@@ -359,7 +349,6 @@ public final class ConstructWheel {
         graphics.item(stack(icon), x, y);
     }
 
-    /** The bottom-left readout of the selected construct, its sub-mode and its size. */
     private static void extractIndicator(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;

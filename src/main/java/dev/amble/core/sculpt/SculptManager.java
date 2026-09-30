@@ -91,7 +91,6 @@ public final class SculptManager {
         player.level().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.8F, 1.6F);
     }
 
-    /** Ends the player's drawing; committing raises a cage's dome or a tube's tunnel, anything else just stops growing. */
     public static void stop(ServerPlayer player, boolean commit) {
         Session session = SESSIONS.get(player);
         if (session == null) return;
@@ -239,7 +238,6 @@ public final class SculptManager {
         }
     }
 
-    /** Charges for up to {@code count} blocks and returns how many were paid for. */
     private static int afford(ServerPlayer player, int count) {
         int cost = BrightestDayConfig.get().sculptBlockCost;
         if (player.hasInfiniteMaterials() || PowerRingItem.consumeCharge(player, cost * count)) return count;
@@ -248,7 +246,6 @@ public final class SculptManager {
         return paid;
     }
 
-    /** Dissolves the caster's oldest other sculptures until the new blocks fit under the total cap. */
     private static void makeRoom(UUID caster, Sculpture keep, int incoming) {
         while (total(caster) + incoming > BrightestDayConfig.get().sculptMaxTotalBlocks) {
             Sculpture oldest = null;
@@ -266,7 +263,6 @@ public final class SculptManager {
 
         for (Map.Entry<UUID, Integer> entry : totals.entrySet()) {
             ServerPlayer player = server.getPlayerList().getPlayer(entry.getKey());
-            // an absent caster can't be drained, so their sculptures hold until they return
             if (player == null || player.hasInfiniteMaterials()) continue;
 
             int drain = Mth.ceil((float) entry.getValue() / Math.max(1, BrightestDayConfig.get().sculptBlocksPerUpkeep));
