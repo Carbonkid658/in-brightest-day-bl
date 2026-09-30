@@ -46,6 +46,7 @@ public record ForgeStrokeC2SPayload(int action, List<Vec3> directions) implement
         if (this.action == START) ArmedRingPower.raise(player);
 
         ForgeStrokeS2CPayload relay = new ForgeStrokeS2CPayload(player.getId(), this.action, this.directions);
+        ServerPlayNetworking.send(player, relay);
         for (ServerPlayer watcher : PlayerLookup.tracking(player)) {
             if (watcher != player) ServerPlayNetworking.send(watcher, relay);
         }

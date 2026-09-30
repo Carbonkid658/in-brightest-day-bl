@@ -37,6 +37,7 @@ public record ChargeC2SPayload(boolean charging, int ticks) implements CustomPac
         if (charging) ArmedRingPower.raise(player);
 
         ChargeS2CPayload relay = new ChargeS2CPayload(player.getId(), charging, Mth.clamp(this.ticks, 1, MAX_TICKS));
+        ServerPlayNetworking.send(player, relay);
         for (ServerPlayer watcher : PlayerLookup.tracking(player)) {
             if (watcher != player) ServerPlayNetworking.send(watcher, relay);
         }

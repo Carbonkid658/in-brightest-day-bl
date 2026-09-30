@@ -12,6 +12,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.CorpsColors;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public final class WallEffects {
     private static final int POP_TICKS = 8;
@@ -61,6 +63,12 @@ public final class WallEffects {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> WALLS.clear());
         ClientTickEvents.END_CLIENT_TICK.register(WallEffects::tick);
         LevelRenderEvents.COLLECT_SUBMITS.register(WallEffects::render);
+    }
+
+    public static void snapshot(Consumer<CustomPacketPayload> out) {
+        WALLS.forEach((id, wall) -> {
+            if (wall.fade < 0) out.accept(new WallSpawnS2CPayload(id, wall.casterId, wall.cells, wall.color, wall.duration, wall.age));
+        });
     }
 
     private static void tick(Minecraft client) {

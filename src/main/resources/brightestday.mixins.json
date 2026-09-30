@@ -22,6 +22,7 @@
 		"client.MinecraftMixin",
 		"client.RenderTargetMixin",
 		"client.MouseHandlerMixin",
+		"client.FlashbackRecorderMixin",
 		"client.PlayerModelArmedMixin"
 	],
 	"injectors": {
