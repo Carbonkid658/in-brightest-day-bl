@@ -76,13 +76,15 @@ public final class BlastEffects {
 
     private static final class Blast {
         final Vec3 start;
+        final Vec3 control;
         final Vec3 end;
         final int color;
         final long seed;
         int age;
 
-        Blast(Vec3 start, Vec3 end, int color, long seed) {
+        Blast(Vec3 start, Vec3 control, Vec3 end, int color, long seed) {
             this.start = start;
+            this.control = control;
             this.end = end;
             this.color = color;
             this.seed = seed;
@@ -179,8 +181,13 @@ public final class BlastEffects {
         if (client.level == null) return;
 
         Entity shooter = client.level.getEntity(payload.shooterId());
-        Vec3 start = shooter instanceof Player player ? hand(player) : payload.impact();
-        BLASTS.add(new Blast(start, payload.impact(), ARGB.opaque(payload.color()), client.level.getRandom().nextLong()));
+        Vec3 end = payload.impact();
+        Vec3 start = shooter instanceof Player player ? hand(player) : end;
+        // bend the beam out along the shooter's aim so homing shots visibly curve onto their target
+        Vec3 control = shooter instanceof Player player
+                ? start.add(player.getViewVector(1.0F).scale(start.distanceTo(end) * 0.5))
+                : start.lerp(end, 0.5);
+        BLASTS.add(new Blast(start, control, end, ARGB.opaque(payload.color()), client.level.getRandom().nextLong()));
     }
 
     private static Vec3 hand(Player player) {
@@ -283,7 +290,8 @@ public final class BlastEffects {
             float half = BEAM_VOXEL_SIZE * life * (1.0F - 0.4F * t) * 0.5F;
             if (half < VoxelRenderer.PIXEL * 0.25F) continue;
 
-            centers.add(VoxelRenderer.snap(blast.start.lerp(blast.end, t).add(jitter)).subtract(camera));
+            Vec3 point = blast.start.lerp(blast.control, t).lerp(blast.control.lerp(blast.end, t), t);
+            centers.add(VoxelRenderer.snap(point.add(jitter)).subtract(camera));
             halves.add(VoxelRenderer.snapSize(half));
             colors.add(tint);
         }
