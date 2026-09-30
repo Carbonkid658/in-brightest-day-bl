@@ -8,7 +8,9 @@ import dev.amble.core.ringpowers.constructs.HealBeamConstruct;
 import dev.amble.core.ringpowers.constructs.SculptConstruct;
 import dev.amble.core.ringpowers.constructs.ToolForgeConstruct;
 import dev.amble.core.ringpowers.constructs.WallConstruct;
+import dev.amble.core.ringpowers.impl.AcidRingPower;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
+import dev.amble.core.ringpowers.impl.ConcussiveRingPower;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import dev.amble.core.ringpowers.impl.LightRingPower;
 import dev.amble.core.ringpowers.impl.ScanRingPower;
@@ -39,6 +41,8 @@ public final class RingPowerRegistry {
     public static final ToolForgeConstruct TOOL_FORGE = register(new ToolForgeConstruct());
     public static final TractorBeamRingPower TRACTOR_BEAM = register(new TractorBeamRingPower());
     public static final ScanRingPower SCAN = register(new ScanRingPower());
+    public static final ConcussiveRingPower CONCUSSIVE = register(new ConcussiveRingPower());
+    public static final AcidRingPower ACID = register(new AcidRingPower());
 
     public static <T extends RingPower<?>> T register(T power) {
         if (REGISTRY.putIfAbsent(power.id(), power) != null) {

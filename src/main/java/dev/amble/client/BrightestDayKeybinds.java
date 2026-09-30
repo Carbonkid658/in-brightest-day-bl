@@ -2,9 +2,13 @@ package dev.amble.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.BrightestDay;
+import dev.amble.core.BrightestDayAttachments;
+import dev.amble.core.networking.payloads.c2s.AcidC2SPayload;
+import dev.amble.core.networking.payloads.c2s.ConcussiveC2SPayload;
 import dev.amble.core.networking.payloads.c2s.DismissConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ToggleLightC2SPayload;
 import dev.amble.core.networking.payloads.c2s.UsePowerC2SPayload;
+import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.LightRingPower;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -27,6 +31,10 @@ public final class BrightestDayKeybinds {
     public static final KeyMapping CYCLE_CONSTRUCT = register("cycle_construct", InputConstants.KEY_R);
     public static final KeyMapping SCAN = register("scan", InputConstants.KEY_V);
     public static final KeyMapping DISMISS_CONSTRUCT = register("dismiss_construct", InputConstants.KEY_G);
+    public static final KeyMapping CONCUSSIVE_BLAST = register("concussive_blast", InputConstants.KEY_B);
+    public static final KeyMapping ACID_VOMIT = register("acid_vomit", InputConstants.KEY_N);
+
+    private static boolean spewing;
 
     private static final KeyMapping[] POWER_KEYS = {POWER_1, POWER_2, POWER_3, POWER_4};
 
@@ -58,6 +66,16 @@ public final class BrightestDayKeybinds {
 
         while (DISMISS_CONSTRUCT.consumeClick()) {
             ClientPlayNetworking.send(DismissConstructC2SPayload.INSTANCE);
+        }
+
+        while (CONCUSSIVE_BLAST.consumeClick()) {
+            if (BrightestDayAttachments.get(client.player, RingPowerRegistry.CONCUSSIVE).isPresent()) ClientPlayNetworking.send(ConcussiveC2SPayload.INSTANCE);
+        }
+
+        boolean spew = ACID_VOMIT.isDown() && client.gui.screen() == null && BrightestDayAttachments.get(client.player, RingPowerRegistry.ACID).isPresent();
+        if (spew != spewing) {
+            spewing = spew;
+            ClientPlayNetworking.send(new AcidC2SPayload(spew));
         }
 
         if (TOGGLE_LIGHT != null) {

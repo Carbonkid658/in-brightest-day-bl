@@ -66,6 +66,12 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
                 Component.translatable("gui.brightestday.inventory"),
                 this::returnToInventory
         ));
+        this.addRenderableWidget(new IconButton(
+                this.leftPos - IconButton.SIZE - 2, this.topPos + 6 + IconButton.SIZE,
+                new ItemStack(Items.ENDER_EYE),
+                Component.translatable("gui.brightestday.eyes"),
+                () -> this.minecraft.gui.setScreen(new EyesScreen(this))
+        ));
 
         ColorTweak tweak = BrightestDayAttachments.getColorTweak(this.minecraft.player);
         this.brightness = this.addRenderableWidget(new ColorTweakSlider(

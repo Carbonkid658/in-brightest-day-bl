@@ -6,6 +6,8 @@ import dev.amble.client.effects.HealBeamEffects;
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.ConstructClient;
 import dev.amble.client.effects.ElementAura;
+import dev.amble.client.effects.AcidEffects;
+import dev.amble.client.effects.ConcussiveEffects;
 import dev.amble.client.effects.ScanEffects;
 import dev.amble.client.effects.SculptClient;
 import dev.amble.client.wheel.ConstructWheel;
@@ -19,6 +21,7 @@ import dev.amble.client.flight.FlightTrail;
 import dev.amble.client.hud.RingChargeHud;
 import dev.amble.client.render.LanternBlockEntityRenderer;
 import dev.amble.client.render.GlowAura;
+import dev.amble.client.render.EyeGlowLayer;
 import dev.amble.client.render.SlottedRingLayer;
 import dev.amble.client.screens.LanternButtons;
 import dev.amble.client.screens.LanternScreen;
@@ -51,12 +54,15 @@ public class BrightestDayClient implements ClientModInitializer {
         ConstructClient.init();
         SculptClient.init();
         ConstructWheel.init();
+        ConcussiveEffects.init();
+        AcidEffects.init();
         LanternButtons.init();
         RingChargeHud.init();
         MenuScreens.register(BrightestDayMenus.LANTERN, LanternScreen::new);
         LivingEntityRenderLayerRegistrationCallback.EVENT.register((entityType, entityRenderer, helper, context) -> {
             if (entityRenderer instanceof AvatarRenderer<?> avatarRenderer) {
                 helper.register(new SlottedRingLayer(avatarRenderer));
+                helper.register(new EyeGlowLayer(avatarRenderer));
             }
         });
         registerBlockEntityRenderers();

@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import dev.amble.BrightestDay;
 import dev.amble.core.ringpowers.ColorTweak;
 import dev.amble.core.ringpowers.CorpsSynergy;
+import dev.amble.core.ringpowers.EyePaint;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerCategory;
@@ -48,6 +49,14 @@ public class BrightestDayAttachments {
                     .syncWith(ColorTweak.STREAM_CODEC, AttachmentSyncPredicate.all())
                     .buildAndRegister(BrightestDay.id("color_tweak"));
 
+    public static final AttachmentType<EyePaint> EYES =
+            AttachmentRegistry.<EyePaint>builder()
+                    .initializer(() -> EyePaint.EMPTY)
+                    .persistent(EyePaint.CODEC)
+                    .copyOnDeath()
+                    .syncWith(EyePaint.STREAM_CODEC, AttachmentSyncPredicate.all())
+                    .buildAndRegister(BrightestDay.id("eyes"));
+
     public static final AttachmentType<Long> LAST_JUMPSTART =
             AttachmentRegistry.<Long>builder()
                     .persistent(Codec.LONG)
@@ -55,6 +64,14 @@ public class BrightestDayAttachments {
                     .buildAndRegister(BrightestDay.id("last_jumpstart"));
 
     public static final int MAX_SLOTS = 4;
+
+    public static EyePaint getEyes(Player player) {
+        return player.getAttachedOrElse(BrightestDayAttachments.EYES, EyePaint.EMPTY);
+    }
+
+    public static void setEyes(Player player, EyePaint eyes) {
+        player.setAttached(BrightestDayAttachments.EYES, eyes.sanitized());
+    }
 
     public static ColorTweak getColorTweak(Player player) {
         return player.getAttachedOrElse(BrightestDayAttachments.COLOR_TWEAK, ColorTweak.NONE);

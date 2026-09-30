@@ -1,5 +1,7 @@
 package dev.amble.core.networking;
 
+import dev.amble.core.networking.payloads.c2s.AcidC2SPayload;
+import dev.amble.core.networking.payloads.c2s.ConcussiveC2SPayload;
 import dev.amble.core.networking.payloads.c2s.CycleConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.DismissConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.FireConstructC2SPayload;
@@ -9,14 +11,17 @@ import dev.amble.core.networking.payloads.c2s.OpenLanternC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ScanC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SculptShapeC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SelectConstructC2SPayload;
+import dev.amble.core.networking.payloads.c2s.SetEyesC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SetColorTweakC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SetFlightC2SPayload;
 import dev.amble.core.networking.payloads.c2s.StopBeamC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ToggleLightC2SPayload;
 import dev.amble.core.networking.payloads.c2s.TractorC2SPayload;
 import dev.amble.core.networking.payloads.c2s.UsePowerC2SPayload;
+import dev.amble.core.networking.payloads.s2c.AcidS2CPayload;
 import dev.amble.core.networking.payloads.s2c.BeamS2CPayload;
 import dev.amble.core.networking.payloads.s2c.BlastS2CPayload;
+import dev.amble.core.networking.payloads.s2c.ConcussiveS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ForgeStrokeS2CPayload;
 import dev.amble.core.networking.payloads.s2c.HealBeamS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ScanS2CPayload;
@@ -52,6 +57,11 @@ public class Networking {
         PayloadTypeRegistry.serverboundPlay().register(StopBeamC2SPayload.TYPE, StopBeamC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SculptShapeC2SPayload.TYPE, SculptShapeC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SelectConstructC2SPayload.TYPE, SelectConstructC2SPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ConcussiveC2SPayload.TYPE, ConcussiveC2SPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(AcidC2SPayload.TYPE, AcidC2SPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(SetEyesC2SPayload.TYPE, SetEyesC2SPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ConcussiveS2CPayload.TYPE, ConcussiveS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(AcidS2CPayload.TYPE, AcidS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(BeamS2CPayload.TYPE, BeamS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(HealBeamS2CPayload.TYPE, HealBeamS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(BlastS2CPayload.TYPE, BlastS2CPayload.CODEC);
@@ -72,6 +82,9 @@ public class Networking {
         ServerPlayNetworking.registerGlobalReceiver(StopBeamC2SPayload.TYPE, StopBeamC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(SculptShapeC2SPayload.TYPE, SculptShapeC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(SelectConstructC2SPayload.TYPE, SelectConstructC2SPayload::handle);
+        ServerPlayNetworking.registerGlobalReceiver(ConcussiveC2SPayload.TYPE, ConcussiveC2SPayload::handle);
+        ServerPlayNetworking.registerGlobalReceiver(AcidC2SPayload.TYPE, AcidC2SPayload::handle);
+        ServerPlayNetworking.registerGlobalReceiver(SetEyesC2SPayload.TYPE, SetEyesC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(ToggleLightC2SPayload.TYPE, ToggleLightC2SPayload::handle);
     }
 }

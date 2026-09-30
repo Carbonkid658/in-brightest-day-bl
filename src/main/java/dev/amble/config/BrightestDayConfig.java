@@ -73,6 +73,30 @@ public class BrightestDayConfig {
     @SerialEntry
     public int wallChargeTicks = 6;
 
+    @SerialEntry
+    public double concussiveRange = 6.0;
+    @SerialEntry
+    public double concussiveConeDegrees = 45.0;
+    @SerialEntry
+    public double concussiveKnockback = 2.2;
+    @SerialEntry
+    public float concussiveDamage = 3.0F;
+    @SerialEntry
+    public int concussiveCost = 25;
+    @SerialEntry
+    public int concussiveCooldownTicks = 20;
+
+    @SerialEntry
+    public double acidRange = 6.0;
+    @SerialEntry
+    public float acidDamage = 2.0F;
+    @SerialEntry
+    public int acidFireSeconds = 3;
+    @SerialEntry
+    public int acidArmorWear = 2;
+    @SerialEntry
+    public int acidDrainPerSecond = 15;
+
     public static BrightestDayConfig get() {
         return HANDLER.instance();
     }
