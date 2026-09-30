@@ -1,5 +1,6 @@
 package dev.amble.core.beams;
 
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.HealBeamS2CPayload;
 import dev.amble.core.ringpowers.RingPowerRegistry;
@@ -19,12 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class HealBeamManager {
-    public static final int MAX_TICKS = 200;
     public static final double RANGE = 24.0;
     private static final double BREAK_DISTANCE = RANGE + 4.0;
     private static final int HEAL_INTERVAL = 10;
-    private static final float HEAL_AMOUNT = 1.0F;
-    private static final int DRAIN_PER_SECOND = 10;
 
     private static final Map<ServerPlayer, HealBeam> BEAMS = new HashMap<>();
 
@@ -66,16 +64,16 @@ public final class HealBeamManager {
             LivingEntity target = beam.target;
             boolean selected = ArmedRingPower.selectedConstruct(player).orElse(null) == RingPowerRegistry.HEAL_BEAM;
             boolean outOfCharge = !PowerRingItem.hasCharge(player)
-                    || drainTick && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, DRAIN_PER_SECOND);
+                    || drainTick && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, BrightestDayConfig.get().healBeamDrainPerSecond);
             boolean targetLost = !target.isAlive() || target.isRemoved() || target.level() != player.level()
                     || target.distanceTo(player) > BREAK_DISTANCE;
-            if (++beam.age > MAX_TICKS || !player.isAlive() || !ArmedRingPower.isArmed(player) || !selected || outOfCharge || targetLost) {
+            if (++beam.age > BrightestDayConfig.get().healBeamMaxTicks || !player.isAlive() || !ArmedRingPower.isArmed(player) || !selected || outOfCharge || targetLost) {
                 stop(player);
                 continue;
             }
 
             if (beam.age % HEAL_INTERVAL == 0) {
-                target.heal(HEAL_AMOUNT);
+                target.heal(BrightestDayConfig.get().healBeamAmount);
                 if (target.isOnFire()) target.clearFire();
             }
         }

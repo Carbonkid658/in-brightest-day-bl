@@ -1,5 +1,6 @@
 package dev.amble.mixin;
 
+import dev.amble.core.ringpowers.RingBenefits;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -18,6 +19,11 @@ public abstract class PlayerMixin extends LivingEntity {
 
     protected PlayerMixin(EntityType<? extends LivingEntity> type, Level level) {
         super(type, level);
+    }
+
+    @Inject(method = "causeFoodExhaustion", at = @At("HEAD"), cancellable = true)
+    private void brightestday$ringSustains(float amount, CallbackInfo ci) {
+        if (RingBenefits.isActive((Player) (Object) this)) ci.cancel();
     }
 
     @Inject(method = "travel", at = @At("HEAD"), cancellable = true)

@@ -1,6 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
 import dev.amble.BrightestDay;
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.shields.ShieldManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -23,7 +24,7 @@ public class EntityShieldConstruct extends ConstructRingPower {
 
     @Override
     public int chargeTicks() {
-        return 6;
+        return BrightestDayConfig.get().entityShieldChargeTicks;
     }
 
     @Override

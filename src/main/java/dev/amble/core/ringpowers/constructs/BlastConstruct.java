@@ -1,6 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
 import dev.amble.BrightestDay;
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.BlastS2CPayload;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -20,15 +21,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 public class BlastConstruct extends ConstructRingPower {
-    private static final double RANGE = 48.0;
-    private static final double BLAST_RADIUS = 5.0;
-    private static final double KNOCKBACK = 1.8;
     private static final double LIFT = 0.35;
-    private static final float SPLASH_DAMAGE = 4.0F;
-    private static final float DIRECT_DAMAGE = 6.0F;
-    private static final float EXPLOSION_POWER = 2.5F;
-    private static final double ASSIST_CONE = Math.cos(6.0 * Mth.DEG_TO_RAD);
-    private static final double HOMING_CONE = Math.cos(22.0 * Mth.DEG_TO_RAD);
     private static final int USE_COST = 250;
 
     private static final ExplosionDamageCalculator BLOCKS_ONLY = new ExplosionDamageCalculator() {
@@ -53,38 +46,47 @@ public class BlastConstruct extends ConstructRingPower {
     }
 
     @Override
+    public int chargeTicks() {
+        return BrightestDayConfig.get().blastChargeTicks;
+    }
+
+    @Override
     public void fire(ServerPlayer player, int radius, int color) {
         ServerLevel level = player.level();
-        Aim aim = aim(player, RANGE);
+        BrightestDayConfig config = BrightestDayConfig.get();
+        double range = config.blastRange;
+        double blastRadius = config.blastRadius;
+        Aim aim = aim(player, range);
         Vec3 impact = aim.end();
         Entity direct = aim.entity();
         if (direct == null) {
-            direct = seek(player, aim.eye(), aim.look());
+            direct = seek(player, aim.eye(), aim.look(), config);
             if (direct != null) impact = direct.getBoundingBox().getCenter();
         }
-        boolean hit = direct != null || aim.eye().distanceTo(impact) < RANGE - 1.0E-3;
+        boolean hit = direct != null || aim.eye().distanceTo(impact) < range - 1.0E-3;
         DamageSource source = level.damageSources().playerAttack(player);
 
-        for (Entity entity : level.getEntities(player, new AABB(impact, impact).inflate(BLAST_RADIUS))) {
+        for (Entity entity : level.getEntities(player, new AABB(impact, impact).inflate(blastRadius))) {
             Vec3 center = entity.getBoundingBox().getCenter();
             double distance = center.distanceTo(impact);
-            if (distance > BLAST_RADIUS && entity != direct) continue;
+            if (distance > blastRadius && entity != direct) continue;
 
-            double falloff = entity == direct ? 1.0 : 1.0 - distance / BLAST_RADIUS;
+            double falloff = entity == direct ? 1.0 : 1.0 - distance / blastRadius;
             if (entity instanceof LivingEntity living) {
-                float damage = (float) (SPLASH_DAMAGE * falloff) + (entity == direct ? DIRECT_DAMAGE : 0.0F);
+                float damage = (float) (config.blastSplashDamage * falloff) + (entity == direct ? config.blastDirectDamage : 0.0F);
                 living.hurtServer(level, source, damage);
             }
 
             Vec3 away = center.subtract(impact);
             away = away.lengthSqr() < 1.0E-4 ? aim.look() : away.normalize();
-            Vec3 push = away.add(aim.look()).normalize().scale(KNOCKBACK * falloff).add(0.0, LIFT * falloff, 0.0);
+            Vec3 push = away.add(aim.look()).normalize().scale(config.blastKnockback * falloff).add(0.0, LIFT * falloff, 0.0);
             entity.push(push);
             entity.needsSync = true;
         }
 
         if (hit) {
-            level.explode(player, null, BLOCKS_ONLY, impact.x, impact.y, impact.z, EXPLOSION_POWER, false, Level.ExplosionInteraction.TNT);
+            level.explode(player, null, BLOCKS_ONLY, impact.x, impact.y, impact.z, config.blastExplosionPower, false,
+                    config.blastBreaksBlocks ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE);
         }
 
         level.playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.BREEZE_SHOOT, SoundSource.PLAYERS, 1.0F, 1.4F);
@@ -101,18 +103,21 @@ public class BlastConstruct extends ConstructRingPower {
      * Picks the target closest to the crosshair within a small aim-assist cone, or a much wider
      * cone for airborne targets so the blast homes in on things in the air.
      */
-    private static @Nullable Entity seek(ServerPlayer player, Vec3 eye, Vec3 look) {
+    private static @Nullable Entity seek(ServerPlayer player, Vec3 eye, Vec3 look, BrightestDayConfig config) {
+        double range = config.blastRange;
+        double assistCone = Math.cos(config.blastAssistConeDegrees * Mth.DEG_TO_RAD);
+        double homingCone = Math.cos(config.blastHomingConeDegrees * Mth.DEG_TO_RAD);
         ServerLevel level = player.level();
         Entity best = null;
         double bestCos = -1.0;
-        for (Entity entity : level.getEntities(player, new AABB(eye, eye).inflate(RANGE),
+        for (Entity entity : level.getEntities(player, new AABB(eye, eye).inflate(range),
                 entity -> entity instanceof LivingEntity && entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !player.isAlliedTo(entity))) {
             Vec3 to = entity.getBoundingBox().getCenter().subtract(eye);
             double distance = to.length();
-            if (distance > RANGE || distance < 1.0E-3) continue;
+            if (distance > range || distance < 1.0E-3) continue;
 
             double cos = to.dot(look) / distance;
-            double cone = isAirborne(entity) ? HOMING_CONE : ASSIST_CONE;
+            double cone = isAirborne(entity) ? homingCone : assistCone;
             if (cos < cone || cos <= bestCos) continue;
             if (!player.hasLineOfSight(entity)) continue;
 

@@ -1,5 +1,6 @@
 package dev.amble.core.walls;
 
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.networking.payloads.s2c.WallRemoveS2CPayload;
 import dev.amble.core.networking.payloads.s2c.WallSpawnS2CPayload;
@@ -26,7 +27,6 @@ import java.util.UUID;
 import java.util.WeakHashMap;
 
 public final class WallManager {
-    public static final int WALL_TICKS = 400;
     /** Sent as the duration of walls that only collapse when told to. */
     public static final int NO_EXPIRY = -1;
     private static final int WATCH_INTERVAL = 10;
@@ -135,7 +135,7 @@ public final class WallManager {
         Iterator<Wall> iterator = WALLS.iterator();
         while (iterator.hasNext()) {
             Wall wall = iterator.next();
-            if (++wall.age >= WALL_TICKS && !wall.sustained) {
+            if (++wall.age >= BrightestDayConfig.get().wallLifetimeTicks && !wall.sustained) {
                 iterator.remove();
                 collapse(wall, true);
                 continue;
@@ -165,7 +165,7 @@ public final class WallManager {
         Set<ServerPlayer> tracking = new HashSet<>(PlayerLookup.tracking(wall.level, wall.cells.getFirst()));
         for (ServerPlayer player : tracking) {
             if (wall.watchers.add(player)) {
-                ServerPlayNetworking.send(player, new WallSpawnS2CPayload(wall.id, wall.casterId, wall.cells, wall.color, wall.sustained ? NO_EXPIRY : WALL_TICKS, wall.age));
+                ServerPlayNetworking.send(player, new WallSpawnS2CPayload(wall.id, wall.casterId, wall.cells, wall.color, wall.sustained ? NO_EXPIRY : BrightestDayConfig.get().wallLifetimeTicks, wall.age));
             }
         }
         wall.watchers.removeIf(player -> {

@@ -30,19 +30,24 @@
 		],
 		"lambdynlights:initializer": [
 			"dev.amble.client.compat.LambDynamicLightsCompat"
+		],
+		"modmenu": [
+			"dev.amble.client.compat.ModMenuCompat"
 		]
 	},
 	"mixins": [
 		"brightestday.mixins.json"
 	],
 	"suggests": {
-		"lambdynlights": "*"
+		"lambdynlights": "*",
+		"modmenu": "*"
 	},
 	"depends": {
 		"fabricloader": ">=0.19.5",
 		"minecraft": "~26.3",
 		"java": ">=25",
 		"fabric-api": "*",
-		"player_animation_library": "*"
+		"player_animation_library": "*",
+		"yet_another_config_lib_v3": ">=3.9.7"
 	}
 }

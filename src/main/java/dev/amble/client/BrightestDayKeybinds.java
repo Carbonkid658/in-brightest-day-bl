@@ -2,7 +2,6 @@ package dev.amble.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.BrightestDay;
-import dev.amble.client.effects.ConstructClient;
 import dev.amble.core.networking.payloads.c2s.DismissConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ToggleLightC2SPayload;
 import dev.amble.core.networking.payloads.c2s.UsePowerC2SPayload;
@@ -55,10 +54,6 @@ public final class BrightestDayKeybinds {
             while (POWER_KEYS[i].consumeClick()) {
                 ClientPlayNetworking.send(new UsePowerC2SPayload(i));
             }
-        }
-
-        while (CYCLE_CONSTRUCT.consumeClick()) {
-            ConstructClient.cycle();
         }
 
         while (DISMISS_CONSTRUCT.consumeClick()) {

@@ -1,6 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
 import dev.amble.BrightestDay;
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.walls.WallGeometry;
 import dev.amble.core.walls.WallManager;
@@ -31,7 +32,7 @@ public class WallConstruct extends ConstructRingPower {
 
     @Override
     public int chargeTicks() {
-        return 6;
+        return BrightestDayConfig.get().wallChargeTicks;
     }
 
     @Override

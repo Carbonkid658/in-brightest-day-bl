@@ -1,5 +1,6 @@
 package dev.amble.core.sculpt;
 
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
@@ -29,11 +30,6 @@ import java.util.Set;
 import java.util.UUID;
 
 public final class SculptManager {
-    public static final int BLOCK_COST = 1;
-    public static final int MAX_BLOCKS = 4096;
-    public static final int MAX_TOTAL_BLOCKS = 16384;
-    private static final int BLOCKS_PER_UPKEEP = 128;
-
     private static final Map<UUID, SculptShape> SHAPES = new HashMap<>();
     private static final Map<ServerPlayer, Session> SESSIONS = new HashMap<>();
     private static final List<Sculpture> SCULPTURES = new ArrayList<>();
@@ -210,8 +206,9 @@ public final class SculptManager {
 
         List<BlockPos> batch = new ArrayList<>(cells);
         int used = session.sculpture == null ? 0 : session.sculpture.blocks;
-        if (used + batch.size() > MAX_BLOCKS) {
-            batch = batch.subList(0, MAX_BLOCKS - used);
+        int maxBlocks = BrightestDayConfig.get().sculptMaxBlocks;
+        if (used + batch.size() > maxBlocks) {
+            batch = batch.subList(0, Math.max(0, maxBlocks - used));
             session.full = true;
             player.sendOverlayMessage(Component.translatable("message.brightestday.sculpt_limit"));
         }
@@ -244,15 +241,16 @@ public final class SculptManager {
 
     /** Charges for up to {@code count} blocks and returns how many were paid for. */
     private static int afford(ServerPlayer player, int count) {
-        if (player.hasInfiniteMaterials() || PowerRingItem.consumeCharge(player, BLOCK_COST * count)) return count;
+        int cost = BrightestDayConfig.get().sculptBlockCost;
+        if (player.hasInfiniteMaterials() || PowerRingItem.consumeCharge(player, cost * count)) return count;
         int paid = 0;
-        while (paid < count && PowerRingItem.consumeCharge(player, BLOCK_COST)) paid++;
+        while (paid < count && PowerRingItem.consumeCharge(player, cost)) paid++;
         return paid;
     }
 
     /** Dissolves the caster's oldest other sculptures until the new blocks fit under the total cap. */
     private static void makeRoom(UUID caster, Sculpture keep, int incoming) {
-        while (total(caster) + incoming > MAX_TOTAL_BLOCKS) {
+        while (total(caster) + incoming > BrightestDayConfig.get().sculptMaxTotalBlocks) {
             Sculpture oldest = null;
             for (Sculpture sculpture : SCULPTURES) {
                 if (sculpture != keep && sculpture.caster.equals(caster) && (oldest == null || sculpture.id < oldest.id)) oldest = sculpture;
@@ -271,7 +269,7 @@ public final class SculptManager {
             // an absent caster can't be drained, so their sculptures hold until they return
             if (player == null || player.hasInfiniteMaterials()) continue;
 
-            int drain = Mth.ceil((float) entry.getValue() / BLOCKS_PER_UPKEEP);
+            int drain = Mth.ceil((float) entry.getValue() / Math.max(1, BrightestDayConfig.get().sculptBlocksPerUpkeep));
             if (PowerRingItem.hasCharge(player) && PowerRingItem.drainWorn(player, drain)) continue;
 
             Sculpture newest = newest(entry.getKey());

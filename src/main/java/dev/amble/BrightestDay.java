@@ -1,5 +1,6 @@
 package dev.amble;
 
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayBlockEntityTypes;
 import dev.amble.core.BrightestDayBlocks;
@@ -35,6 +36,7 @@ public class BrightestDay implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		BrightestDayConfig.load();
 		BrightestDayItems.init();
 		BrightestDayBlocks.init();
 		BrightestDayBlockEntityTypes.init();

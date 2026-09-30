@@ -13,6 +13,14 @@ repositories {
 		name = "Gegy"
 		url = uri("https://maven.gegy.dev/releases/")
 	}
+	maven {
+		name = "Xander"
+		url = uri("https://maven.isxander.dev/releases")
+	}
+	maven {
+		name = "TerraformersMC"
+		url = uri("https://maven.terraformersmc.com/releases")
+	}
 }
 
 fabricApi {
@@ -31,6 +39,8 @@ dependencies {
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 	implementation("com.zigythebird.playeranim:PlayerAnimationLibFabric:${project.pal_version}")
 	compileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-api:${project.lambdynamiclights_version}")
+	implementation "dev.isxander:yet-another-config-lib:${project.yacl_version}"
+	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
 }
 
 processResources {

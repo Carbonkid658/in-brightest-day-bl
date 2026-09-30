@@ -8,6 +8,7 @@ import dev.amble.core.networking.payloads.c2s.ForgeStrokeC2SPayload;
 import dev.amble.core.networking.payloads.c2s.OpenLanternC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ScanC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SculptShapeC2SPayload;
+import dev.amble.core.networking.payloads.c2s.SelectConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SetColorTweakC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SetFlightC2SPayload;
 import dev.amble.core.networking.payloads.c2s.StopBeamC2SPayload;
@@ -50,6 +51,7 @@ public class Networking {
         PayloadTypeRegistry.serverboundPlay().register(DismissConstructC2SPayload.TYPE, DismissConstructC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(StopBeamC2SPayload.TYPE, StopBeamC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SculptShapeC2SPayload.TYPE, SculptShapeC2SPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(SelectConstructC2SPayload.TYPE, SelectConstructC2SPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(BeamS2CPayload.TYPE, BeamS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(HealBeamS2CPayload.TYPE, HealBeamS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(BlastS2CPayload.TYPE, BlastS2CPayload.CODEC);
@@ -69,6 +71,7 @@ public class Networking {
         ServerPlayNetworking.registerGlobalReceiver(DismissConstructC2SPayload.TYPE, DismissConstructC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(StopBeamC2SPayload.TYPE, StopBeamC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(SculptShapeC2SPayload.TYPE, SculptShapeC2SPayload::handle);
+        ServerPlayNetworking.registerGlobalReceiver(SelectConstructC2SPayload.TYPE, SelectConstructC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(ToggleLightC2SPayload.TYPE, ToggleLightC2SPayload::handle);
     }
 }

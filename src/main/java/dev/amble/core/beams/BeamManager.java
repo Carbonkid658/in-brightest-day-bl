@@ -1,5 +1,6 @@
 package dev.amble.core.beams;
 
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.BeamS2CPayload;
 import dev.amble.core.ringpowers.RingPowerRegistry;
@@ -23,12 +24,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class BeamManager {
-    public static final int MAX_TICKS = 140;
     public static final double RANGE = 32.0;
     private static final int DAMAGE_INTERVAL = 10;
-    private static final float DAMAGE = 4.0F;
     private static final double PUSH = 0.08;
-    private static final int DRAIN_PER_SECOND = 20;
 
     private static final Map<ServerPlayer, Beam> BEAMS = new HashMap<>();
 
@@ -67,8 +65,8 @@ public final class BeamManager {
             Beam beam = BEAMS.get(player);
             boolean selected = ArmedRingPower.selectedConstruct(player).orElse(null) == RingPowerRegistry.BEAM;
             boolean outOfCharge = !PowerRingItem.hasCharge(player)
-                    || drainTick && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, DRAIN_PER_SECOND);
-            if (++beam.age > MAX_TICKS || !player.isAlive() || !ArmedRingPower.isArmed(player) || !selected || outOfCharge) {
+                    || drainTick && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, BrightestDayConfig.get().beamDrainPerSecond);
+            if (++beam.age > BrightestDayConfig.get().beamMaxTicks || !player.isAlive() || !ArmedRingPower.isArmed(player) || !selected || outOfCharge) {
                 stop(player);
                 continue;
             }
@@ -77,7 +75,7 @@ public final class BeamManager {
             if (!(aim.entity() instanceof LivingEntity target)) continue;
 
             ServerLevel level = player.level();
-            if (beam.age % DAMAGE_INTERVAL == 0) target.hurtServer(level, level.damageSources().playerAttack(player), DAMAGE);
+            if (beam.age % DAMAGE_INTERVAL == 0) target.hurtServer(level, level.damageSources().playerAttack(player), BrightestDayConfig.get().beamDamage);
             Vec3 push = aim.look().scale(PUSH);
             target.push(push);
             if (beam.age % 4 == 0) target.needsSync = true;

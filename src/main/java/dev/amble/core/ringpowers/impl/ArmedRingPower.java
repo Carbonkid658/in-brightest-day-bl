@@ -123,6 +123,19 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         player.sendOverlayMessage(Component.translatable("message.brightestday.construct_selected", Component.translatable(next.getTranslationKey())));
     }
 
+    /** Selects a specific construct, as picked from the construct wheel. */
+    public static void select(ServerPlayer player, Identifier id) {
+        if (!PowerRingItem.hasCharge(player)) {
+            player.sendOverlayMessage(Component.translatable("message.brightestday.ring_depleted"));
+            return;
+        }
+
+        Optional<Data> data = data(player);
+        Optional<ConstructRingPower> construct = constructs(player).stream().filter(entry -> entry.id().equals(id)).findFirst();
+        if (data.isEmpty() || construct.isEmpty()) return;
+        BrightestDayAttachments.setData(player, RingPowerRegistry.ARMED, data.get().withConstruct(construct.get().id()));
+    }
+
     public static void fire(ServerPlayer player, int radius) {
         if (!isArmed(player) || player.isSpectator()) return;
 
@@ -151,7 +164,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         return BrightestDayAttachments.get(player, RingPowerRegistry.ARMED).map(RingPowerInstance::data);
     }
 
-    private static List<ConstructRingPower> constructs(Player player) {
+    public static List<ConstructRingPower> constructs(Player player) {
         return BrightestDayAttachments.get(player).stream()
                 .map(RingPowerInstance::power)
                 .filter(ConstructRingPower.class::isInstance)
