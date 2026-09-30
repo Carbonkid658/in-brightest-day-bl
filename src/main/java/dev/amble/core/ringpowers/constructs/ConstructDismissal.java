@@ -2,6 +2,7 @@ package dev.amble.core.ringpowers.constructs;
 
 import dev.amble.core.beams.BeamManager;
 import dev.amble.core.beams.HealBeamManager;
+import dev.amble.core.light.LightOrbManager;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.shields.ShieldManager;
 import dev.amble.core.walls.WallManager;
@@ -16,8 +17,9 @@ public final class ConstructDismissal {
         long shieldCreated = ShieldManager.latestCreatedAt(player.getUUID());
         long wallCreated = WallManager.latestCreatedAt(player.getUUID());
         long sculptCreated = SculptManager.latestCreatedAt(player.getUUID());
+        long orbCreated = LightOrbManager.latestCreatedAt(player.getUUID());
         long toolCreated = ConstructTools.latestCreatedAt(player);
-        long newest = Math.max(Math.max(shieldCreated, sculptCreated), Math.max(wallCreated, toolCreated));
+        long newest = Math.max(Math.max(Math.max(shieldCreated, sculptCreated), Math.max(wallCreated, toolCreated)), orbCreated);
         if (newest == Long.MIN_VALUE) {
             player.sendOverlayMessage(Component.translatable("message.brightestday.no_constructs_to_dismiss"));
             return;
@@ -26,6 +28,8 @@ public final class ConstructDismissal {
         if (newest == toolCreated) {
             ConstructTools.dissolveAll(player);
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 0.8F, 1.4F);
+        } else if (newest == orbCreated) {
+            LightOrbManager.dismissLatest(player.getUUID());
         } else if (newest == sculptCreated) {
             SculptManager.dismissLatest(player.getUUID());
         } else if (newest == wallCreated) {
@@ -42,6 +46,7 @@ public final class ConstructDismissal {
         ShieldManager.dismissAll(player.getUUID());
         WallManager.dismissAll(player.getUUID());
         SculptManager.dismissAll(player.getUUID());
+        LightOrbManager.dismissAll(player.getUUID());
         ConstructTools.dissolveAll(player);
     }
 

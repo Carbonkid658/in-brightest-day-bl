@@ -1,7 +1,7 @@
 package dev.amble.client.effects;
 
 import dev.amble.BrightestDay;
-import dev.amble.client.BrightestDayKeybinds;
+import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.networking.payloads.c2s.ScanC2SPayload;
 import dev.amble.core.networking.payloads.s2c.ScanS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ScanStartS2CPayload;
@@ -57,6 +57,7 @@ public final class ScanEffects {
     private static final int PANEL_BACKGROUND = 0x0A140C;
 
     private static @Nullable Scan scan;
+    private static boolean wasHolding;
 
     private static final class Scan {
         final int entityId;
@@ -119,9 +120,9 @@ public final class ScanEffects {
     }
 
     private static void tick(Minecraft client) {
-        while (BrightestDayKeybinds.SCAN.consumeClick()) {
-            if (scan == null || !scan.scanning()) ClientPlayNetworking.send(new ScanC2SPayload(ScanC2SPayload.START));
-        }
+        boolean holding = client.player != null && AbilityClient.holding(client.player, RingPowerRegistry.SCAN);
+        if (holding && !wasHolding && (scan == null || !scan.scanning())) ClientPlayNetworking.send(new ScanC2SPayload(ScanC2SPayload.START));
+        wasHolding = holding;
 
         if (scan == null || client.isPaused()) return;
         if (scan.level != client.level || client.level == null) {
@@ -130,8 +131,7 @@ public final class ScanEffects {
         }
 
         if (scan.scanning()) {
-            boolean held = client.gui.screen() == null && BrightestDayKeybinds.SCAN.isDown();
-            if (!held || scan.box(client.level, 1.0F) == null || scan.age > ScanRingPower.SCAN_TICKS + RESULT_TIMEOUT) {
+            if (!holding || scan.box(client.level, 1.0F) == null || scan.age > ScanRingPower.SCAN_TICKS + RESULT_TIMEOUT) {
                 if (!scan.completeSent) ClientPlayNetworking.send(new ScanC2SPayload(ScanC2SPayload.CANCEL));
                 scan = null;
                 return;

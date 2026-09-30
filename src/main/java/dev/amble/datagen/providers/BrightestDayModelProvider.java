@@ -24,6 +24,7 @@ public class BrightestDayModelProvider extends FabricModelProvider {
     @Override
     public void generateBlockStateModels(BlockModelGenerators blockModelGenerators) {
         blockModelGenerators.createNonTemplateModelBlock(BrightestDayBlocks.HARD_LIGHT, Blocks.BARRIER);
+        blockModelGenerators.createNonTemplateModelBlock(BrightestDayBlocks.CONSTRUCT_LIGHT, Blocks.BARRIER);
     }
 
     @Override

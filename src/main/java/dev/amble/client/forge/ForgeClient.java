@@ -3,6 +3,7 @@ package dev.amble.client.forge;
 import dev.amble.BrightestDay;
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.ConstructClient;
+import dev.amble.client.effects.RingInput;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.VoxelRenderer;
 import dev.amble.core.items.PowerRingItem;
@@ -87,7 +88,7 @@ public final class ForgeClient {
 
     public static boolean wantsToDraw(LocalPlayer player) {
         return player.getMainHandItem().isEmpty()
-                && ArmedRingPower.isArmed(player)
+                && !ArmedRingPower.isAbilityMode(player)
                 && PowerRingItem.hasCharge(player)
                 && ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::usesGesture).orElse(false)
                 && !ConstructClient.isLookingAtLantern()
@@ -108,7 +109,7 @@ public final class ForgeClient {
         tickRemote(client);
         if (player == null || client.isPaused()) return;
 
-        boolean down = client.gui.screen() == null && client.options.keyUse.isDown() && wantsToDraw(player);
+        boolean down = RingInput.useHeld(client) && wantsToDraw(player);
         if (down && !drawing) {
             drawing = true;
             releaseAge = -1;

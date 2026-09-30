@@ -33,25 +33,8 @@ public class TractorBeamRingPower extends RingPower<TractorBeamRingPower.Data> {
     }
 
     @Override
-    public boolean slotted() {
-        return true;
-    }
-
-    @Override
     public Data createData() {
         return new Data(false);
-    }
-
-    @Override
-    public boolean run(ServerPlayer player, Data data) {
-        boolean active = !data.active();
-        if (active && !ArmedRingPower.isArmed(player)) {
-            player.sendOverlayMessage(Component.translatable("message.brightestday.raise_ring_first"));
-            return false;
-        }
-        this.setData(player, new Data(active));
-        if (!active) TractorManager.release(player);
-        return true;
     }
 
     @Override
@@ -66,8 +49,6 @@ public class TractorBeamRingPower extends RingPower<TractorBeamRingPower.Data> {
     }
 
     public static boolean isActive(Player player) {
-        return BrightestDayAttachments.get(player, RingPowerRegistry.TRACTOR_BEAM)
-                .map(instance -> instance.data().active())
-                .orElse(false);
+        return ArmedRingPower.activeAbility(player).orElse(null) == RingPowerRegistry.TRACTOR_BEAM;
     }
 }

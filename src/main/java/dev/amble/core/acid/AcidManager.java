@@ -5,6 +5,7 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.AcidS2CPayload;
 import dev.amble.core.ringpowers.RingPowerRegistry;
+import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -45,6 +46,10 @@ public final class AcidManager {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> SPEWING.remove(handler.player));
     }
 
+    public static boolean isSpewing(ServerPlayer player) {
+        return SPEWING.containsKey(player);
+    }
+
     public static void start(ServerPlayer player) {
         if (SPEWING.containsKey(player) || player.isSpectator() || BrightestDayAttachments.get(player, RingPowerRegistry.ACID).isEmpty()) return;
         if (!PowerRingItem.hasCharge(player)) {
@@ -53,6 +58,7 @@ public final class AcidManager {
         }
 
         SPEWING.put(player, 0);
+        ArmedRingPower.raise(player);
         broadcast(player, true);
         player.level().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.PLAYER_BURP, SoundSource.PLAYERS, 1.2F, 0.5F);
     }

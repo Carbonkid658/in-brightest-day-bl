@@ -35,11 +35,6 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
     }
 
     @Override
-    public boolean slotted() {
-        return false;
-    }
-
-    @Override
     public RingPowerCategory category() {
         return RingPowerCategory.CONSTRUCT;
     }

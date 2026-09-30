@@ -54,11 +54,6 @@ public class ScanRingPower extends RingPower<Unit> {
     }
 
     @Override
-    public boolean slotted() {
-        return false;
-    }
-
-    @Override
     public int useCost() {
         return USE_COST;
     }
@@ -95,6 +90,7 @@ public class ScanRingPower extends RingPower<Unit> {
         Entity entity = entityHit != null ? entityHit.getEntity() : null;
         BlockPos pos = entity != null ? BlockPos.ZERO : blockHit.getBlockPos();
         PENDING.put(player, new Pending(entity, pos, now));
+        ArmedRingPower.raise(player);
         ServerPlayNetworking.send(player, new ScanStartS2CPayload(entity != null ? entity.getId() : ScanS2CPayload.NO_ENTITY, pos, CorpsColors.of(player)));
     }
 

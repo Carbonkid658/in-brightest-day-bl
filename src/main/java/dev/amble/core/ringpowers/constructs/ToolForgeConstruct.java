@@ -38,8 +38,8 @@ public class ToolForgeConstruct extends ConstructRingPower {
     public void fire(ServerPlayer player, int radius, int color) {}
 
     public static void forge(ServerPlayer player, ConstructTool tool) {
-        if (!ArmedRingPower.isArmed(player)) return;
-        if (ArmedRingPower.selectedConstruct(player).orElse(null) != RingPowerRegistry.TOOL_FORGE) return;
+        if (ArmedRingPower.isAbilityMode(player) || ArmedRingPower.selectedConstruct(player).orElse(null) != RingPowerRegistry.TOOL_FORGE) return;
+        ArmedRingPower.raise(player);
 
         long now = player.level().getGameTime();
         Long last = LAST_FORGED.get(player);

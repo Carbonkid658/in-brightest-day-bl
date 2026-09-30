@@ -19,6 +19,8 @@ import dev.amble.core.walls.WallManager;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.ringpowers.RingJumpstart;
 import dev.amble.core.acid.AcidManager;
+import dev.amble.core.light.LightManager;
+import dev.amble.core.light.LightOrbManager;
 import dev.amble.core.beams.BeamManager;
 import dev.amble.core.beams.HealBeamManager;
 import dev.amble.core.ringpowers.CorpsSynergy;
@@ -57,6 +59,8 @@ public class BrightestDay implements ModInitializer {
 		SculptManager.init();
 		RingJumpstart.init();
 		AcidManager.init();
+		LightManager.init();
+		LightOrbManager.init();
 		BeamManager.init();
 		HealBeamManager.init();
 		CorpsSynergy.init();

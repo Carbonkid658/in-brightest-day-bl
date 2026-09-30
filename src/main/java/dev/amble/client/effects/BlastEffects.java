@@ -7,16 +7,20 @@ import dev.amble.client.forge.ForgeClient;
 import dev.amble.client.flight.FlightRenderTypes;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.items.LanternBlockItem;
+import dev.amble.core.networking.payloads.c2s.ChargeC2SPayload;
 import dev.amble.core.networking.payloads.c2s.FireConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.StopBeamC2SPayload;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.networking.payloads.s2c.BlastS2CPayload;
+import dev.amble.core.networking.payloads.s2c.ChargeS2CPayload;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.EntityBoundSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -32,8 +36,10 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public final class BlastEffects {
     private static final int LIFETIME = 12;
@@ -55,6 +61,7 @@ public final class BlastEffects {
 
     private static final int LONG_CHARGE_TICKS = 25;
     private static final int SUSTAIN_GRACE_TICKS = 10;
+    private static final int REMOTE_CHARGE_GRACE = 40;
     private static final float CHARGE_SOUND_PITCH = 1.2F;
     private static final int CHARGE_VOXELS = 16;
     private static final float CHARGE_RADIUS = 1.2F;
@@ -74,6 +81,20 @@ public final class BlastEffects {
     private static float kick;
     private static float oKick;
     private static @Nullable SoundInstance chargeSound;
+    private static boolean announced;
+    private static final Map<Integer, RemoteCharge> REMOTE_CHARGES = new HashMap<>();
+    private static @Nullable ClientLevel chargeLevel;
+
+    private static final class RemoteCharge {
+        final int goal;
+        final SoundInstance sound;
+        int age;
+
+        RemoteCharge(int goal, SoundInstance sound) {
+            this.goal = goal;
+            this.sound = sound;
+        }
+    }
 
     private static final class Blast {
         final Vec3 start;
@@ -94,13 +115,15 @@ public final class BlastEffects {
 
     public static void init() {
         ClientPlayNetworking.registerGlobalReceiver(BlastS2CPayload.TYPE, (payload, context) -> spawn(context.client(), payload));
+        ClientPlayNetworking.registerGlobalReceiver(ChargeS2CPayload.TYPE, (payload, context) -> receiveCharge(context.client(), payload));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> REMOTE_CHARGES.clear());
         ClientTickEvents.END_CLIENT_TICK.register(BlastEffects::tick);
         LevelRenderEvents.COLLECT_SUBMITS.register(BlastEffects::render);
     }
 
     public static boolean wantsToCharge(LocalPlayer player) {
         return player.getMainHandItem().isEmpty()
-                && ArmedRingPower.isArmed(player)
+                && !ArmedRingPower.isAbilityMode(player)
                 && PowerRingItem.hasCharge(player)
                 && ArmedRingPower.selectedConstruct(player).map(construct -> !construct.usesGesture()).orElse(false)
                 && !ConstructClient.isLookingAtLantern()
@@ -133,7 +156,7 @@ public final class BlastEffects {
             awaitRelease = false;
         }
 
-        boolean holding = keyDown && wantsToCharge(player);
+        boolean holding = keyDown && !RingInput.blocked() && wantsToCharge(player);
         if (!holding || cooldown > 0) {
             cancelCharge(client);
             return;
@@ -143,10 +166,13 @@ public final class BlastEffects {
         if (charge == 0 && chargeGoal > 1) {
             chargeSound = new EntityBoundSoundInstance(SoundEvents.WARDEN_SONIC_CHARGE, SoundSource.PLAYERS, 1.0F, CHARGE_SOUND_PITCH, player, player.getRandom().nextLong());
             client.getSoundManager().play(chargeSound);
+            ClientPlayNetworking.send(new ChargeC2SPayload(true, chargeGoal));
+            announced = true;
         }
 
         if (++charge >= chargeGoal) {
             if (chargeSound != null && chargeGoal < LONG_CHARGE_TICKS) client.getSoundManager().stop(chargeSound);
+            retractCharge();
             boolean sustained = ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::sustained).orElse(false);
             ClientPlayNetworking.send(new FireConstructC2SPayload(ConstructClient.selectedSize(player)));
             if (sustained) {
@@ -162,9 +188,40 @@ public final class BlastEffects {
     }
 
     private static void cancelCharge(Minecraft client) {
+        retractCharge();
         if (chargeSound != null) client.getSoundManager().stop(chargeSound);
         chargeSound = null;
         charge = 0;
+    }
+
+    private static void retractCharge() {
+        if (!announced) return;
+        announced = false;
+        ClientPlayNetworking.send(new ChargeC2SPayload(false, 0));
+    }
+
+    private static void receiveCharge(Minecraft client, ChargeS2CPayload payload) {
+        RemoteCharge previous = REMOTE_CHARGES.remove(payload.playerId());
+        if (previous != null) client.getSoundManager().stop(previous.sound);
+        if (!payload.charging() || client.level == null) return;
+
+        Entity entity = client.level.getEntity(payload.playerId());
+        if (!(entity instanceof Player player)) return;
+        SoundInstance sound = new EntityBoundSoundInstance(SoundEvents.WARDEN_SONIC_CHARGE, SoundSource.PLAYERS, 1.0F, CHARGE_SOUND_PITCH, player, player.getRandom().nextLong());
+        client.getSoundManager().play(sound);
+        REMOTE_CHARGES.put(payload.playerId(), new RemoteCharge(payload.ticks(), sound));
+    }
+
+    private static void tickRemoteCharges(Minecraft client) {
+        if (client.level != chargeLevel) {
+            REMOTE_CHARGES.clear();
+            chargeLevel = client.level;
+        }
+        REMOTE_CHARGES.values().removeIf(remote -> {
+            boolean expired = ++remote.age > remote.goal + REMOTE_CHARGE_GRACE;
+            if (expired) client.getSoundManager().stop(remote.sound);
+            return expired;
+        });
     }
 
     public static boolean isSustaining() {
@@ -213,6 +270,7 @@ public final class BlastEffects {
     private static void tick(Minecraft client) {
         if (client.isPaused()) return;
         tickCharge(client);
+        tickRemoteCharges(client);
         Iterator<Blast> iterator = BLASTS.iterator();
         while (iterator.hasNext()) {
             Blast blast = iterator.next();
@@ -226,7 +284,14 @@ public final class BlastEffects {
         float partialTicks = client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         PoseStack poseStack = context.poseStack();
 
-        if (charge > 0 && client.player != null) renderCharge(context, client.player, camera, partialTicks);
+        if (charge > 0 && client.player != null) renderCharge(context, client.player, camera, partialTicks, Mth.lerp(partialTicks, oCharge, charge) / Math.max(chargeGoal, 1));
+        if (client.level != null) {
+            for (Map.Entry<Integer, RemoteCharge> entry : REMOTE_CHARGES.entrySet()) {
+                if (!(client.level.getEntity(entry.getKey()) instanceof Player player)) continue;
+                RemoteCharge remote = entry.getValue();
+                renderCharge(context, player, camera, partialTicks, Math.min((remote.age + partialTicks) / remote.goal, 1.0F));
+            }
+        }
 
         for (Blast blast : BLASTS) {
             float time = blast.age + partialTicks;
@@ -247,8 +312,7 @@ public final class BlastEffects {
         }
     }
 
-    private static void renderCharge(LevelRenderContext context, LocalPlayer player, Vec3 camera, float partialTicks) {
-        float progress = Mth.lerp(partialTicks, oCharge, charge) / Math.max(chargeGoal, 1);
+    private static void renderCharge(LevelRenderContext context, Player player, Vec3 camera, float partialTicks, float progress) {
         int color = ARGB.opaque(CorpsColors.of(player));
         int tint = VoxelRenderer.toWhite(color, progress * 0.6F);
         Vec3 hand = hand(player, partialTicks);

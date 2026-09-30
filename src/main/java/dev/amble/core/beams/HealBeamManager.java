@@ -49,6 +49,10 @@ public final class HealBeamManager {
         player.level().playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.0F, 1.4F);
     }
 
+    public static boolean isHealing(ServerPlayer player) {
+        return BEAMS.containsKey(player);
+    }
+
     public static void stop(ServerPlayer player) {
         HealBeam beam = BEAMS.remove(player);
         if (beam == null) return;

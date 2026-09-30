@@ -65,7 +65,7 @@ public final class TractorEffects {
     }
 
     public static boolean isTractorMode(Player player) {
-        return TractorBeamRingPower.isActive(player) && ArmedRingPower.isArmed(player) && PowerRingItem.hasCharge(player);
+        return TractorBeamRingPower.isActive(player) && player.getMainHandItem().isEmpty() && PowerRingItem.hasCharge(player);
     }
 
     public static boolean onScroll(int wheel) {
@@ -85,7 +85,7 @@ public final class TractorEffects {
         }
 
         LocalPlayer player = client.player;
-        boolean down = player != null && client.gui.screen() == null && isTractorMode(player) && client.options.keyAttack.isDown();
+        boolean down = player != null && RingInput.useHeld(client) && isTractorMode(player);
         if (down && !holding) {
             ClientPlayNetworking.send(new TractorC2SPayload(TractorC2SPayload.GRAB, 0));
             holding = true;

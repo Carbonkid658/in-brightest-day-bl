@@ -21,11 +21,6 @@ public class AcidRingPower extends RingPower<Unit> {
     }
 
     @Override
-    public boolean slotted() {
-        return false;
-    }
-
-    @Override
     public Unit createData() {
         return Unit.INSTANCE;
     }

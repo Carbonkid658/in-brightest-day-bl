@@ -128,7 +128,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
 
         builder.add(RingPowerRegistry.FLIGHT.getTranslationKey(), "Flight");
         builder.add(RingPowerRegistry.ARMED.getTranslationKey(), "Armed");
-        builder.add(RingPowerRegistry.LIGHT.getTranslationKey(), "Light");
+        builder.add(RingPowerRegistry.LIGHT.getTranslationKey(), "Spotlight");
         builder.add(RingPowerRegistry.BLAST.getTranslationKey(), "Blast");
         builder.add(RingPowerRegistry.ENTITY_SHIELD.getTranslationKey(), "Bubble Shield");
         builder.add(RingPowerRegistry.AREA_SHIELD.getTranslationKey(), "Dome Shield");
@@ -150,6 +150,20 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("hud.brightestday.sculpt_hint", "Sneak + Scroll: shape");
         builder.add("hud.brightestday.construct_size", "Size: %s");
         builder.add("construct_group.brightestday.shield", "Shield");
+        builder.add("brightestday.ring_power.light_orb", "Light Orb");
+        builder.add("message.brightestday.light_orb_blocked", "There's no room for a light there.");
+        builder.add("block.brightestday.construct_light", "Construct Light");
+        builder.add("config.brightestday.group.light", "Light");
+        builder.add("config.brightestday.option.light_orb_cost", "Light Orb Cost");
+        builder.add("config.brightestday.option.light_orb_cost.desc", "Ring charge spent to place a light orb.");
+        builder.add("config.brightestday.option.light_orb_charge", "Light Orb Charge-Up");
+        builder.add("config.brightestday.option.light_orb_charge.desc", "Ticks the light orb must charge before it's placed.");
+        builder.add("config.brightestday.option.light_orb_upkeep", "Light Orb Upkeep");
+        builder.add("config.brightestday.option.light_orb_upkeep.desc", "Ring charge drained per second for each size step of every standing light orb.");
+        builder.add("config.brightestday.option.light_orb_max", "Max Light Orbs");
+        builder.add("config.brightestday.option.light_orb_max.desc", "How many light orbs a player can have at once; the oldest dissolves to make room.");
+        builder.add("config.brightestday.option.spotlight_range", "Spotlight Range");
+        builder.add("config.brightestday.option.spotlight_range.desc", "How far in blocks the ring's spotlight reaches.");
         builder.add("key.brightestday.concussive_blast", "Concussive Blast");
         builder.add("key.brightestday.acid_vomit", "Acid Vomit (hold)");
         builder.add("brightestday.ring_power.concussive_blast", "Concussive Blast");
@@ -266,7 +280,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.nothing_to_scan", "Nothing to scan.");
         builder.add("message.brightestday.scan_cooldown", "Scanner recharging: %ss");
         builder.add("message.brightestday.raise_ring_first", "Raise your ring first.");
-        builder.add("key.brightestday.scan", "Scan (hold)");
+        builder.add("key.brightestday.ability_wheel", "Ability Wheel (hold)");
+        builder.add("key.brightestday.flight", "Flight");
+        builder.add("key.brightestday.raise_ring", "Raise Ring");
+        builder.add("key.brightestday.toggle_light", "Toggle Spotlight");
         builder.add("key.brightestday.dismiss_construct", "Dismiss Construct");
         builder.add("message.brightestday.no_constructs_to_dismiss", "No constructs to dismiss.");
         builder.add("scan.brightestday.scanning", "SCANNING");
@@ -299,11 +316,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("scan.brightestday.position", "Position: %s, %s, %s");
 
         builder.add("key.category.brightestday.main", "In Brightest Day");
-        builder.add("key.brightestday.power_1", "Ring Power 1");
-        builder.add("key.brightestday.power_2", "Ring Power 2");
-        builder.add("key.brightestday.power_3", "Ring Power 3");
-        builder.add("key.brightestday.power_4", "Ring Power 4");
-        builder.add("key.brightestday.toggle_light", "Toggle Ring Light");
         builder.add("key.brightestday.cycle_construct", "Construct Wheel (hold)");
     }
 }

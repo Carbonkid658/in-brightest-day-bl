@@ -46,11 +46,6 @@ public class ConcussiveRingPower extends RingPower<Unit> {
     }
 
     @Override
-    public boolean slotted() {
-        return false;
-    }
-
-    @Override
     public Unit createData() {
         return Unit.INSTANCE;
     }
@@ -90,6 +85,7 @@ public class ConcussiveRingPower extends RingPower<Unit> {
             entity.needsSync = true;
         }
 
+        ArmedRingPower.raise(player);
         player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true);
         level.playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.WIND_CHARGE_BURST, SoundSource.PLAYERS, 1.0F, 0.6F);
         level.playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4F, 1.6F);

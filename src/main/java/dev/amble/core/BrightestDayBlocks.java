@@ -1,6 +1,7 @@
 package dev.amble.core;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.blocks.ConstructLightBlock;
 import dev.amble.core.blocks.HardLightBlock;
 import dev.amble.core.blocks.LanternBlock;
 import dev.amble.core.items.LanternBlockItem;
@@ -74,6 +75,11 @@ public class BrightestDayBlocks {
                     .lightLevel(_ -> 8).sound(SoundType.AMETHYST).pushReaction(PushReaction.IMMOVEABLE)
                     .isValidSpawn((state, level, pos, type) -> false).isSuffocating((state, level, pos) -> false)
                     .isViewBlocking((state, level, pos, box) -> false)));
+
+    public static final Block CONSTRUCT_LIGHT = registerBlock("construct_light",
+            properties -> new ConstructLightBlock(properties.strength(-1.0F, 3600000.0F).noLootTable().noOcclusion().noCollision().replaceable()
+                    .lightLevel(_ -> 15).pushReaction(PushReaction.POPPED).isValidSpawn((state, level, pos, type) -> false)
+                    .isSuffocating((state, level, pos) -> false).isViewBlocking((state, level, pos, box) -> false)));
 
     private static <T extends Block> T registerBlockWithItem(String name, Function<BlockBehaviour.Properties, T> function, Item.Properties itemProperties) {
         T block = registerBlock(name, function);

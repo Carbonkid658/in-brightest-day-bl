@@ -1,12 +1,15 @@
 package dev.amble.mixin.client;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import dev.amble.client.effects.ArmedPose;
+import dev.amble.client.flight.FlightAnimator;
 import dev.amble.client.render.EyeGlowLayer;
 import dev.amble.client.render.GlowAura;
 import dev.amble.client.render.SlottedRingRenderer;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.world.entity.Avatar;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,5 +24,12 @@ public abstract class AvatarRendererMixin {
         ArmedPose.extract(entity, state, partialTicks);
         GlowAura.extract(entity, state);
         EyeGlowLayer.extract(entity, state);
+        FlightAnimator.extractDive(entity, state, partialTicks);
+    }
+
+    @Inject(method = "setupRotations(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;FF)V", at = @At("TAIL"))
+    private void brightestday$centerDivingModel(AvatarRenderState state, PoseStack poseStack, float bodyRot, float entityScale, CallbackInfo ci) {
+        Vec3 offset = state.getDataOrDefault(FlightAnimator.DIVE_OFFSET, Vec3.ZERO);
+        if (offset.lengthSqr() > 1.0E-8) poseStack.translate(offset.x, offset.y, offset.z);
     }
 }

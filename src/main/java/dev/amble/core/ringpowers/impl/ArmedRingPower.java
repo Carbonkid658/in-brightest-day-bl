@@ -14,6 +14,8 @@ import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.beams.BeamManager;
 import dev.amble.core.beams.HealBeamManager;
+import dev.amble.core.acid.AcidManager;
+import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.tractor.TractorManager;
 import net.minecraft.network.chat.Component;
@@ -23,6 +25,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -33,21 +36,30 @@ import java.util.WeakHashMap;
 public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
 
     public static final int COOLDOWN_TICKS = 10;
+    private static final int AUTO_LOWER_TICKS = 100;
 
     private static final Map<ServerPlayer, Long> LAST_FIRED = new WeakHashMap<>();
+    private static final Map<ServerPlayer, Long> LAST_USED = new WeakHashMap<>();
 
-    public record Data(boolean active, Optional<Identifier> construct) {
+    public record Data(boolean active, boolean manual, Optional<Identifier> construct, Optional<Identifier> ability, boolean abilityMode) {
         public static final Codec<Data> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.BOOL.optionalFieldOf("active", false).forGetter(Data::active),
-                Identifier.CODEC.optionalFieldOf("construct").forGetter(Data::construct)
+                Codec.BOOL.optionalFieldOf("manual", false).forGetter(Data::manual),
+                Identifier.CODEC.optionalFieldOf("construct").forGetter(Data::construct),
+                Identifier.CODEC.optionalFieldOf("ability").forGetter(Data::ability),
+                Codec.BOOL.optionalFieldOf("ability_mode", false).forGetter(Data::abilityMode)
         ).apply(instance, Data::new));
 
-        public Data withActive(boolean active) {
-            return new Data(active, this.construct);
+        public Data withActive(boolean active, boolean manual) {
+            return new Data(active, manual, this.construct, this.ability, this.abilityMode);
         }
 
         public Data withConstruct(Identifier construct) {
-            return new Data(this.active, Optional.of(construct));
+            return new Data(this.active, this.manual, Optional.of(construct), this.ability, false);
+        }
+
+        public Data withAbility(Identifier ability) {
+            return new Data(this.active, this.manual, this.construct, Optional.of(ability), true);
         }
     }
 
@@ -62,7 +74,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
 
     @Override
     public Data createData() {
-        return new Data(false, Optional.empty());
+        return new Data(false, false, Optional.empty(), Optional.empty(), false);
     }
 
     @Override
@@ -75,17 +87,44 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         if (data.active()) {
             lower(player);
         } else {
-            this.setData(player, data.withActive(true));
+            this.setData(player, data.withActive(true, true));
         }
         return true;
+    }
+
+    @Override
+    public void tick(ServerPlayer player, Data data) {
+        if (!data.active()) return;
+
+        ItemStack held = player.getMainHandItem();
+        if (!held.isEmpty() && !(held.getItem() instanceof PowerRingItem) && !(held.getItem() instanceof LanternBlockItem)) {
+            lower(player);
+            return;
+        }
+        if (data.manual()) return;
+
+        long now = player.level().getGameTime();
+        boolean busy = BeamManager.isBeaming(player) || HealBeamManager.isHealing(player) || SculptManager.isSculpting(player)
+                || TractorManager.isHolding(player) || AcidManager.isSpewing(player) || LightRingPower.isEmitting(player);
+        Long last = LAST_USED.get(player);
+        if (busy || last == null) {
+            LAST_USED.put(player, now);
+        } else if (now - last > AUTO_LOWER_TICKS) {
+            lower(player);
+        }
+    }
+
+    public static void raise(ServerPlayer player) {
+        LAST_USED.put(player, player.level().getGameTime());
+        data(player).filter(data -> !data.active()).ifPresent(data -> BrightestDayAttachments.setData(player, RingPowerRegistry.ARMED, data.withActive(true, false)));
     }
 
     public static void lower(ServerPlayer player) {
         BeamManager.stop(player);
         HealBeamManager.stop(player);
         SculptManager.stop(player, false);
-        data(player).ifPresent(data -> BrightestDayAttachments.setData(player, RingPowerRegistry.ARMED, data.withActive(false)));
-        BrightestDayAttachments.setData(player, RingPowerRegistry.TRACTOR_BEAM, new TractorBeamRingPower.Data(false));
+        data(player).ifPresent(data -> BrightestDayAttachments.setData(player, RingPowerRegistry.ARMED, data.withActive(false, false)));
+        AcidManager.stop(player);
         TractorManager.release(player);
     }
 
@@ -135,8 +174,41 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         BrightestDayAttachments.setData(player, RingPowerRegistry.ARMED, data.get().withConstruct(construct.get().id()));
     }
 
+    public static void selectAbility(ServerPlayer player, Identifier id) {
+        Optional<Data> data = data(player);
+        Optional<RingPower<?>> ability = abilities(player).stream().filter(entry -> entry.id().equals(id)).findFirst();
+        if (data.isEmpty() || ability.isEmpty()) return;
+        if (ability.get() != RingPowerRegistry.TRACTOR_BEAM) TractorManager.release(player);
+        BrightestDayAttachments.setData(player, RingPowerRegistry.ARMED, data.get().withAbility(ability.get().id()));
+    }
+
+    public static Optional<RingPower<?>> selectedAbility(Player player) {
+        List<RingPower<?>> abilities = abilities(player);
+        if (abilities.isEmpty()) return Optional.empty();
+
+        Optional<Identifier> selected = data(player).flatMap(Data::ability);
+        return Optional.of(abilities.stream()
+                .filter(ability -> selected.isPresent() && ability.id().equals(selected.get()))
+                .findFirst()
+                .orElse(abilities.getFirst()));
+    }
+
+    public static boolean isAbilityMode(Player player) {
+        return data(player).map(Data::abilityMode).orElse(false) && !abilities(player).isEmpty();
+    }
+
+    public static Optional<RingPower<?>> activeAbility(Player player) {
+        return isAbilityMode(player) ? selectedAbility(player) : Optional.empty();
+    }
+
+    public static List<RingPower<?>> abilities(Player player) {
+        return List.<RingPower<?>>of(RingPowerRegistry.TRACTOR_BEAM, RingPowerRegistry.SCAN, RingPowerRegistry.CONCUSSIVE, RingPowerRegistry.ACID).stream()
+                .filter(power -> BrightestDayAttachments.get(player, power).isPresent())
+                .toList();
+    }
+
     public static void fire(ServerPlayer player, int radius) {
-        if (!isArmed(player) || player.isSpectator()) return;
+        if (player.isSpectator() || isAbilityMode(player)) return;
 
         ServerLevel level = player.level();
         Optional<ConstructRingPower> construct = selectedConstruct(player);
@@ -154,6 +226,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
             return;
         }
         LAST_FIRED.put(player, now);
+        raise(player);
 
         int color = CorpsColors.of(player);
         construct.get().fire(player, radius, color);

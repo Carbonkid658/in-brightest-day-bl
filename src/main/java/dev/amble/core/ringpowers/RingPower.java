@@ -58,10 +58,6 @@ public abstract class RingPower<D> implements Identifiable, Translatable {
         return false;
     }
 
-    public boolean slotted() {
-        return this.category() != RingPowerCategory.CONSTRUCT;
-    }
-
     public boolean isAvailableTo(LanternCorps corps) {
         return this.corps.contains(corps) && corps.canUse(this.category());
     }

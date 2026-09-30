@@ -58,14 +58,19 @@ public final class TractorManager {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> release(handler.player));
     }
 
+    public static boolean isHolding(ServerPlayer player) {
+        return GRIPS.containsKey(player);
+    }
+
     public static void grab(ServerPlayer player) {
-        if (GRIPS.containsKey(player) || !TractorBeamRingPower.isActive(player) || !ArmedRingPower.isArmed(player) || !PowerRingItem.hasCharge(player)) return;
+        if (GRIPS.containsKey(player) || !TractorBeamRingPower.isActive(player) || !PowerRingItem.hasCharge(player)) return;
 
         Entity target = findTarget(player);
         if (target == null) return;
 
         double distance = Mth.clamp(player.getEyePosition().distanceTo(target.getBoundingBox().getCenter()), MIN_DISTANCE, RANGE);
         GRIPS.put(player, new Grip(target, distance));
+        ArmedRingPower.raise(player);
         broadcast(player, target.getId());
         player.level().playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 0.8F, 1.6F);
     }

@@ -6,9 +6,12 @@ import com.zigythebird.playeranimcore.animation.layered.modifier.AdjustmentModif
 import com.zigythebird.playeranimcore.math.Vec3f;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState;
+import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -45,6 +48,11 @@ public final class FlightAnimator {
     public static final float MAX_FOV_MODIFIER = 2.0F;
     public static final float MAX_FOV = 120.0F;
     private static final double SONIC_BOOM_SPEED = 3.0;
+    private static final float DIVE_PIVOT = 0.75F;
+    private static final float DIVE_MODEL_CENTER = 0.94F;
+    private static final float DIVE_BOX_CENTER = 0.3F;
+
+    public static final RenderStateDataKey<Vec3> DIVE_OFFSET = RenderStateDataKey.create(() -> "brightestday:dive_offset");
 
     private static final Map<Player, Motion> MOTIONS = new WeakHashMap<>();
     private static @Nullable FlightWindSoundInstance windSound;
@@ -252,6 +260,28 @@ public final class FlightAnimator {
         float flight = Mth.lerp(partialTicks, motion.oFlight, motion.flight);
         float blend = ease(Mth.lerp(partialTicks, motion.oFlightBlend, motion.flightBlend));
         return (blend * FLIGHT_BODY_ANGLE + Mth.lerp(partialTicks, motion.oBodyPitch, motion.bodyPitch)) * flight;
+    }
+
+    public static void extractDive(Avatar entity, AvatarRenderState state, float partialTicks) {
+        ((FabricRenderState) state).setData(DIVE_OFFSET, entity instanceof Player player ? diveOffset(player, partialTicks) : Vec3.ZERO);
+    }
+
+    public static Vec3 diveOffset(Player player, float partialTicks) {
+        Motion motion = MOTIONS.get(player);
+        if (motion == null) return Vec3.ZERO;
+
+        float flight = Mth.lerp(partialTicks, motion.oFlight, motion.flight);
+        float dive = ease(Mth.lerp(partialTicks, motion.oFlightBlend, motion.flightBlend)) * flight;
+        float pitch = bodyPitch(player, partialTicks) * Mth.DEG_TO_RAD;
+        float arm = DIVE_MODEL_CENTER - DIVE_PIVOT;
+        return new Vec3(0.0, DIVE_BOX_CENTER - DIVE_PIVOT - arm * Mth.cos(pitch), arm * Mth.sin(pitch)).scale(dive);
+    }
+
+    public static Vec3 worldDiveOffset(Player player, float partialTicks) {
+        Vec3 local = diveOffset(player, partialTicks);
+        float yaw = Mth.rotLerp(partialTicks, player.yBodyRotO, player.yBodyRot) * Mth.DEG_TO_RAD;
+        Vec3 facing = new Vec3(-Mth.sin(yaw), 0.0, Mth.cos(yaw));
+        return new Vec3(0.0, local.y, 0.0).add(facing.scale(-local.z));
     }
 
     public static boolean isAnimating(Player player) {

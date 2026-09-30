@@ -284,6 +284,7 @@ public final class FlightTrail {
         Vec3 right = new Vec3(-Mth.cos(yaw), 0.0, -Mth.sin(yaw));
         Vec3 down = new Vec3(0.0, -Mth.cos(pitch), 0.0).add(facing.scale(-Mth.sin(pitch)));
         return player.getPosition(partialTicks)
+                .add(FlightAnimator.worldDiveOffset(player, partialTicks))
                 .add(0.0, HIP_HEIGHT, 0.0)
                 .add(down.scale(LEG_LENGTH))
                 .add(right.scale(side * FOOT_SPACING));

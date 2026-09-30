@@ -97,6 +97,17 @@ public class BrightestDayConfig {
     @SerialEntry
     public int acidDrainPerSecond = 15;
 
+    @SerialEntry
+    public int lightOrbCost = 20;
+    @SerialEntry
+    public int lightOrbChargeTicks = 6;
+    @SerialEntry
+    public int lightOrbUpkeepPerSize = 1;
+    @SerialEntry
+    public int lightOrbMaxCount = 8;
+    @SerialEntry
+    public double spotlightRange = 48.0;
+
     public static BrightestDayConfig get() {
         return HANDLER.instance();
     }

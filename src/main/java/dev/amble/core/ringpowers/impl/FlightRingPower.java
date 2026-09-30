@@ -13,8 +13,10 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
@@ -28,6 +30,8 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
     private static final double BRAKE_RESPONSE = 0.12;
     private static final int DRAIN_PER_SECOND = 15;
     private static final int BOOST_DRAIN_PER_SECOND = 30;
+    private static final double DIVE_ENTER_SPEED = 0.35;
+    private static final double DIVE_EXIT_SPEED = 0.15;
 
     public record Data(boolean enabled) {
         public static final Codec<Data> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -100,6 +104,17 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
                 && !player.isSleeping()
                 && !player.isFallFlying()
                 && !player.getAbilities().flying;
+    }
+
+    public static boolean isDiving(Player player, boolean wasDiving) {
+        if (!isFlying(player) || !player.isSprinting()) return false;
+        double speed = player.position().subtract(player.xo, player.yo, player.zo).horizontalDistance();
+        return speed > (wasDiving ? DIVE_EXIT_SPEED : DIVE_ENTER_SPEED);
+    }
+
+    public static boolean fitsStanding(Player player) {
+        AABB box = EntityDimensions.scalable(0.6F, 1.8F).scale(player.getScale()).makeBoundingBox(player.position());
+        return player.level().noCollision(player, box.deflate(1.0E-7));
     }
 
     public static void travel(Player player, Vec3 input, boolean ascending) {

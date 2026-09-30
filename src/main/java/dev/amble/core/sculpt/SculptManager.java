@@ -80,6 +80,10 @@ public final class SculptManager {
         });
     }
 
+    public static boolean isSculpting(ServerPlayer player) {
+        return SESSIONS.containsKey(player);
+    }
+
     public static void setShape(ServerPlayer player, SculptShape shape) {
         SHAPES.put(player.getUUID(), shape);
     }

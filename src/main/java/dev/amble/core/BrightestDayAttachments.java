@@ -63,8 +63,6 @@ public class BrightestDayAttachments {
                     .copyOnDeath()
                     .buildAndRegister(BrightestDay.id("last_jumpstart"));
 
-    public static final int MAX_SLOTS = 4;
-
     public static EyePaint getEyes(Player player) {
         return player.getAttachedOrElse(BrightestDayAttachments.EYES, EyePaint.EMPTY);
     }
@@ -99,13 +97,6 @@ public class BrightestDayAttachments {
             if (instance.is(power)) return Optional.of((RingPowerInstance<D>) instance);
         }
         return Optional.empty();
-    }
-
-    public static List<RingPowerInstance<?>> slotted(Player player) {
-        return get(player).stream()
-                .filter(instance -> instance.power().slotted())
-                .limit(MAX_SLOTS)
-                .toList();
     }
 
     public static List<RingPowerInstance<?>> constructs(Player player) {

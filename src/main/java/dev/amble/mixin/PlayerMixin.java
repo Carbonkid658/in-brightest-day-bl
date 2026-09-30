@@ -1,6 +1,7 @@
 package dev.amble.mixin;
 
 import dev.amble.core.ringpowers.RingBenefits;
+import dev.amble.core.ringpowers.CompactFlyer;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -9,13 +10,16 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Player.class)
-public abstract class PlayerMixin extends LivingEntity {
+public abstract class PlayerMixin extends LivingEntity implements CompactFlyer {
+    @Unique
+    private boolean brightestday$compact;
 
     protected PlayerMixin(EntityType<? extends LivingEntity> type, Level level) {
         super(type, level);
@@ -40,6 +44,20 @@ public abstract class PlayerMixin extends LivingEntity {
         if (FlightRingPower.isFlying((Player) (Object) this)) {
             cir.setReturnValue(Pose.STANDING);
         }
+    }
+
+    @Override
+    public boolean brightestday$isCompact() {
+        return this.brightestday$compact;
+    }
+
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void brightestday$updateCompact(CallbackInfo ci) {
+        Player self = (Player) (Object) this;
+        boolean compact = FlightRingPower.isDiving(self, this.brightestday$compact) || this.brightestday$compact && !FlightRingPower.fitsStanding(self);
+        if (compact == this.brightestday$compact) return;
+        this.brightestday$compact = compact;
+        this.refreshDimensions();
     }
 
     @Inject(method = "updateSwimming", at = @At("HEAD"), cancellable = true)

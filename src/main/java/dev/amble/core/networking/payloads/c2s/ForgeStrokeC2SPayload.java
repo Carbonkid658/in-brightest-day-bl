@@ -41,8 +41,9 @@ public record ForgeStrokeC2SPayload(int action, List<Vec3> directions) implement
     public void handle(ServerPlayNetworking.Context context) {
         ServerPlayer player = context.player();
         boolean drawing = this.action == START || this.action == POINTS;
-        if (drawing && (!ArmedRingPower.isArmed(player)
+        if (drawing && (ArmedRingPower.isAbilityMode(player)
                 || ArmedRingPower.selectedConstruct(player).orElse(null) != RingPowerRegistry.TOOL_FORGE)) return;
+        if (this.action == START) ArmedRingPower.raise(player);
 
         ForgeStrokeS2CPayload relay = new ForgeStrokeS2CPayload(player.getId(), this.action, this.directions);
         for (ServerPlayer watcher : PlayerLookup.tracking(player)) {

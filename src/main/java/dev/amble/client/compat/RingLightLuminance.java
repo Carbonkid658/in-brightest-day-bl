@@ -12,7 +12,7 @@ public final class RingLightLuminance implements EntityLuminance {
     public static final RingLightLuminance INSTANCE = new RingLightLuminance();
     public static final Type TYPE = Type.registerSimple(BrightestDay.id("ring_light"), INSTANCE);
 
-    private static final int LUMINANCE = 7;
+    private static final int LUMINANCE = 15;
 
     @Override
     public Type type() {
