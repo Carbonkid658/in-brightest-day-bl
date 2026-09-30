@@ -43,7 +43,7 @@ public final class ArmedPose {
     private static final float FIRST_PERSON_FORWARD = 0.1F;
     private static final float FIRING_INWARD = 0.22F;
     private static final float FIRING_TURN = 18.0F;
-    private static final float GLOW_SIZE = 1.5F * VoxelRenderer.PIXEL;
+    private static final float GLOW_SIZE = 0.75F * VoxelRenderer.PIXEL;
     private static final float GLOW_CORE_WHITENESS = 0.6F;
     private static final float GLOW_CORE_ALPHA = 0.9F;
     private static final float GLOW_HALO_SCALE = 2.2F;
