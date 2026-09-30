@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public final class ShieldEffects {
     private static final int FADE_TICKS = 6;
@@ -70,6 +72,12 @@ public final class ShieldEffects {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> SHIELDS.clear());
         ClientTickEvents.END_CLIENT_TICK.register(ShieldEffects::tick);
         LevelRenderEvents.COLLECT_SUBMITS.register(ShieldEffects::render);
+    }
+
+    public static void snapshot(Consumer<CustomPacketPayload> out) {
+        SHIELDS.forEach((id, shield) -> {
+            if (shield.fade < 0) out.accept(new ShieldSpawnS2CPayload(id, shield.entityId, shield.center, shield.radius, shield.color, shield.duration, shield.age));
+        });
     }
 
     private static void tick(Minecraft client) {

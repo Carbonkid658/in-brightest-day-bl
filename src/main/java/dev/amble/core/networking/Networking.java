@@ -28,6 +28,7 @@ import dev.amble.core.networking.payloads.s2c.ConcussiveS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ForgeStrokeS2CPayload;
 import dev.amble.core.networking.payloads.s2c.HealBeamS2CPayload;
 import dev.amble.core.networking.payloads.s2c.LightOrbS2CPayload;
+import dev.amble.core.networking.payloads.s2c.PlayerStateS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ScanS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ScanStartS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ShieldRemoveS2CPayload;
@@ -66,6 +67,7 @@ public class Networking {
         PayloadTypeRegistry.serverboundPlay().register(ChargeC2SPayload.TYPE, ChargeC2SPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ChargeS2CPayload.TYPE, ChargeS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(LightOrbS2CPayload.TYPE, LightOrbS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(PlayerStateS2CPayload.TYPE, PlayerStateS2CPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(AcidC2SPayload.TYPE, AcidC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SetEyesC2SPayload.TYPE, SetEyesC2SPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ConcussiveS2CPayload.TYPE, ConcussiveS2CPayload.CODEC);

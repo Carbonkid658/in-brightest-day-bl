@@ -160,6 +160,8 @@ public final class ForgeClient {
     }
 
     private static void receive(ForgeStrokeS2CPayload payload) {
+        LocalPlayer self = Minecraft.getInstance().player;
+        if (self != null && self.getId() == payload.playerId()) return;
         switch (payload.action()) {
             case ForgeStrokeC2SPayload.START -> {
                 RemoteStroke stroke = new RemoteStroke();

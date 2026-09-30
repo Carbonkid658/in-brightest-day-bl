@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public final class LightOrbEffects {
     private static final int POP_TICKS = 8;
@@ -61,6 +63,12 @@ public final class LightOrbEffects {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ORBS.clear());
         ClientTickEvents.END_CLIENT_TICK.register(LightOrbEffects::tick);
         LevelRenderEvents.COLLECT_SUBMITS.register(LightOrbEffects::render);
+    }
+
+    public static void snapshot(Consumer<CustomPacketPayload> out) {
+        ORBS.forEach((id, orb) -> {
+            if (orb.fade < 0) out.accept(new LightOrbS2CPayload(id, orb.casterId, orb.center, orb.size, orb.color, true));
+        });
     }
 
     private static void tick(Minecraft client) {

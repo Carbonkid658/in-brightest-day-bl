@@ -201,6 +201,7 @@ public final class BlastEffects {
     }
 
     private static void receiveCharge(Minecraft client, ChargeS2CPayload payload) {
+        if (client.player != null && client.player.getId() == payload.playerId()) return;
         RemoteCharge previous = REMOTE_CHARGES.remove(payload.playerId());
         if (previous != null) client.getSoundManager().stop(previous.sound);
         if (!payload.charging() || client.level == null) return;

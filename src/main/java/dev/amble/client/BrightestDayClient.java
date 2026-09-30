@@ -6,6 +6,7 @@ import dev.amble.client.effects.HealBeamEffects;
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.ConstructClient;
 import dev.amble.client.effects.ElementAura;
+import dev.amble.client.compat.ReplaySnapshot;
 import dev.amble.client.effects.AbilityClient;
 import dev.amble.client.effects.AcidEffects;
 import dev.amble.client.effects.ConcussiveEffects;
@@ -64,6 +65,7 @@ public class BrightestDayClient implements ClientModInitializer {
         AcidEffects.init();
         LightOrbEffects.init();
         SpotlightEffects.init();
+        ReplaySnapshot.init();
         LanternButtons.init();
         RingChargeHud.init();
         MenuScreens.register(BrightestDayMenus.LANTERN, LanternScreen::new);
