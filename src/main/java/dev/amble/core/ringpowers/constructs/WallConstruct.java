@@ -30,6 +30,11 @@ public class WallConstruct extends ConstructRingPower {
     }
 
     @Override
+    public int chargeTicks() {
+        return 6;
+    }
+
+    @Override
     public int maxSize() {
         return 6;
     }

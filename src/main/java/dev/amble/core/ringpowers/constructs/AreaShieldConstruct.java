@@ -27,6 +27,11 @@ public class AreaShieldConstruct extends ConstructRingPower {
     }
 
     @Override
+    public int chargeTicks() {
+        return 8;
+    }
+
+    @Override
     public int minSize() {
         return 2;
     }

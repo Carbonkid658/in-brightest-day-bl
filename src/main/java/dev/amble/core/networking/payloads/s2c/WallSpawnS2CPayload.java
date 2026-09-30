@@ -9,7 +9,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 import java.util.List;
 
-public record WallSpawnS2CPayload(int id, List<BlockPos> cells, int color, int duration, int age) implements CustomPacketPayload {
+public record WallSpawnS2CPayload(int id, int casterId, List<BlockPos> cells, int color, int duration, int age) implements CustomPacketPayload {
 
     public static final Type<WallSpawnS2CPayload> TYPE =
             new Type<>(BrightestDay.id("wall_spawn"));
@@ -17,6 +17,7 @@ public record WallSpawnS2CPayload(int id, List<BlockPos> cells, int color, int d
     public static final StreamCodec<ByteBuf, WallSpawnS2CPayload> CODEC =
             StreamCodec.composite(
                     ByteBufCodecs.VAR_INT, WallSpawnS2CPayload::id,
+                    ByteBufCodecs.VAR_INT, WallSpawnS2CPayload::casterId,
                     BlockPos.STREAM_CODEC.apply(ByteBufCodecs.list()), WallSpawnS2CPayload::cells,
                     ByteBufCodecs.INT, WallSpawnS2CPayload::color,
                     ByteBufCodecs.VAR_INT, WallSpawnS2CPayload::duration,

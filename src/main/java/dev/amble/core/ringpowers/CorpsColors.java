@@ -6,9 +6,9 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 
 public final class CorpsColors {
-    private static final float MAX_DARKEN = 0.5F;
-    private static final float MAX_LIGHTEN = 0.6F;
-    private static final float LIGHTEN_DESATURATION = 0.4F;
+    private static final float MAX_DARKEN = 0.85F;
+    private static final float MAX_LIGHTEN = 0.95F;
+    private static final float LIGHTEN_DESATURATION = 0.7F;
     private static final float MAX_SATURATION_BOOST = 0.8F;
 
     public static int of(Player player) {

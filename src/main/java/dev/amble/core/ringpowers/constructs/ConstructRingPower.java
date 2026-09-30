@@ -103,6 +103,11 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
         return false;
     }
 
+    /** How long the ring winds up before this construct fires; 0 fires the moment use is pressed. */
+    public int chargeTicks() {
+        return 25;
+    }
+
     public abstract void fire(ServerPlayer player, int radius, int color);
 
     public record Aim(Vec3 eye, Vec3 look, Vec3 end, @Nullable Entity entity) {}

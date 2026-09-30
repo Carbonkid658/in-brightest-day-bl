@@ -9,9 +9,12 @@ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.ringpowers.CorpsColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -26,11 +29,13 @@ public final class WallEffects {
     private static final int FADE_TICKS = 6;
     private static final float CELL_HALF = 0.49F;
     private static final float CELL_ALPHA = 0.85F;
+    private static final float PREVIEW_HALF = 0.48F;
 
     private static final Map<Integer, ClientWall> WALLS = new HashMap<>();
 
     private static final class ClientWall {
         final List<BlockPos> cells;
+        final int casterId;
         final int color;
         final int duration;
         final @Nullable ClientLevel level;
@@ -39,6 +44,7 @@ public final class WallEffects {
 
         ClientWall(WallSpawnS2CPayload payload, @Nullable ClientLevel level) {
             this.cells = payload.cells();
+            this.casterId = payload.casterId();
             this.color = ARGB.opaque(payload.color());
             this.duration = payload.duration();
             this.age = payload.age();
@@ -67,7 +73,7 @@ public final class WallEffects {
                 continue;
             }
             wall.age++;
-            if (wall.fade < 0 && wall.age > wall.duration + 20) wall.fade = 0;
+            if (wall.fade < 0 && wall.duration >= 0 && wall.age > wall.duration + 20) wall.fade = 0;
             if (wall.fade >= 0 && ++wall.fade > FADE_TICKS) iterator.remove();
         }
     }
@@ -76,6 +82,7 @@ public final class WallEffects {
         if (WALLS.isEmpty()) return;
 
         Minecraft client = Minecraft.getInstance();
+        if (client.level == null) return;
         float partialTicks = client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         Vec3 camera = context.levelState().cameraRenderState.pos;
 
@@ -84,6 +91,7 @@ public final class WallEffects {
             float fade = wall.fade < 0 ? 1.0F : 1.0F - Mth.clamp((wall.fade + partialTicks) / FADE_TICKS, 0.0F, 1.0F);
             if (fade <= 0.01F) continue;
 
+            int color = liveColor(client.level, wall);
             List<ShieldEffects.Voxel> cells = new ArrayList<>(wall.cells.size());
             int count = wall.cells.size();
             for (int i = 0; i < count; i++) {
@@ -92,11 +100,27 @@ public final class WallEffects {
                 float scale = pop * fade;
                 if (scale <= 0.01F) continue;
 
-                int tint = VoxelRenderer.toWhite(wall.color, 0.1F + 0.12F * Mth.sin(time * 0.2F + i * 0.9F));
+                int tint = VoxelRenderer.toWhite(color, 0.1F + 0.12F * Mth.sin(time * 0.2F + i * 0.9F));
                 cells.add(new ShieldEffects.Voxel(Vec3.atCenterOf(wall.cells.get(i)), CELL_HALF * scale, tint));
             }
             ShieldEffects.submit(context, camera, cells, CELL_ALPHA);
         }
+    }
+
+    /** Follows the caster's current colour tweak while they're around, falling back to the colour it was raised with. */
+    private static int liveColor(ClientLevel level, ClientWall wall) {
+        if (level.getEntity(wall.casterId) instanceof Player caster && PowerRingItem.getWornCorps(caster).isPresent()) {
+            return ARGB.opaque(CorpsColors.of(caster));
+        }
+        return wall.color;
+    }
+
+    /** Translucent outlines for hard light that doesn't exist yet, in the same style as raised walls. */
+    public static void submitPreview(LevelRenderContext context, Vec3 camera, Iterable<BlockPos> cells, int color, float alpha) {
+        int opaque = ARGB.opaque(color);
+        List<ShieldEffects.Voxel> voxels = new ArrayList<>();
+        for (BlockPos pos : cells) voxels.add(new ShieldEffects.Voxel(Vec3.atCenterOf(pos), PREVIEW_HALF, opaque));
+        ShieldEffects.submit(context, camera, voxels, alpha);
     }
 
     private WallEffects() {}

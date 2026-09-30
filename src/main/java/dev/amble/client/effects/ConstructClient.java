@@ -62,6 +62,7 @@ public final class ConstructClient {
 
     public static boolean onScroll(int wheel) {
         if (TractorEffects.onScroll(wheel)) return true;
+        if (SculptClient.onScroll(wheel)) return true;
 
         LocalPlayer player = Minecraft.getInstance().player;
         Optional<ConstructRingPower> construct = player == null ? Optional.empty() : sizingConstruct(player);

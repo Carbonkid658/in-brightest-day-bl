@@ -29,6 +29,11 @@ public class HealBeamConstruct extends ConstructRingPower {
     }
 
     @Override
+    public int chargeTicks() {
+        return 10;
+    }
+
+    @Override
     public boolean sustained() {
         return true;
     }

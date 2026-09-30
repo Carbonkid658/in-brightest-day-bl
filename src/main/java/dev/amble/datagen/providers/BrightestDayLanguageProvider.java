@@ -4,6 +4,7 @@ import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.BrightestDayItems;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPowerRegistry;
+import dev.amble.core.sculpt.SculptShape;
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider;
 import net.minecraft.core.HolderLookup;
@@ -37,8 +38,9 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(BrightestDayBlocks.STAR_SAPPHIRE_LANTERN_BLOCK, "Star Sapphire Lantern");
 
         builder.add("itemGroup.brightestday.brightest_day", "In Brightest Day");
-        builder.add("container.brightestday.lantern", "Lantern");
-        builder.add("gui.brightestday.lantern", "Lantern");
+        builder.add("container.brightestday.lantern", "Ring Slot");
+        builder.add("gui.brightestday.lantern", "Ring Slot");
+        builder.add("gui.brightestday.ring_charge", "Charge: %s%%");
         builder.add("gui.brightestday.inventory", "Inventory");
         builder.add("gui.brightestday.no_ring", "No ring equipped");
         builder.add("gui.brightestday.brightness", "Brightness: %s");
@@ -135,6 +137,17 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(RingPowerRegistry.WALL.getTranslationKey(), "Wall");
         builder.add("message.brightestday.construct_size", "%s size: %s");
         builder.add("message.brightestday.wall_blocked", "There's no room for a wall there.");
+        builder.add(RingPowerRegistry.SCULPT.getTranslationKey(), "Sculpt");
+        builder.add(SculptShape.FREEFORM.translationKey(), "Freeform");
+        builder.add(SculptShape.STAIRS.translationKey(), "Stairs");
+        builder.add(SculptShape.TUBE.translationKey(), "Tube");
+        builder.add(SculptShape.CAGE.translationKey(), "Cage");
+        builder.add("message.brightestday.sculpt_shape", "%s shape: %s");
+        builder.add("message.brightestday.sculpt_limit", "Your construct is at its limit.");
+        builder.add("message.brightestday.sculpt_cage_too_small", "Circle an area to raise a cage.");
+        builder.add("message.brightestday.sculpt_fading", "Your ring can't hold your constructs together!");
+        builder.add("hud.brightestday.sculpt_width", "Width: %s");
+        builder.add("hud.brightestday.sculpt_hint", "Sneak + Scroll: shape");
         builder.add("block.brightestday.hard_light", "Hard Light");
         builder.add(RingPowerRegistry.TOOL_FORGE.getTranslationKey(), "Forge");
 

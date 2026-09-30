@@ -8,9 +8,12 @@ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Map;
@@ -33,7 +36,8 @@ public final class ElementAura {
         if (client.level == null || client.isPaused()) return;
 
         for (AbstractClientPlayer player : client.level.players()) {
-            boolean submerged = (player.isInWater() || player.isInLava()) && RingBenefits.isActive(player);
+            boolean inLava = isSubmerged(player, FluidTags.LAVA);
+            boolean submerged = (inLava || isSubmerged(player, FluidTags.WATER)) && RingBenefits.isActive(player);
             float[] aura = AURAS.get(player);
             if (aura == null) {
                 if (!submerged) continue;
@@ -42,9 +46,14 @@ public final class ElementAura {
             }
             aura[1] = aura[0];
             aura[0] += ((submerged ? 1.0F : 0.0F) - aura[0]) * FADE_SPEED;
-            if (submerged) aura[2] = player.isInLava() ? LAVA_ALPHA : WATER_ALPHA;
+            if (submerged) aura[2] = inLava ? LAVA_ALPHA : WATER_ALPHA;
             if (!submerged && aura[0] < 0.005F) AURAS.remove(player);
         }
+    }
+
+    /** True once the fluid reaches the top of the player's hitbox, not merely their feet or eyes. */
+    private static boolean isSubmerged(Player player, TagKey<Fluid> fluid) {
+        return player.getFluidHeight(fluid) >= player.getBbHeight();
     }
 
     private static void render(LevelRenderContext context) {

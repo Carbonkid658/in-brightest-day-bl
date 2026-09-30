@@ -7,6 +7,7 @@ import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.ConstructClient;
 import dev.amble.client.effects.ElementAura;
 import dev.amble.client.effects.ScanEffects;
+import dev.amble.client.effects.SculptClient;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.TractorEffects;
 import dev.amble.client.effects.WallEffects;
@@ -47,6 +48,7 @@ public class BrightestDayClient implements ClientModInitializer {
         GlowAura.init();
         ForgeClient.init();
         ConstructClient.init();
+        SculptClient.init();
         LanternButtons.init();
         RingChargeHud.init();
         MenuScreens.register(BrightestDayMenus.LANTERN, LanternScreen::new);

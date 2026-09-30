@@ -53,7 +53,7 @@ public final class BlastEffects {
     private static final float SHOULDER_OFFSET = 0.35F;
     private static final float ARM_LENGTH = 0.7F;
 
-    private static final int CHARGE_TICKS = 25;
+    private static final int LONG_CHARGE_TICKS = 25;
     private static final int SUSTAIN_GRACE_TICKS = 10;
     private static final float CHARGE_SOUND_PITCH = 1.2F;
     private static final int CHARGE_VOXELS = 16;
@@ -69,6 +69,7 @@ public final class BlastEffects {
     private static int sustainTicks;
     private static boolean awaitRelease;
     private static int charge;
+    private static int chargeGoal = LONG_CHARGE_TICKS;
     private static int oCharge;
     private static float kick;
     private static float oKick;
@@ -116,7 +117,7 @@ public final class BlastEffects {
         boolean keyDown = player != null && client.gui.screen() == null && client.options.keyUse.isDown();
         if (sustaining) {
             sustainTicks++;
-            boolean serverStopped = sustainTicks > SUSTAIN_GRACE_TICKS && (player == null || !BeamEffects.isBeaming(player) && !HealBeamEffects.isHealing(player));
+            boolean serverStopped = sustainTicks > SUSTAIN_GRACE_TICKS && (player == null || !SculptClient.isSelected(player) && !BeamEffects.isBeaming(player) && !HealBeamEffects.isHealing(player));
             if (!keyDown || serverStopped) {
                 if (!serverStopped) ClientPlayNetworking.send(StopBeamC2SPayload.INSTANCE);
                 sustaining = false;
@@ -138,12 +139,14 @@ public final class BlastEffects {
             return;
         }
 
-        if (charge == 0) {
+        if (charge == 0) chargeGoal = ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::chargeTicks).orElse(LONG_CHARGE_TICKS);
+        if (charge == 0 && chargeGoal > 1) {
             chargeSound = new EntityBoundSoundInstance(SoundEvents.WARDEN_SONIC_CHARGE, SoundSource.PLAYERS, 1.0F, CHARGE_SOUND_PITCH, player, player.getRandom().nextLong());
             client.getSoundManager().play(chargeSound);
         }
 
-        if (++charge >= CHARGE_TICKS) {
+        if (++charge >= chargeGoal) {
+            if (chargeSound != null && chargeGoal < LONG_CHARGE_TICKS) client.getSoundManager().stop(chargeSound);
             boolean sustained = ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::sustained).orElse(false);
             ClientPlayNetworking.send(new FireConstructC2SPayload(ConstructClient.selectedSize(player)));
             if (sustained) {
@@ -154,7 +157,7 @@ public final class BlastEffects {
             oCharge = 0;
             chargeSound = null;
             cooldown = ArmedRingPower.COOLDOWN_TICKS;
-            kick = 1.0F;
+            kick = chargeGoal > 0 ? 1.0F : 0.0F;
         }
     }
 
@@ -164,8 +167,12 @@ public final class BlastEffects {
         charge = 0;
     }
 
+    public static boolean isSustaining() {
+        return sustaining;
+    }
+
     public static float firingAmount(float partialTicks) {
-        float chargeProgress = Mth.lerp(partialTicks, oCharge, charge) / CHARGE_TICKS;
+        float chargeProgress = Mth.lerp(partialTicks, oCharge, charge) / Math.max(chargeGoal, 1);
         float easedCharge = chargeProgress * chargeProgress * (3.0F - 2.0F * chargeProgress);
         float forge = ForgeClient.drawAmount();
         float beam = sustaining ? 1.0F : 0.0F;
@@ -173,7 +180,7 @@ public final class BlastEffects {
     }
 
     public static float cameraShake(float partialTicks) {
-        float chargeProgress = Mth.lerp(partialTicks, oCharge, charge) / CHARGE_TICKS;
+        float chargeProgress = Mth.lerp(partialTicks, oCharge, charge) / Math.max(chargeGoal, 1);
         return chargeProgress * chargeProgress * MAX_CHARGE_SHAKE + Mth.lerp(partialTicks, oKick, kick) * FIRE_SHAKE;
     }
 
@@ -242,7 +249,7 @@ public final class BlastEffects {
     }
 
     private static void renderCharge(LevelRenderContext context, LocalPlayer player, Vec3 camera, float partialTicks) {
-        float progress = Mth.lerp(partialTicks, oCharge, charge) / CHARGE_TICKS;
+        float progress = Mth.lerp(partialTicks, oCharge, charge) / Math.max(chargeGoal, 1);
         int color = ARGB.opaque(CorpsColors.of(player));
         int tint = VoxelRenderer.toWhite(color, progress * 0.6F);
         Vec3 hand = hand(player, partialTicks);

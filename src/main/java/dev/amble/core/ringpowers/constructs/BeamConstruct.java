@@ -17,6 +17,11 @@ public class BeamConstruct extends ConstructRingPower {
     }
 
     @Override
+    public int chargeTicks() {
+        return 12;
+    }
+
+    @Override
     public boolean sustained() {
         return true;
     }

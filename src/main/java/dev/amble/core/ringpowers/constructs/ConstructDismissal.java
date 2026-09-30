@@ -2,6 +2,7 @@ package dev.amble.core.ringpowers.constructs;
 
 import dev.amble.core.beams.BeamManager;
 import dev.amble.core.beams.HealBeamManager;
+import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.shields.ShieldManager;
 import dev.amble.core.walls.WallManager;
 import net.minecraft.network.chat.Component;
@@ -14,8 +15,9 @@ public final class ConstructDismissal {
     public static void dismissLatest(ServerPlayer player) {
         long shieldCreated = ShieldManager.latestCreatedAt(player.getUUID());
         long wallCreated = WallManager.latestCreatedAt(player.getUUID());
+        long sculptCreated = SculptManager.latestCreatedAt(player.getUUID());
         long toolCreated = ConstructTools.latestCreatedAt(player);
-        long newest = Math.max(shieldCreated, Math.max(wallCreated, toolCreated));
+        long newest = Math.max(Math.max(shieldCreated, sculptCreated), Math.max(wallCreated, toolCreated));
         if (newest == Long.MIN_VALUE) {
             player.sendOverlayMessage(Component.translatable("message.brightestday.no_constructs_to_dismiss"));
             return;
@@ -24,6 +26,8 @@ public final class ConstructDismissal {
         if (newest == toolCreated) {
             ConstructTools.dissolveAll(player);
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 0.8F, 1.4F);
+        } else if (newest == sculptCreated) {
+            SculptManager.dismissLatest(player.getUUID());
         } else if (newest == wallCreated) {
             WallManager.dismissLatest(player.getUUID());
         } else {
@@ -34,8 +38,10 @@ public final class ConstructDismissal {
     public static void dismissAll(ServerPlayer player) {
         BeamManager.stop(player);
         HealBeamManager.stop(player);
+        SculptManager.stop(player, false);
         ShieldManager.dismissAll(player.getUUID());
         WallManager.dismissAll(player.getUUID());
+        SculptManager.dismissAll(player.getUUID());
         ConstructTools.dissolveAll(player);
     }
 

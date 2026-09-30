@@ -15,6 +15,7 @@ import dev.amble.core.shields.ShieldManager;
 import dev.amble.core.tractor.TractorManager;
 import dev.amble.core.ringpowers.constructs.ConstructTools;
 import dev.amble.core.walls.WallManager;
+import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.beams.BeamManager;
 import dev.amble.core.beams.HealBeamManager;
 import dev.amble.core.ringpowers.CorpsSynergy;
@@ -49,6 +50,7 @@ public class BrightestDay implements ModInitializer {
 		TractorManager.init();
 		ConstructTools.init();
 		WallManager.init();
+		SculptManager.init();
 		BeamManager.init();
 		HealBeamManager.init();
 		CorpsSynergy.init();

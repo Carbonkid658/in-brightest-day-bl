@@ -1,17 +1,25 @@
 package dev.amble.client.screens;
 
 import dev.amble.core.BrightestDayItems;
+import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.ringpowers.CorpsColors;
+import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.networking.payloads.c2s.OpenLanternC2SPayload;
 import dev.amble.mixin.client.AbstractContainerScreenAccessor;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+
+import java.util.Optional;
 
 public final class LanternButtons {
     private static final int RECIPE_BOOK_WIDTH = 147;
@@ -28,8 +36,27 @@ public final class LanternButtons {
 
             position(screen, button);
             Screens.getWidgets(screen).add(button);
-            ScreenEvents.beforeExtract(screen).register((s, graphics, mouseX, mouseY, delta) -> position(s, button));
+            int[] shownCharge = {Integer.MIN_VALUE};
+            ScreenEvents.beforeExtract(screen).register((s, graphics, mouseX, mouseY, delta) -> {
+                position(s, button);
+                updateTooltip(client, button, shownCharge);
+            });
         });
+    }
+
+    /** Keeps the charge line under the button's name current; the tooltip is only rebuilt when the percentage changes. */
+    private static void updateTooltip(Minecraft client, IconButton button, int[] shownCharge) {
+        if (client.player == null) return;
+        ItemStack ring = PowerRingItem.getWornRing(client.player);
+        Optional<LanternCorps> corps = PowerRingItem.getCorps(ring);
+        int charge = corps.isPresent() ? Math.round(PowerRingItem.getChargeFraction(ring) * 100) : -1;
+        if (charge == shownCharge[0]) return;
+        shownCharge[0] = charge;
+
+        Component detail = corps.isPresent()
+                ? Component.translatable("gui.brightestday.ring_charge", charge).withColor(CorpsColors.of(client.player))
+                : Component.translatable("gui.brightestday.no_ring").withStyle(ChatFormatting.GRAY);
+        button.setTooltip(Tooltip.create(Component.translatable("gui.brightestday.lantern").append("\n").append(detail)));
     }
 
     private static void position(Screen screen, IconButton button) {

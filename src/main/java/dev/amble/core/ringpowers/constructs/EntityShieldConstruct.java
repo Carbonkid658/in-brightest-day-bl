@@ -22,6 +22,11 @@ public class EntityShieldConstruct extends ConstructRingPower {
     }
 
     @Override
+    public int chargeTicks() {
+        return 6;
+    }
+
+    @Override
     public void fire(ServerPlayer player, int radius, int color) {
         Entity hit = aim(player, RANGE).entity();
         Entity target = hit instanceof LivingEntity ? hit : player;

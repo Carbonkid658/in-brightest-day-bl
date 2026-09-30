@@ -37,7 +37,10 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
     private static final int AURA_MARGIN = 7;
     private static final int INFO_X = 50;
     private static final int BAR_Y = 36;
-    private static final int BAR_WIDTH = 118;
+    private static final int INFO_WIDTH = 118;
+    private static final int PERCENT_GAP = 4;
+    // leaves room right of the bar for "100%", so the corps name above gets the full width
+    private static final int BAR_WIDTH = 90;
     private static final int BAR_HEIGHT = 5;
 
     private static final int PANEL = 0xFFC6C6C6;
@@ -140,11 +143,12 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
             return;
         }
 
-        graphics.text(this.font, Component.translatable(corps.get().getTranslationKey()), INFO_X, BAR_Y - 12, this.tint(corps.get()), false);
+        String name = Component.translatable(corps.get().getTranslationKey()).getString();
+        if (this.font.width(name) > INFO_WIDTH) name = this.font.plainSubstrByWidth(name, INFO_WIDTH - this.font.width("…")) + "…";
+        graphics.text(this.font, name, INFO_X, BAR_Y - 12, this.tint(corps.get()), false);
 
         int percent = Math.round(PowerRingItem.getChargeFraction(ring) * 100);
-        String charge = percent + "%";
-        graphics.text(this.font, charge, INFO_X + BAR_WIDTH - this.font.width(charge), BAR_Y - 12, LABEL, false);
+        graphics.text(this.font, percent + "%", INFO_X + BAR_WIDTH + PERCENT_GAP, BAR_Y - 2, LABEL, false);
     }
 
     private static void drawPanel(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
