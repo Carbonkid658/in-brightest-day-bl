@@ -2,6 +2,7 @@ package dev.amble.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.BrightestDay;
+import dev.amble.client.flight.FlightControls;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.networking.payloads.c2s.ConcussiveC2SPayload;
 import dev.amble.core.networking.payloads.c2s.DismissConstructC2SPayload;
@@ -27,7 +28,11 @@ public final class BrightestDayKeybinds {
     public static final KeyMapping CONCUSSIVE_BLAST = register("concussive_blast", InputConstants.KEY_B);
     public static final KeyMapping ACID_VOMIT = register("acid_vomit", InputConstants.KEY_N);
 
-    public static final KeyMapping TOGGLE_LIGHT = register("toggle_light", InputConstants.KEY_LALT);
+    public static final KeyMapping TOGGLE_LIGHT = register("toggle_light", InputConstants.KEY_V);
+
+    public static final KeyMapping FLIGHT_SPEED_UP = register("flight_speed_up", InputConstants.KEY_EQUALS);
+    public static final KeyMapping FLIGHT_SPEED_DOWN = register("flight_speed_down", InputConstants.KEY_MINUS);
+    public static final KeyMapping FLIGHT_BOOST = register("flight_boost", InputConstants.KEY_LALT);
 
     private static KeyMapping register(String name, int key) {
         return KeyMappingHelper.registerKeyMapping(new KeyMapping(
@@ -64,6 +69,16 @@ public final class BrightestDayKeybinds {
         while (TOGGLE_LIGHT.consumeClick()) {
             ClientPlayNetworking.send(ToggleLightC2SPayload.INSTANCE);
         }
+
+        while (FLIGHT_SPEED_UP.consumeClick()) {
+            FlightControls.stepSpeed(client, client.player, 1);
+        }
+
+        while (FLIGHT_SPEED_DOWN.consumeClick()) {
+            FlightControls.stepSpeed(client, client.player, -1);
+        }
+
+        FlightControls.syncBoost(client.player, client.gui.screen() == null && FLIGHT_BOOST.isDown());
     }
 
     private BrightestDayKeybinds() {}

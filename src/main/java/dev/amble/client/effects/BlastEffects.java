@@ -3,6 +3,8 @@ package dev.amble.client.effects;
 import dev.amble.core.ringpowers.CorpsColors;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import dev.amble.client.effects.attacks.area.BarrageEffects;
+import dev.amble.client.effects.drill.DrillEffects;
 import dev.amble.client.forge.ForgeClient;
 import dev.amble.client.flight.FlightRenderTypes;
 import dev.amble.core.items.PowerRingItem;
@@ -140,7 +142,7 @@ public final class BlastEffects {
         boolean keyDown = player != null && client.gui.screen() == null && client.options.keyUse.isDown();
         if (sustaining) {
             sustainTicks++;
-            boolean serverStopped = sustainTicks > SUSTAIN_GRACE_TICKS && (player == null || !SculptClient.isSelected(player) && !BeamEffects.isBeaming(player) && !HealBeamEffects.isHealing(player));
+            boolean serverStopped = sustainTicks > SUSTAIN_GRACE_TICKS && (player == null || !SculptClient.isSelected(player) && !BeamEffects.isBeaming(player) && !HealBeamEffects.isHealing(player) && !BarrageEffects.isFiring(player) && !DrillEffects.isDrilling(player));
             if (!keyDown || serverStopped) {
                 if (!serverStopped) ClientPlayNetworking.send(StopBeamC2SPayload.INSTANCE);
                 sustaining = false;

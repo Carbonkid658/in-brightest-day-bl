@@ -22,7 +22,6 @@ import org.jspecify.annotations.Nullable;
 
 public class BlastConstruct extends ConstructRingPower {
     private static final double LIFT = 0.35;
-    private static final int USE_COST = 250;
 
     private static final ExplosionDamageCalculator BLOCKS_ONLY = new ExplosionDamageCalculator() {
         @Override
@@ -42,7 +41,7 @@ public class BlastConstruct extends ConstructRingPower {
 
     @Override
     public int useCost() {
-        return USE_COST;
+        return BrightestDayConfig.get().blastCost;
     }
 
     @Override

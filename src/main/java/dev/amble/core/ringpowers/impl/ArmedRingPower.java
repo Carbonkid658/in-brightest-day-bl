@@ -13,8 +13,10 @@ import dev.amble.core.ringpowers.RingPowerInstance;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.beams.BeamManager;
+import dev.amble.core.drill.DrillManager;
 import dev.amble.core.beams.HealBeamManager;
 import dev.amble.core.acid.AcidManager;
+import dev.amble.core.attacks.area.BarrageManager;
 import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.tractor.TractorManager;
@@ -105,7 +107,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
 
         long now = player.level().getGameTime();
         boolean busy = BeamManager.isBeaming(player) || HealBeamManager.isHealing(player) || SculptManager.isSculpting(player)
-                || TractorManager.isHolding(player) || AcidManager.isSpewing(player) || LightRingPower.isEmitting(player);
+                || TractorManager.isHolding(player) || AcidManager.isSpewing(player) || LightRingPower.isEmitting(player) || BarrageManager.isFiring(player) || DrillManager.isDrilling(player);
         Long last = LAST_USED.get(player);
         if (busy || last == null) {
             LAST_USED.put(player, now);
@@ -123,6 +125,8 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         BeamManager.stop(player);
         HealBeamManager.stop(player);
         SculptManager.stop(player, false);
+        BarrageManager.stop(player);
+        DrillManager.stop(player);
         data(player).ifPresent(data -> BrightestDayAttachments.setData(player, RingPowerRegistry.ARMED, data.withActive(false, false)));
         AcidManager.stop(player);
         TractorManager.release(player);

@@ -57,6 +57,7 @@ public final class ConstructTools {
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             if (isConstruct(inventory.getItem(slot))) inventory.setItem(slot, ItemStack.EMPTY);
         }
+        if (isConstruct(player.containerMenu.getCarried())) player.containerMenu.setCarried(ItemStack.EMPTY);
     }
 
     public static void tick(ServerPlayer player, int serverTick) {

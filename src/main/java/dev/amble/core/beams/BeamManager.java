@@ -25,7 +25,7 @@ import java.util.Map;
 
 public final class BeamManager {
     public static final double RANGE = 32.0;
-    private static final int DAMAGE_INTERVAL = 10;
+    private static final int DAMAGE_INTERVAL = 5;
     private static final double PUSH = 0.08;
 
     private static final Map<ServerPlayer, Beam> BEAMS = new HashMap<>();
@@ -75,7 +75,10 @@ public final class BeamManager {
             if (!(aim.entity() instanceof LivingEntity target)) continue;
 
             ServerLevel level = player.level();
-            if (beam.age % DAMAGE_INTERVAL == 0) target.hurtServer(level, level.damageSources().playerAttack(player), BrightestDayConfig.get().beamDamage);
+            if (beam.age % DAMAGE_INTERVAL == 0) {
+                target.setInvulnerableTime(0);
+                target.hurtServer(level, level.damageSources().playerAttack(player), BrightestDayConfig.get().beamDamage);
+            }
             Vec3 push = aim.look().scale(PUSH);
             target.push(push);
             if (beam.age % 4 == 0) target.needsSync = true;

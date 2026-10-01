@@ -29,8 +29,6 @@ public final class FlightAnimator {
 
     private static final float MAX_HOVER_LEAN = 30.0F;
     private static final float HOVER_LEAN_PER_SPEED = 30.0F;
-    private static final double FLIGHT_ENTER_SPEED = 0.35;
-    private static final double FLIGHT_EXIT_SPEED = 0.15;
     private static final float MAX_HEAD_PITCH = 50.0F;
     private static final float MAX_HEAD_YAW = 70.0F;
     public static final int TRANSITION_TICKS = 16;
@@ -193,13 +191,13 @@ public final class FlightAnimator {
                 motion.phase = Phase.HOVER;
             }
             case HOVER -> {
-                if (player.isSprinting() && motion.forward > FLIGHT_ENTER_SPEED) {
+                if (motion.forward > FlightRingPower.DIVE_ENTER_SPEED) {
                     FlightAnimations.loop(controller, FlightAnimations.FLIGHT);
                     motion.phase = Phase.FLIGHT;
                 }
             }
             case FLIGHT -> {
-                if (!player.isSprinting() || motion.forward < FLIGHT_EXIT_SPEED) {
+                if (motion.forward < FlightRingPower.DIVE_EXIT_SPEED) {
                     FlightAnimations.loop(controller, FlightAnimations.HOVER);
                     motion.phase = Phase.HOVER;
                 }

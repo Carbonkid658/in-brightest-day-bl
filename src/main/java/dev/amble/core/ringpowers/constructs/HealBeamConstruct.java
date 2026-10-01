@@ -16,7 +16,7 @@ public class HealBeamConstruct extends ConstructRingPower {
     private static final int USE_COST = 50;
 
     public HealBeamConstruct() {
-        super(BrightestDay.id("heal_beam"), EnumSet.of(LanternCorps.BLUE));
+        super(BrightestDay.id("heal_beam"), EnumSet.of(LanternCorps.BLUE, LanternCorps.WHITE));
     }
 
     @Override

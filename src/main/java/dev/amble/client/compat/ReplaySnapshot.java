@@ -3,6 +3,8 @@ package dev.amble.client.compat;
 import dev.amble.client.effects.LightOrbEffects;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.WallEffects;
+import dev.amble.client.effects.attacks.weapon.TurretEffects;
+import dev.amble.client.effects.glide.GlideEffects;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.networking.payloads.s2c.PlayerStateS2CPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -36,6 +38,8 @@ public final class ReplaySnapshot {
         WallEffects.snapshot(out);
         ShieldEffects.snapshot(out);
         LightOrbEffects.snapshot(out);
+        TurretEffects.snapshot(out);
+        GlideEffects.snapshot(out);
     }
 
     private ReplaySnapshot() {}

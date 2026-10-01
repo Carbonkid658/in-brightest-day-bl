@@ -1,7 +1,9 @@
 package dev.amble.core.networking.payloads.c2s;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.attacks.area.BarrageManager;
 import dev.amble.core.beams.BeamManager;
+import dev.amble.core.drill.DrillManager;
 import dev.amble.core.beams.HealBeamManager;
 import dev.amble.core.sculpt.SculptManager;
 import io.netty.buffer.ByteBuf;
@@ -27,5 +29,7 @@ public record StopBeamC2SPayload() implements CustomPacketPayload {
         BeamManager.stop(context.player());
         HealBeamManager.stop(context.player());
         SculptManager.stop(context.player(), true);
+        BarrageManager.stop(context.player());
+        DrillManager.stop(context.player());
     }
 }

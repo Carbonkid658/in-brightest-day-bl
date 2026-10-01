@@ -33,6 +33,7 @@ import net.minecraft.world.item.Items;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,18 @@ public final class PowerWheel {
             Map.entry(RingPowerRegistry.WALL, Items.STONE_BRICKS),
             Map.entry(RingPowerRegistry.SCULPT, Items.AMETHYST_SHARD),
             Map.entry(RingPowerRegistry.LIGHT_ORB, Items.GLOWSTONE),
+            Map.entry(RingPowerRegistry.DRILL, Items.DIAMOND_PICKAXE),
+            Map.entry(RingPowerRegistry.GLIDER, Items.ELYTRA),
+            Map.entry(RingPowerRegistry.SWARM_MISSILES, Items.FIREWORK_ROCKET),
+            Map.entry(RingPowerRegistry.PIERCING_LANCE, Items.SPECTRAL_ARROW),
+            Map.entry(RingPowerRegistry.CHAIN_BOLT, Items.TRIDENT),
+            Map.entry(RingPowerRegistry.BOOMERANG_DISC, Items.MUSIC_DISC_PIGSTEP),
+            Map.entry(RingPowerRegistry.NOVA_BURST, Items.FIREWORK_STAR),
+            Map.entry(RingPowerRegistry.GROUND_SLAM, Items.MACE),
+            Map.entry(RingPowerRegistry.RAPID_BARRAGE, Items.PRISMARINE_SHARD),
+            Map.entry(RingPowerRegistry.GIANT_FIST, Items.HEAVY_CORE),
+            Map.entry(RingPowerRegistry.ENERGY_WHIP, Items.BREEZE_ROD),
+            Map.entry(RingPowerRegistry.SENTRY_TURRET, Items.DISPENSER),
             Map.entry(RingPowerRegistry.TOOL_FORGE, Items.ANVIL),
             Map.entry(RingPowerRegistry.TRACTOR_BEAM, Items.LEAD),
             Map.entry(RingPowerRegistry.SCAN, Items.SPYGLASS),
@@ -79,7 +92,11 @@ public final class PowerWheel {
             SculptShape.TUBE, Items.HOPPER,
             SculptShape.CAGE, Items.IRON_BARS
     );
-    private static final Item SHIELD_ICON = Items.SHIELD;
+    private static final List<Group> GROUPS = List.of(
+            new Group("construct_group.brightestday.attacks", Items.BLAZE_ROD, List.of("blast", "swarm_missiles", "piercing_lance", "chain_bolt", "boomerang_disc", "rapid_barrage", "nova_burst", "ground_slam")),
+            new Group("construct_group.brightestday.weapons", Items.IRON_SWORD, List.of("giant_fist", "energy_whip", "sentry_turret")),
+            new Group("construct_group.brightestday.shield", Items.SHIELD, List.of("entity_shield", "area_shield"))
+    );
     private static final Item FALLBACK_ICON = Items.NETHER_STAR;
     private static final Map<Item, ItemStack> STACKS = new HashMap<>();
 
@@ -225,27 +242,33 @@ public final class PowerWheel {
         if (latched) {
             Entry entry = this.entries.get(this.hoveredEntry);
             double start = this.subStart(this.hoveredEntry, entry.subs().size());
-            this.hoveredSub = Mth.clamp((int) Math.floor((angle - start) / SUB_SLICE_DEGREES), 0, entry.subs().size() - 1);
+            this.hoveredSub = Mth.clamp((int) Math.floor((angle - start) / subSlice(entry.subs().size())), 0, entry.subs().size() - 1);
         } else {
             this.hoveredEntry = sliceAt(angle, this.entries.size());
             this.hoveredSub = -1;
         }
     }
 
+    private record Group(String key, Item icon, List<String> members) {
+        int indexOf(ConstructRingPower construct) {
+            return this.members.indexOf(construct.id().getPath());
+        }
+    }
+
     private static List<Entry> constructEntries(Player player) {
         List<ConstructRingPower> owned = ArmedRingPower.constructs(player);
         List<Entry> built = new ArrayList<>();
-        List<Sub> shieldSubs = new ArrayList<>();
-        int shieldIndex = -1;
+        Map<Group, Integer> slots = new HashMap<>();
+        Map<Group, List<ConstructRingPower>> members = new HashMap<>();
 
         for (ConstructRingPower construct : owned) {
-            if (construct == RingPowerRegistry.ENTITY_SHIELD || construct == RingPowerRegistry.AREA_SHIELD) {
-                if (shieldIndex < 0) {
-                    shieldIndex = built.size();
+            Group group = GROUPS.stream().filter(candidate -> candidate.indexOf(construct) >= 0).findFirst().orElse(null);
+            if (group != null) {
+                if (!slots.containsKey(group)) {
+                    slots.put(group, built.size());
                     built.add(null);
                 }
-                shieldSubs.add(new Sub(Component.translatable(construct.getTranslationKey()), icon(construct),
-                        () -> selectConstruct(player, construct), () -> ArmedRingPower.selectedConstruct(player).orElse(null) == construct));
+                members.computeIfAbsent(group, key -> new ArrayList<>()).add(construct);
             } else if (construct == RingPowerRegistry.SCULPT) {
                 List<Sub> shapes = new ArrayList<>();
                 for (SculptShape shape : SculptShape.values()) {
@@ -262,21 +285,28 @@ public final class PowerWheel {
             }
         }
 
-        if (shieldIndex >= 0) {
-            Set<RingPower<?>> shields = Set.copyOf(owned.stream()
-                    .filter(construct -> construct == RingPowerRegistry.ENTITY_SHIELD || construct == RingPowerRegistry.AREA_SHIELD)
-                    .toList());
-            Sub first = shieldSubs.getFirst();
-            built.set(shieldIndex, new Entry(Component.translatable("construct_group.brightestday.shield"), SHIELD_ICON, shields, () -> {
-                Optional<ConstructRingPower> current = ArmedRingPower.selectedConstruct(player);
-                if (current.isPresent() && shields.contains(current.get())) {
-                    selectConstruct(player, current.get());
-                } else {
-                    first.apply().run();
-                }
-            }, List.copyOf(shieldSubs)));
-        }
+        slots.forEach((group, slot) -> built.set(slot, groupEntry(player, group, members.get(group))));
         return built;
+    }
+
+    private static Entry groupEntry(Player player, Group group, List<ConstructRingPower> constructs) {
+        List<ConstructRingPower> ordered = new ArrayList<>(constructs);
+        ordered.sort(Comparator.comparingInt(group::indexOf));
+        List<Sub> subs = new ArrayList<>();
+        for (ConstructRingPower construct : ordered) {
+            subs.add(new Sub(Component.translatable(construct.getTranslationKey()), icon(construct),
+                    () -> selectConstruct(player, construct), () -> ArmedRingPower.selectedConstruct(player).orElse(null) == construct));
+        }
+        Set<RingPower<?>> powers = Set.copyOf(ordered);
+        Sub first = subs.getFirst();
+        return new Entry(Component.translatable(group.key()), group.icon(), powers, () -> {
+            Optional<ConstructRingPower> current = ArmedRingPower.selectedConstruct(player);
+            if (current.isPresent() && powers.contains(current.get())) {
+                selectConstruct(player, current.get());
+            } else {
+                first.apply().run();
+            }
+        }, List.copyOf(subs));
     }
 
     private static List<Entry> abilityEntries(Player player) {
@@ -326,6 +356,10 @@ public final class PowerWheel {
         return ICONS.getOrDefault(power, FALLBACK_ICON);
     }
 
+    private static double subSlice(int count) {
+        return Math.min(SUB_SLICE_DEGREES, 180.0 / Math.max(count, 1));
+    }
+
     private static double sliceWidth(int count) {
         return 180.0 / Math.max(count, 1);
     }
@@ -339,7 +373,7 @@ public final class PowerWheel {
     }
 
     private double subStart(int index, int subs) {
-        double span = subs * SUB_SLICE_DEGREES;
+        double span = subs * subSlice(subs);
         return Mth.clamp(sliceCenter(index, this.entries.size()) - span / 2.0, -90.0, Math.max(90.0 - span, -90.0));
     }
 
@@ -394,7 +428,7 @@ public final class PowerWheel {
         }
         if (focused == null) return;
         for (int j = 0; j < focused.subs().size(); j++) {
-            this.drawIcon(graphics, focused.subs().get(j).icon(), subStart + (j + 0.5) * SUB_SLICE_DEGREES, (SUB_INNER + SUB_OUTER) / 2.0, centerY);
+            this.drawIcon(graphics, focused.subs().get(j).icon(), subStart + (j + 0.5) * subSlice(focused.subs().size()), (SUB_INNER + SUB_OUTER) / 2.0, centerY);
         }
 
         Component label = focused.name();
@@ -418,10 +452,11 @@ public final class PowerWheel {
         }
         if (focused != null && !focused.subs().isEmpty() && radius >= SUB_INNER && radius < SUB_OUTER) {
             double local = angle - subStart;
-            if (local < 0.0 || local >= focused.subs().size() * SUB_SLICE_DEGREES) return 0;
-            double offset = local % SUB_SLICE_DEGREES;
-            if (offset < GAP_DEGREES / 2.0 || offset > SUB_SLICE_DEGREES - GAP_DEGREES / 2.0) return 0;
-            int index = (int) (local / SUB_SLICE_DEGREES);
+            double slice = subSlice(focused.subs().size());
+            if (local < 0.0 || local >= focused.subs().size() * slice) return 0;
+            double offset = local % slice;
+            if (offset < GAP_DEGREES / 2.0 || offset > slice - GAP_DEGREES / 2.0) return 0;
+            int index = (int) (local / slice);
             return sliceColor(color, index == this.hoveredSub, currentSub[index]);
         }
         return 0;
