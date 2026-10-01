@@ -9,7 +9,8 @@ import dev.amble.BrightestDay;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
+
+import java.util.List;
 
 public final class FlightRenderTypes {
 
@@ -27,8 +28,24 @@ public final class FlightRenderTypes {
             RenderSetup.builder(GLOW_PIPELINE).setOitPipelines(RenderPipelines.OIT_LIGHTNING).sortOnUpload().createRenderSetup()
     );
 
+    private static final RenderPipeline GLASS_PIPELINE = RenderPipelines.register(
+            RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+                    .withLocation(BrightestDay.id("pipeline/construct_glass"))
+                    .withCull(false)
+                    .build()
+    );
+
+    private static final RenderType GLASS = RenderType.create(
+            "brightestday_construct_glass",
+            RenderSetup.builder(GLASS_PIPELINE).setOitPipelines(RenderPipelines.OIT_DEBUG_QUADS).sortOnUpload().createRenderSetup()
+    );
+
     public static RenderType glass() {
-        return RenderTypes.debugQuads();
+        return GLASS;
+    }
+
+    public static List<RenderPipeline> pipelines() {
+        return List.of(GLOW_PIPELINE, GLASS_PIPELINE);
     }
 
     public static void init() {}
