@@ -11,17 +11,21 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -36,15 +40,19 @@ public final class GlideManager {
     private static final class Buff {
         final LivingEntity entity;
         final Level level;
+        UUID caster;
         int casterId;
+        long createdAt;
         int color;
         int remaining;
         final Set<ServerPlayer> watchers = Collections.newSetFromMap(new WeakHashMap<>());
 
-        Buff(LivingEntity entity, int casterId, int color, int remaining) {
+        Buff(LivingEntity entity, ServerPlayer caster, int color, int remaining) {
             this.entity = entity;
             this.level = entity.level();
-            this.casterId = casterId;
+            this.caster = caster.getUUID();
+            this.casterId = caster.getId();
+            this.createdAt = this.level.getGameTime();
             this.color = color;
             this.remaining = remaining;
         }
@@ -64,7 +72,9 @@ public final class GlideManager {
     public static void apply(LivingEntity target, ServerPlayer caster, int color, int duration) {
         Buff buff = BUFFS.get(target.getUUID());
         if (buff != null && buff.entity == target) {
+            buff.caster = caster.getUUID();
             buff.casterId = caster.getId();
+            buff.createdAt = buff.level.getGameTime();
             buff.color = color;
             buff.remaining = Math.max(buff.remaining, duration);
             GlideS2CPayload refresh = buff.payload(true);
@@ -73,11 +83,28 @@ public final class GlideManager {
             }
         } else {
             if (buff != null) end(target.getUUID());
-            buff = new Buff(target, caster.getId(), color, duration);
+            buff = new Buff(target, caster, color, duration);
             BUFFS.put(target.getUUID(), buff);
         }
         target.resetFallDistance();
         syncWatchers(buff);
+    }
+
+    public static long latestCreatedAt(UUID caster) {
+        return BUFFS.values().stream().filter(buff -> buff.caster.equals(caster)).mapToLong(buff -> buff.createdAt).max().orElse(Long.MIN_VALUE);
+    }
+
+    public static boolean dismissLatest(UUID caster) {
+        Buff newest = newest(caster);
+        if (newest == null) return false;
+        dismiss(newest);
+        return true;
+    }
+
+    public static void dismissAll(UUID caster) {
+        for (Buff buff : List.copyOf(BUFFS.values())) {
+            if (buff.caster.equals(caster)) dismiss(buff);
+        }
     }
 
     public static boolean isGliding(Entity entity) {
@@ -122,6 +149,20 @@ public final class GlideManager {
         Vec3 movement = entity.getDeltaMovement();
         if (movement.y >= -BrightestDayConfig.get().gliderMobFallSpeed) return;
         entity.setDeltaMovement(movement.x, -BrightestDayConfig.get().gliderMobFallSpeed, movement.z);
+    }
+
+    private static @Nullable Buff newest(UUID caster) {
+        Buff newest = null;
+        for (Buff buff : BUFFS.values()) {
+            if (buff.caster.equals(caster) && (newest == null || buff.createdAt >= newest.createdAt)) newest = buff;
+        }
+        return newest;
+    }
+
+    private static void dismiss(Buff buff) {
+        BUFFS.remove(buff.entity.getUUID());
+        dissolve(buff);
+        buff.level.playSound(null, buff.entity.getX(), buff.entity.getY(), buff.entity.getZ(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 0.8F, 1.4F);
     }
 
     private static void end(UUID id) {

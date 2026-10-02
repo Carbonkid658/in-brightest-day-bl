@@ -190,6 +190,14 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("config.brightestday.option.drill_drain.desc", "Ring charge drained each second while drilling.");
         builder.add("config.brightestday.option.drill_drain_per_size", "Drain Per Size Step");
         builder.add("config.brightestday.option.drill_drain_per_size.desc", "Extra charge drained each second for each bore size above 1×1.");
+        builder.add("config.brightestday.option.drill_placed_max", "Max Placed Drills");
+        builder.add("config.brightestday.option.drill_placed_max.desc", "Placed drills one player can have active; the oldest is replaced.");
+        builder.add("config.brightestday.option.drill_placed_distance", "Placed Drill Distance");
+        builder.add("config.brightestday.option.drill_placed_distance.desc", "Blocks a placed drill bores forward before dissolving.");
+        builder.add("config.brightestday.option.drill_placed_lifetime", "Placed Drill Lifetime");
+        builder.add("config.brightestday.option.drill_placed_lifetime.desc", "Ticks a placed drill runs before dissolving.");
+        builder.add("config.brightestday.option.drill_placed_travel", "Placed Drill Travel Time");
+        builder.add("config.brightestday.option.drill_placed_travel.desc", "Minimum ticks a placed drill takes to advance one block.");
         builder.add("key.brightestday.flight_speed_up", "Flight Speed Up");
         builder.add("key.brightestday.flight_speed_down", "Flight Speed Down");
         builder.add("key.brightestday.flight_boost", "Flight Boost");
@@ -358,6 +366,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.ring_power.sentry_turret", "Sentry Turret");
         builder.add("message.brightestday.ground_slam_airborne", "You must be airborne to slam.");
         builder.add("message.brightestday.sentry_turret_blocked", "No room to deploy a turret there.");
+        builder.add("message.brightestday.drill_place_blocked", "Nothing to drill there.");
         builder.add("config.brightestday.option.blast_cost", "Charge Cost");
         builder.add("config.brightestday.option.blast_cost.desc", "Ring charge spent on each blast.");
         builder.add("brightestday.ring_power.self_heal", "Self-Healing");

@@ -21,6 +21,7 @@ import dev.amble.client.effects.attacks.weapon.FistEffects;
 import dev.amble.client.effects.attacks.weapon.TurretEffects;
 import dev.amble.client.effects.attacks.weapon.WhipEffects;
 import dev.amble.client.effects.drill.DrillEffects;
+import dev.amble.client.effects.drill.PlacedDrillEffects;
 import dev.amble.client.effects.glide.GlideEffects;
 import dev.amble.client.effects.AcidEffects;
 import dev.amble.client.effects.ConcussiveEffects;
@@ -89,6 +90,7 @@ public class BrightestDayClient implements ClientModInitializer {
         ChainBoltEffects.init();
         DiscEffects.init();
         DrillEffects.init();
+        PlacedDrillEffects.init();
         GlideEffects.init();
         AcidEffects.init();
         LightOrbEffects.init();

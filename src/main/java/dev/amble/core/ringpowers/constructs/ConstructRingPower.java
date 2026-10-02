@@ -94,6 +94,10 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
         return false;
     }
 
+    public boolean sustained(Player player) {
+        return this.sustained();
+    }
+
     public boolean sustained() {
         return false;
     }

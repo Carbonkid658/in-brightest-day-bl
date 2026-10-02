@@ -6,6 +6,8 @@ import dev.amble.core.attacks.projectile.DiscManager;
 import dev.amble.core.attacks.weapon.TurretManager;
 import dev.amble.core.beams.BeamManager;
 import dev.amble.core.drill.DrillManager;
+import dev.amble.core.drill.PlacedDrillManager;
+import dev.amble.core.glide.GlideManager;
 import dev.amble.core.beams.HealBeamManager;
 import dev.amble.core.light.LightOrbManager;
 import dev.amble.core.sculpt.SculptManager;
@@ -19,6 +21,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 
 import java.util.List;
+import java.util.stream.LongStream;
 
 public final class ConstructDismissal {
 
@@ -33,8 +36,10 @@ public final class ConstructDismissal {
         long sculptCreated = SculptManager.latestCreatedAt(player.getUUID());
         long orbCreated = LightOrbManager.latestCreatedAt(player.getUUID());
         long turretCreated = TurretManager.latestCreatedAt(player.getUUID());
+        long glideCreated = GlideManager.latestCreatedAt(player.getUUID());
+        long drillCreated = PlacedDrillManager.latestCreatedAt(player.getUUID());
         long toolCreated = ConstructTools.latestCreatedAt(player);
-        long newest = Math.max(Math.max(Math.max(Math.max(shieldCreated, sculptCreated), Math.max(wallCreated, toolCreated)), orbCreated), turretCreated);
+        long newest = LongStream.of(shieldCreated, wallCreated, sculptCreated, orbCreated, turretCreated, glideCreated, drillCreated, toolCreated).max().getAsLong();
         if (newest == Long.MIN_VALUE) {
             player.sendOverlayMessage(Component.translatable("message.brightestday.no_constructs_to_dismiss"));
             return;
@@ -43,6 +48,10 @@ public final class ConstructDismissal {
         if (newest == toolCreated) {
             ConstructTools.dissolveAll(player);
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 0.8F, 1.4F);
+        } else if (newest == drillCreated) {
+            PlacedDrillManager.dismissLatest(player.getUUID());
+        } else if (newest == glideCreated) {
+            GlideManager.dismissLatest(player.getUUID());
         } else if (newest == turretCreated) {
             TurretManager.dismissLatest(player.getUUID());
         } else if (newest == orbCreated) {
@@ -69,6 +78,8 @@ public final class ConstructDismissal {
         SculptManager.dismissAll(player.getUUID());
         LightOrbManager.dismissAll(player.getUUID());
         TurretManager.dismissAll(player.getUUID());
+        GlideManager.dismissAll(player.getUUID());
+        PlacedDrillManager.dismissAll(player.getUUID());
         ConstructTools.dissolveAll(player);
     }
 

@@ -41,7 +41,7 @@ import java.util.Set;
 
 public final class DrillManager {
 
-    private static final float HARDNESS_DIVISOR = 30.0F;
+    static final float HARDNESS_DIVISOR = 30.0F;
     private static final int GRACE_TICKS = 8;
     private static final int HIT_SOUND_INTERVAL = 4;
     private static final int PARTICLE_INTERVAL = 2;
@@ -157,25 +157,28 @@ public final class DrillManager {
     }
 
     private static void feedback(ServerLevel level, BlockHitResult hit, BlockState state, Drill drill) {
-        Vec3 point = hit.getLocation();
-        int side = DrillGeometry.side(drill.size);
-        if (drill.age % HIT_SOUND_INTERVAL == 0) {
+        feedback(level, hit.getLocation(), state, drill.size, drill.age);
+    }
+
+    static void feedback(ServerLevel level, Vec3 point, BlockState state, int size, int age) {
+        int side = DrillGeometry.side(size);
+        if (age % HIT_SOUND_INTERVAL == 0) {
             SoundType sound = state.getSoundType();
             level.playSound(null, point.x, point.y, point.z, sound.getHitSound(), SoundSource.BLOCKS, (sound.getVolume() + 1.0F) / 4.0F, sound.getPitch() * 0.8F);
         }
-        if (drill.age % PARTICLE_INTERVAL == 0) {
+        if (age % PARTICLE_INTERVAL == 0) {
             double spread = 0.1 + 0.15 * (side - 1);
             level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, state), point.x, point.y, point.z, 3 + side, spread, spread, spread, 0.15);
         }
     }
 
-    private static boolean canBreak(ServerLevel level, ServerPlayer player, GameType mode, BlockPos pos, BlockState state) {
+    static boolean canBreak(ServerLevel level, ServerPlayer player, GameType mode, BlockPos pos, BlockState state) {
         if (!DrillGeometry.drillable(level, pos, state)) return false;
         if (state.getBlock() instanceof GameMasterBlock && !player.canUseGameMasterBlocks()) return false;
         return level.mayInteract(player, pos) && level.getWorldBorder().isWithinBounds(pos) && !player.blockActionRestricted(level, pos, mode);
     }
 
-    private static void breakBlock(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state) {
+    static void breakBlock(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state) {
         BlockEntity blockEntity = level.getBlockEntity(pos);
         if (!PlayerBlockBreakEvents.BEFORE.invoker().beforeBlockBreak(level, player, pos, state, blockEntity)) {
             PlayerBlockBreakEvents.CANCELED.invoker().onBlockBreakCanceled(level, player, pos, state, blockEntity);

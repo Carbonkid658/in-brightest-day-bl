@@ -175,7 +175,7 @@ public final class BlastEffects {
         if (++charge >= chargeGoal) {
             if (chargeSound != null && chargeGoal < LONG_CHARGE_TICKS) client.getSoundManager().stop(chargeSound);
             retractCharge();
-            boolean sustained = ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::sustained).orElse(false);
+            boolean sustained = ArmedRingPower.selectedConstruct(player).map(construct -> construct.sustained(player)).orElse(false);
             ClientPlayNetworking.send(new FireConstructC2SPayload(ConstructClient.selectedSize(player)));
             if (sustained) {
                 sustaining = true;

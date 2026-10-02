@@ -6,14 +6,21 @@ import dev.amble.core.ringpowers.CorpsColors;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Container;
+import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.component.TooltipDisplay;
+
+import java.util.UUID;
 
 public final class ConstructTools {
     public static final int LIFETIME_TICKS = 1200;
@@ -53,11 +60,39 @@ public final class ConstructTools {
     }
 
     public static void dissolveAll(ServerPlayer player) {
-        Inventory inventory = player.getInventory();
-        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
-            if (isConstruct(inventory.getItem(slot))) inventory.setItem(slot, ItemStack.EMPTY);
-        }
+        clear(player.getInventory());
+        clear(player.getEnderChestInventory());
         if (isConstruct(player.containerMenu.getCarried())) player.containerMenu.setCarried(ItemStack.EMPTY);
+
+        for (ServerLevel level : player.level().getServer().getAllLevels()) {
+            for (ItemEntity item : level.getEntities(EntityTypeTest.forClass(ItemEntity.class), item -> isOwnedBy(item.getItem(), player.getUUID()))) {
+                item.discard();
+            }
+        }
+    }
+
+    private static void clear(Container container) {
+        for (int slot = 0; slot < container.getContainerSize(); slot++) {
+            if (isConstruct(container.getItem(slot))) container.setItem(slot, ItemStack.EMPTY);
+        }
+    }
+
+    private static boolean isOwnedBy(ItemStack stack, UUID owner) {
+        ConstructToolData data = stack.get(BrightestDayComponents.CONSTRUCT_TOOL);
+        return data != null && data.owner().equals(owner);
+    }
+
+    private static boolean isStale(ItemStack stack, MinecraftServer server, long now) {
+        ConstructToolData data = stack.get(BrightestDayComponents.CONSTRUCT_TOOL);
+        return data != null && (now >= data.expiresAt() || server.getPlayerList().getPlayer(data.owner()) == null);
+    }
+
+    private static void purgeOpenContainer(ServerPlayer player, long now) {
+        if (player.containerMenu == player.inventoryMenu) return;
+        MinecraftServer server = player.level().getServer();
+        for (Slot slot : player.containerMenu.slots) {
+            if (slot.container != player.getInventory() && isStale(slot.getItem(), server, now)) slot.set(ItemStack.EMPTY);
+        }
     }
 
     public static void tick(ServerPlayer player, int serverTick) {
@@ -66,6 +101,7 @@ public final class ConstructTools {
         boolean charged = PowerRingItem.hasCharge(player);
         boolean carrying = false;
         boolean dissolved = false;
+        purgeOpenContainer(player, now);
 
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);

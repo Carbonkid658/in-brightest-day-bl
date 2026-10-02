@@ -28,6 +28,7 @@ import dev.amble.core.attacks.weapon.FistManager;
 import dev.amble.core.attacks.weapon.TurretManager;
 import dev.amble.core.attacks.weapon.WhipManager;
 import dev.amble.core.drill.DrillManager;
+import dev.amble.core.drill.PlacedDrillManager;
 import dev.amble.core.glide.GlideManager;
 import dev.amble.core.light.LightManager;
 import dev.amble.core.light.LightOrbManager;
@@ -81,6 +82,7 @@ public class BrightestDay implements ModInitializer {
 		SwarmManager.init();
 		DiscManager.init();
 		DrillManager.init();
+		PlacedDrillManager.init();
 		GlideManager.init();
 		HealBeamManager.init();
 		CorpsSynergy.init();

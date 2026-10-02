@@ -4,8 +4,11 @@ import dev.amble.config.BrightestDayConfig;
 import dev.amble.BrightestDay;
 import dev.amble.core.drill.DrillGeometry;
 import dev.amble.core.drill.DrillManager;
+import dev.amble.core.drill.PlacedDrillManager;
+import dev.amble.core.items.PowerRingItem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 
 public class DrillConstruct extends ConstructRingPower {
 
@@ -50,7 +53,18 @@ public class DrillConstruct extends ConstructRingPower {
     }
 
     @Override
+    public boolean sustained(Player player) {
+        return !player.isShiftKeyDown();
+    }
+
+    @Override
     public void fire(ServerPlayer player, int size, int color) {
-        DrillManager.start(player, this.clampSize(player, size), color);
+        if (!player.isShiftKeyDown()) {
+            DrillManager.start(player, this.clampSize(player, size), color);
+            return;
+        }
+        if (PlacedDrillManager.place(player, this.clampSize(player, size), color)) return;
+        PowerRingItem.refund(player, this.cost(size));
+        player.sendOverlayMessage(Component.translatable("message.brightestday.drill_place_blocked"));
     }
 }

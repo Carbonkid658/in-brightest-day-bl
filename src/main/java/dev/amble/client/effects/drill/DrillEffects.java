@@ -51,7 +51,7 @@ public final class DrillEffects {
     private static final float BIT_RADIUS_PER_STEP = 0.3F;
     private static final float BIT_TURNS = 2.5F;
     private static final float SPIN = 1.1F;
-    private static final float TIP_BITE = 0.15F;
+    static final float TIP_BITE = 0.15F;
     private static final float IDLE_REACH = 0.6F;
     private static final int COLLAR_VOXELS = 6;
     private static final int CHIP_VOXELS = 10;
@@ -63,7 +63,7 @@ public final class DrillEffects {
     private static final Map<Integer, DrillSound> SOUNDS = new HashMap<>();
     private static @Nullable ClientLevel drillLevel;
 
-    private record ClientDrill(int color, int size) {}
+    record ClientDrill(int color, int size) {}
 
     public static void init() {
         ClientPlayNetworking.registerGlobalReceiver(DrillS2CPayload.TYPE, (payload, context) -> {
@@ -151,7 +151,7 @@ public final class DrillEffects {
                 && ArmedRingPower.selectedConstruct(player).orElse(null) instanceof DrillConstruct;
     }
 
-    private static void drill(Vec3 start, Vec3 tip, float time, ClientDrill drill, List<ShieldEffects.Voxel> out) {
+    static void drill(Vec3 start, Vec3 tip, float time, ClientDrill drill, List<ShieldEffects.Voxel> out) {
         Vec3 path = tip.subtract(start);
         double length = path.length();
         if (length < 1.0E-3) return;
@@ -212,7 +212,7 @@ public final class DrillEffects {
         out.add(new ShieldEffects.Voxel(VoxelRenderer.snap(tip), VoxelRenderer.snapSize(FLIGHT_HALF), VoxelRenderer.toWhite(color, 0.9F)));
     }
 
-    private static void chips(ClientLevel level, BlockHitResult hit, Vec3 look, float time, ClientDrill drill, List<ShieldEffects.Voxel> out) {
+    static void chips(ClientLevel level, BlockHitResult hit, Vec3 look, float time, ClientDrill drill, List<ShieldEffects.Voxel> out) {
         BlockState state = level.getBlockState(hit.getBlockPos());
         if (!DrillGeometry.drillable(level, hit.getBlockPos(), state)) return;
 

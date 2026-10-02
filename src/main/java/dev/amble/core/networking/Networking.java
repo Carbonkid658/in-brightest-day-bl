@@ -32,6 +32,7 @@ import dev.amble.core.networking.payloads.s2c.ChainBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ConcussiveS2CPayload;
 import dev.amble.core.networking.payloads.s2c.DiscS2CPayload;
 import dev.amble.core.networking.payloads.s2c.DrillS2CPayload;
+import dev.amble.core.networking.payloads.s2c.PlacedDrillS2CPayload;
 import dev.amble.core.networking.payloads.s2c.FistS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ForgeStrokeS2CPayload;
 import dev.amble.core.networking.payloads.s2c.GlideBoltS2CPayload;
@@ -100,6 +101,7 @@ public class Networking {
         PayloadTypeRegistry.clientboundPlay().register(ChainBoltS2CPayload.TYPE, ChainBoltS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(DiscS2CPayload.TYPE, DiscS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(DrillS2CPayload.TYPE, DrillS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(PlacedDrillS2CPayload.TYPE, PlacedDrillS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(GlideS2CPayload.TYPE, GlideS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(GlideBoltS2CPayload.TYPE, GlideBoltS2CPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(AcidC2SPayload.TYPE, AcidC2SPayload.CODEC);

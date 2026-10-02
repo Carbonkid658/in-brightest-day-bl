@@ -275,6 +275,14 @@ public class BrightestDayConfig {
     public int drillDrainPerSecond = 15;
     @SerialEntry
     public int drillDrainPerSize = 10;
+    @SerialEntry
+    public int drillPlacedMaxCount = 2;
+    @SerialEntry
+    public int drillPlacedDistance = 24;
+    @SerialEntry
+    public int drillPlacedLifetimeTicks = 600;
+    @SerialEntry
+    public int drillPlacedTravelTicks = 4;
 
     @SerialEntry
     public double flightBoostMultiplier = 2.5;
