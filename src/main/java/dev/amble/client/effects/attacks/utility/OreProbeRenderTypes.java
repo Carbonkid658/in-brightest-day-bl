@@ -5,6 +5,7 @@ import com.mojang.renderpearl.api.pipeline.DepthStencilState;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import dev.amble.BrightestDay;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.oit.OitPipelineSet;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 
@@ -20,9 +21,15 @@ public final class OreProbeRenderTypes {
                     .build()
     );
 
+    private static final OitPipelineSet OIT_XRAY = RenderPipelines.register(
+            OitPipelineSet.builder("brightestday_ore_probe_xray", RenderPipeline.builder(RenderPipelines.OIT_DEBUG_FILLED_SNIPPET))
+                    .withoutDepthTest()
+                    .build()
+    );
+
     public static final RenderType XRAY = RenderType.create(
             "brightestday_ore_probe_xray",
-            RenderSetup.builder(XRAY_PIPELINE).sortOnUpload().createRenderSetup()
+            RenderSetup.builder(XRAY_PIPELINE).setOitPipelines(OIT_XRAY).sortOnUpload().createRenderSetup()
     );
 
     public static List<RenderPipeline> pipelines() {
