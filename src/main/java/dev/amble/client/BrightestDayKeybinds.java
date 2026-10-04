@@ -6,8 +6,10 @@ import dev.amble.client.flight.FlightControls;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.networking.payloads.c2s.ConcussiveC2SPayload;
 import dev.amble.core.networking.payloads.c2s.DismissConstructC2SPayload;
+import dev.amble.core.networking.payloads.c2s.SetColorTweakC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ToggleLightC2SPayload;
 import dev.amble.core.networking.payloads.c2s.UsePowerC2SPayload;
+import dev.amble.core.ringpowers.ColorTweak;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -29,6 +31,8 @@ public final class BrightestDayKeybinds {
     public static final KeyMapping ACID_VOMIT = register("acid_vomit", InputConstants.KEY_N);
 
     public static final KeyMapping TOGGLE_LIGHT = register("toggle_light", InputConstants.KEY_V);
+    public static final KeyMapping TOGGLE_SUIT = register("toggle_suit", InputConstants.KEY_PERIOD);
+    public static final KeyMapping TOGGLE_MASK = register("toggle_mask", InputConstants.KEY_H);
 
     public static final KeyMapping FLIGHT_SPEED_UP = register("flight_speed_up", InputConstants.KEY_EQUALS);
     public static final KeyMapping FLIGHT_SPEED_DOWN = register("flight_speed_down", InputConstants.KEY_MINUS);
@@ -70,6 +74,16 @@ public final class BrightestDayKeybinds {
             ClientPlayNetworking.send(ToggleLightC2SPayload.INSTANCE);
         }
 
+        while (TOGGLE_SUIT.consumeClick()) {
+            ColorTweak tweak = BrightestDayAttachments.getColorTweak(client.player);
+            setTweak(client, tweak.withSuit(!tweak.suit()));
+        }
+
+        while (TOGGLE_MASK.consumeClick()) {
+            ColorTweak tweak = BrightestDayAttachments.getColorTweak(client.player);
+            setTweak(client, tweak.withMask(!tweak.mask()));
+        }
+
         while (FLIGHT_SPEED_UP.consumeClick()) {
             FlightControls.stepSpeed(client, client.player, 1);
         }
@@ -79,6 +93,11 @@ public final class BrightestDayKeybinds {
         }
 
         FlightControls.syncBoost(client.player, client.gui.screen() == null && FLIGHT_BOOST.isDown());
+    }
+
+    private static void setTweak(Minecraft client, ColorTweak tweak) {
+        BrightestDayAttachments.setColorTweak(client.player, tweak);
+        ClientPlayNetworking.send(new SetColorTweakC2SPayload(tweak));
     }
 
     private BrightestDayKeybinds() {}

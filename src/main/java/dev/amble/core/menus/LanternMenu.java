@@ -13,7 +13,7 @@ import net.minecraft.world.item.ItemStack;
 public class LanternMenu extends AbstractContainerMenu {
     public static final int RING_SLOT_X = 26;
     public static final int RING_SLOT_Y = 26;
-    public static final int INVENTORY_Y = 104;
+    public static final int INVENTORY_Y = 124;
 
     private final Container ring;
 

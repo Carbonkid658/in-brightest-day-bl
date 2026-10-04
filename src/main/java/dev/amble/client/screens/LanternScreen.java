@@ -27,14 +27,17 @@ import java.util.Optional;
 public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
     private static final Identifier SLOT_SPRITE = Identifier.withDefaultNamespace("container/slot");
     private static final int IMAGE_WIDTH = 176;
-    private static final int IMAGE_HEIGHT = 186;
+    private static final int IMAGE_HEIGHT = 206;
     private static final int SLIDER_X = 8;
     private static final int SLIDER_WIDTH = 160;
     private static final int SLIDER_HEIGHT = 16;
     private static final int BRIGHTNESS_Y = 50;
     private static final int SATURATION_Y = 70;
+    private static final int MASK_Y = 90;
+    private static final int MASK_SLIDER_GAP = 6;
     private static final int AURA_Y = 4;
     private static final int AURA_MARGIN = 7;
+    private static final int SUIT_GAP = 6;
     private static final int INFO_X = 50;
     private static final int BAR_Y = 36;
     private static final int INFO_WIDTH = 118;
@@ -51,6 +54,9 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
     private @Nullable ColorTweakSlider brightness;
     private @Nullable ColorTweakSlider saturation;
     private @Nullable Checkbox aura;
+    private @Nullable Checkbox suit;
+    private @Nullable Checkbox mask;
+    private @Nullable MaskHeightSlider maskHeight;
 
     public LanternScreen(LanternMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, IMAGE_WIDTH, IMAGE_HEIGHT);
@@ -88,12 +94,35 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
                 .selected(tweak.aura())
                 .onValueChange((checkbox, value) -> this.updateTweak())
                 .build());
+
+        Component suitLabel = Component.translatable("gui.brightestday.suit");
+        int suitWidth = Checkbox.getBoxSize(this.font) + 4 + this.font.width(suitLabel);
+        this.suit = this.addRenderableWidget(Checkbox.builder(suitLabel, this.font)
+                .pos(this.aura.getX() - SUIT_GAP - suitWidth, this.topPos + AURA_Y)
+                .selected(tweak.suit())
+                .onValueChange((checkbox, value) -> this.updateTweak())
+                .build());
+
+        Component maskLabel = Component.translatable("gui.brightestday.mask");
+        int maskWidth = Checkbox.getBoxSize(this.font) + 4 + this.font.width(maskLabel);
+        this.mask = this.addRenderableWidget(Checkbox.builder(maskLabel, this.font)
+                .pos(this.leftPos + SLIDER_X, this.topPos + MASK_Y)
+                .selected(tweak.mask())
+                .onValueChange((checkbox, value) -> this.updateTweak())
+                .build());
+
+        int maskSliderX = SLIDER_X + maskWidth + MASK_SLIDER_GAP;
+        this.maskHeight = this.addRenderableWidget(new MaskHeightSlider(
+                this.leftPos + maskSliderX, this.topPos + MASK_Y, SLIDER_X + SLIDER_WIDTH - maskSliderX, SLIDER_HEIGHT,
+                tweak.maskOffset(), ColorTweak.MAX_MASK_OFFSET, value -> this.updateTweak()));
     }
 
     private void updateTweak() {
-        if (this.brightness == null || this.saturation == null || this.aura == null) return;
+        if (this.brightness == null || this.saturation == null || this.aura == null || this.suit == null
+                || this.mask == null || this.maskHeight == null) return;
 
-        ColorTweak tweak = new ColorTweak(this.brightness.tweak(), this.saturation.tweak(), this.aura.selected());
+        ColorTweak tweak = new ColorTweak(this.brightness.tweak(), this.saturation.tweak(), this.aura.selected(), this.suit.selected(),
+                this.mask.selected(), this.maskHeight.offset());
         if (tweak.equals(BrightestDayAttachments.getColorTweak(this.minecraft.player))) return;
 
         BrightestDayAttachments.setColorTweak(this.minecraft.player, tweak);

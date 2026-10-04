@@ -46,6 +46,9 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.brightness", "Brightness: %s");
         builder.add("gui.brightestday.saturation", "Saturation: %s");
         builder.add("gui.brightestday.aura", "Aura");
+        builder.add("gui.brightestday.suit", "Suit");
+        builder.add("gui.brightestday.mask", "Mask");
+        builder.add("gui.brightestday.mask_height", "Mask Height: %s");
 
         builder.add(LanternCorps.GREEN.getTranslationKey(), "Green Lantern Corps");
         builder.add(LanternCorps.BLUE.getTranslationKey(), "Blue Lantern Corps");
@@ -521,6 +524,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("key.brightestday.flight", "Flight");
         builder.add("key.brightestday.raise_ring", "Raise Ring");
         builder.add("key.brightestday.toggle_light", "Toggle Spotlight");
+        builder.add("key.brightestday.toggle_suit", "Toggle Suit");
+        builder.add("key.brightestday.toggle_mask", "Toggle Mask");
         builder.add("key.brightestday.dismiss_construct", "Dismiss Construct");
         builder.add("message.brightestday.no_constructs_to_dismiss", "No constructs to dismiss.");
         builder.add("scan.brightestday.scanning", "SCANNING");

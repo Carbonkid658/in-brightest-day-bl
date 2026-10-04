@@ -45,6 +45,8 @@ import dev.amble.client.hud.FlightSpeedHud;
 import dev.amble.client.hud.RingChargeHud;
 import dev.amble.client.render.LanternBlockEntityRenderer;
 import dev.amble.client.render.GlowAura;
+import dev.amble.client.render.LanternSuit;
+import dev.amble.client.render.SuitGlowLayer;
 import dev.amble.client.render.EyeGlowLayer;
 import dev.amble.client.render.SlottedRingLayer;
 import dev.amble.client.screens.LanternButtons;
@@ -74,6 +76,7 @@ public class BrightestDayClient implements ClientModInitializer {
         TractorEffects.init();
         ScanEffects.init();
         GlowAura.init();
+        LanternSuit.init();
         ForgeClient.init();
         ConstructClient.init();
         SculptClient.init();
@@ -111,6 +114,7 @@ public class BrightestDayClient implements ClientModInitializer {
             if (entityRenderer instanceof AvatarRenderer<?> avatarRenderer) {
                 helper.register(new SlottedRingLayer(avatarRenderer));
                 helper.register(new EyeGlowLayer(avatarRenderer));
+                helper.register(new SuitGlowLayer(avatarRenderer));
             }
         });
         registerBlockEntityRenderers();

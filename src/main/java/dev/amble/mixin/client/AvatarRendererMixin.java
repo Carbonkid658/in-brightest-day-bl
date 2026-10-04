@@ -5,6 +5,7 @@ import dev.amble.client.effects.ArmedPose;
 import dev.amble.client.flight.FlightAnimator;
 import dev.amble.client.render.EyeGlowLayer;
 import dev.amble.client.render.GlowAura;
+import dev.amble.client.render.LanternSuit;
 import dev.amble.client.render.SlottedRingRenderer;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
@@ -24,6 +25,7 @@ public abstract class AvatarRendererMixin {
         ArmedPose.extract(entity, state, partialTicks);
         GlowAura.extract(entity, state);
         EyeGlowLayer.extract(entity, state);
+        LanternSuit.extract(entity, state, partialTicks);
         FlightAnimator.extractDive(entity, state, partialTicks);
     }
 
