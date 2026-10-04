@@ -152,6 +152,16 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("construct_group.brightestday.shield", "Shield");
         builder.add("construct_group.brightestday.attacks", "Attacks");
         builder.add("construct_group.brightestday.weapons", "Weapons");
+        builder.add("construct_group.brightestday.utility", "Utility");
+        builder.add("brightestday.ring_power.lumberjack", "Lumberjack");
+        builder.add("brightestday.ring_power.ore_probe", "Ore Finder Probe");
+        builder.add("message.brightestday.lumberjack_no_log", "Aim at a log to fell a tree.");
+        builder.add("message.brightestday.lumberjack_not_tree", "That isn't a natural tree.");
+        builder.add("message.brightestday.lumberjack_blocked", "You can't fell that tree here.");
+        builder.add("message.brightestday.lumberjack_busy", "That tree is already being felled.");
+        builder.add("brightestday.ring_power.grappling_hook", "Grappling Hook");
+        builder.add("drill_mode.brightestday.hold", "Hold");
+        builder.add("drill_mode.brightestday.tunnel", "Tunnel");
         builder.add("brightestday.ring_power.glider", "Glider");
         builder.add("message.brightestday.glider_granted", "Hard-light glider equipped: jump mid-air to glide.");
         builder.add("config.brightestday.group.glider", "Glider");

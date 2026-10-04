@@ -132,7 +132,8 @@ public final class GlideManager {
         while (iterator.hasNext()) {
             Buff buff = iterator.next().getValue();
             LivingEntity entity = buff.entity;
-            if (--buff.remaining <= 0 || entity.isRemoved() || !entity.isAlive() || entity.level() != buff.level) {
+            boolean ringFlying = entity instanceof Player player && FlightRingPower.isFlying(player);
+            if (--buff.remaining <= 0 || ringFlying || entity.isRemoved() || !entity.isAlive() || entity.level() != buff.level) {
                 iterator.remove();
                 dissolve(buff);
                 continue;

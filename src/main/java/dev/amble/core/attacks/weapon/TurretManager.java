@@ -1,5 +1,6 @@
 package dev.amble.core.attacks.weapon;
 
+import dev.amble.core.ringpowers.ActiveConstructs;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.TurretBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TurretS2CPayload;
@@ -113,6 +114,7 @@ public final class TurretManager {
 
         Turret turret = new Turret(nextId++, level, point, color, player);
         TURRETS.add(turret);
+        ActiveConstructs.track(player, turret);
         syncWatchers(turret);
         level.playSound(null, point.x, point.y, point.z, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.7F, 1.8F);
         level.playSound(null, point.x, point.y, point.z, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.0F, 1.4F);
@@ -237,6 +239,7 @@ public final class TurretManager {
 
     private static void dissolve(Turret turret) {
         TURRETS.remove(turret);
+        ActiveConstructs.untrack(turret.owner, turret);
         TurretS2CPayload removal = new TurretS2CPayload(turret.id, turret.ownerId, turret.center, turret.color, 0, false);
         for (ServerPlayer watcher : turret.watchers) {
             if (!watcher.hasDisconnected()) ServerPlayNetworking.send(watcher, removal);

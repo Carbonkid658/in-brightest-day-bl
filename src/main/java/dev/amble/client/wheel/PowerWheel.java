@@ -4,7 +4,10 @@ import dev.amble.BrightestDay;
 import dev.amble.client.BrightestDayKeybinds;
 import dev.amble.client.effects.ConstructClient;
 import dev.amble.client.effects.SculptClient;
+import dev.amble.core.drill.DrillMode;
+import dev.amble.core.drill.DrillModes;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.networking.payloads.c2s.DrillModeC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SelectAbilityC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SelectConstructC2SPayload;
 import dev.amble.core.ringpowers.CorpsColors;
@@ -14,6 +17,7 @@ import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.sculpt.SculptShape;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
@@ -70,6 +74,9 @@ public final class PowerWheel {
             Map.entry(RingPowerRegistry.LIGHT_ORB, Items.GLOWSTONE),
             Map.entry(RingPowerRegistry.DRILL, Items.DIAMOND_PICKAXE),
             Map.entry(RingPowerRegistry.GLIDER, Items.ELYTRA),
+            Map.entry(RingPowerRegistry.GRAPPLING_HOOK, Items.TRIPWIRE_HOOK),
+            Map.entry(RingPowerRegistry.LUMBERJACK, Items.IRON_AXE),
+            Map.entry(RingPowerRegistry.ORE_PROBE, Items.SPYGLASS),
             Map.entry(RingPowerRegistry.SWARM_MISSILES, Items.FIREWORK_ROCKET),
             Map.entry(RingPowerRegistry.PIERCING_LANCE, Items.SPECTRAL_ARROW),
             Map.entry(RingPowerRegistry.CHAIN_BOLT, Items.TRIDENT),
@@ -95,7 +102,12 @@ public final class PowerWheel {
     private static final List<Group> GROUPS = List.of(
             new Group("construct_group.brightestday.attacks", Items.BLAZE_ROD, List.of("blast", "swarm_missiles", "piercing_lance", "chain_bolt", "boomerang_disc", "rapid_barrage", "nova_burst", "ground_slam")),
             new Group("construct_group.brightestday.weapons", Items.IRON_SWORD, List.of("giant_fist", "energy_whip", "sentry_turret")),
+            new Group("construct_group.brightestday.utility", Items.COMPASS, List.of("glider", "grappling_hook", "light_orb", "lumberjack", "ore_probe")),
             new Group("construct_group.brightestday.shield", Items.SHIELD, List.of("entity_shield", "area_shield"))
+    );
+    private static final Map<DrillMode, Item> DRILL_MODE_ICONS = Map.of(
+            DrillMode.HOLD, Items.DIAMOND_PICKAXE,
+            DrillMode.TUNNEL, Items.DIAMOND_SHOVEL
     );
     private static final Item FALLBACK_ICON = Items.NETHER_STAR;
     private static final Map<Item, ItemStack> STACKS = new HashMap<>();
@@ -141,6 +153,7 @@ public final class PowerWheel {
     }
 
     public static void init() {
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> DrillModes.setClient(DrillMode.HOLD));
         ClientTickEvents.END_CLIENT_TICK.register(client -> WHEELS.forEach(wheel -> wheel.tick(client)));
         for (PowerWheel wheel : WHEELS) {
             HudElementRegistry.attachElementAfter(VanillaHudElements.CROSSHAIR, BrightestDay.id(wheel.id), wheel::extractWheel);
@@ -269,6 +282,16 @@ public final class PowerWheel {
                     built.add(null);
                 }
                 members.computeIfAbsent(group, key -> new ArrayList<>()).add(construct);
+            } else if (construct == RingPowerRegistry.DRILL) {
+                List<Sub> modes = new ArrayList<>();
+                for (DrillMode mode : DrillMode.values()) {
+                    modes.add(new Sub(Component.translatable(mode.translationKey()), DRILL_MODE_ICONS.get(mode), () -> {
+                        setDrillMode(mode);
+                        selectConstruct(player, construct);
+                    }, () -> DrillModes.client() == mode));
+                }
+                built.add(new Entry(Component.translatable(construct.getTranslationKey()), icon(construct), Set.of(construct),
+                        () -> selectConstruct(player, construct), modes));
             } else if (construct == RingPowerRegistry.SCULPT) {
                 List<Sub> shapes = new ArrayList<>();
                 for (SculptShape shape : SculptShape.values()) {
@@ -316,6 +339,12 @@ public final class PowerWheel {
                     () -> selectAbility(player, ability), List.of()));
         }
         return built;
+    }
+
+    private static void setDrillMode(DrillMode mode) {
+        if (DrillModes.client() == mode) return;
+        DrillModes.setClient(mode);
+        ClientPlayNetworking.send(new DrillModeC2SPayload(mode.ordinal()));
     }
 
     private static void selectConstruct(Player player, ConstructRingPower construct) {
@@ -490,7 +519,7 @@ public final class PowerWheel {
             Optional<Sub> sub = entry == null ? Optional.empty() : entry.currentSub();
             icon = sub.map(Sub::icon).orElse(icon(construct));
             title = Component.translatable(construct.getTranslationKey());
-            if (construct == RingPowerRegistry.SCULPT && sub.isPresent()) {
+            if ((construct == RingPowerRegistry.SCULPT || construct == RingPowerRegistry.DRILL) && sub.isPresent()) {
                 title = Component.empty().append(title).append(" · ").append(sub.get().name());
             }
             if (construct.usesSize()) {

@@ -4,6 +4,8 @@ import dev.amble.config.BrightestDayConfig;
 import dev.amble.BrightestDay;
 import dev.amble.core.drill.DrillGeometry;
 import dev.amble.core.drill.DrillManager;
+import dev.amble.core.drill.DrillMode;
+import dev.amble.core.drill.DrillModes;
 import dev.amble.core.drill.PlacedDrillManager;
 import dev.amble.core.items.PowerRingItem;
 import net.minecraft.network.chat.Component;
@@ -54,12 +56,12 @@ public class DrillConstruct extends ConstructRingPower {
 
     @Override
     public boolean sustained(Player player) {
-        return !player.isShiftKeyDown();
+        return DrillModes.get(player) == DrillMode.HOLD;
     }
 
     @Override
     public void fire(ServerPlayer player, int size, int color) {
-        if (!player.isShiftKeyDown()) {
+        if (DrillModes.get(player) == DrillMode.HOLD) {
             DrillManager.start(player, this.clampSize(player, size), color);
             return;
         }
