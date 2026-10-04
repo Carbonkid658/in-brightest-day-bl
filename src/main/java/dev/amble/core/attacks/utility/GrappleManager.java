@@ -1,5 +1,6 @@
 package dev.amble.core.attacks.utility;
 
+import dev.amble.core.ringpowers.ActiveConstructs;
 import dev.amble.core.attacks.projectile.ProjectileTargeting;
 import dev.amble.core.networking.payloads.s2c.GrappleS2CPayload;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
@@ -112,6 +113,7 @@ public final class GrappleManager {
         Vec3 direction = toAim.lengthSqr() < 1.0E-4 ? aim.look() : toAim.normalize();
         Hook hook = new Hook(nextId++, player, color, origin, direction);
         HOOKS.put(player, hook);
+        ActiveConstructs.track(player, hook);
         send(hook);
     }
 
@@ -343,6 +345,7 @@ public final class GrappleManager {
     }
 
     private static void detach(Hook hook) {
+        ActiveConstructs.untrack(hook.owner.getUUID(), hook);
         if (!hook.latched) return;
         hook.latched = false;
         if (hook.phase == Phase.ANCHORED) {

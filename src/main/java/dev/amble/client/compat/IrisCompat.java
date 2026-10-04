@@ -2,6 +2,7 @@ package dev.amble.client.compat;
 
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import dev.amble.BrightestDay;
+import dev.amble.client.effects.attacks.utility.OreProbeRenderTypes;
 import dev.amble.client.flight.FlightRenderTypes;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -20,6 +21,7 @@ public final class IrisCompat {
             Method assign = api.getMethod("assignPipeline", RenderPipeline.class, program);
             Object basic = Enum.valueOf(program, "BASIC");
             for (RenderPipeline pipeline : FlightRenderTypes.pipelines()) assign.invoke(instance, pipeline, basic);
+            for (RenderPipeline pipeline : OreProbeRenderTypes.pipelines()) assign.invoke(instance, pipeline, basic);
         } catch (ReflectiveOperationException | RuntimeException exception) {
             BrightestDay.LOGGER.warn("Couldn't register construct render pipelines with Iris; constructs may be invisible with shaders", exception);
         }

@@ -3,6 +3,8 @@ package dev.amble.client.compat;
 import dev.amble.client.effects.LightOrbEffects;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.WallEffects;
+import dev.amble.client.effects.attacks.utility.LumberjackEffects;
+import dev.amble.client.effects.attacks.utility.OreProbeEffects;
 import dev.amble.client.effects.attacks.weapon.TurretEffects;
 import dev.amble.client.effects.glide.GlideEffects;
 import dev.amble.core.BrightestDayAttachments;
@@ -40,6 +42,8 @@ public final class ReplaySnapshot {
         LightOrbEffects.snapshot(out);
         TurretEffects.snapshot(out);
         GlideEffects.snapshot(out);
+        LumberjackEffects.snapshot(out);
+        OreProbeEffects.snapshot(out);
     }
 
     private ReplaySnapshot() {}

@@ -2,6 +2,8 @@ package dev.amble.client.effects;
 
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.items.LanternBlockItem;
+import dev.amble.core.networking.payloads.s2c.ActiveConstructS2CPayload;
+import dev.amble.core.ringpowers.ActiveConstructs;
 import dev.amble.core.ringpowers.CorpsColors;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -11,6 +13,8 @@ import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.ringpowers.impl.LightRingPower;
 import dev.amble.core.ringpowers.impl.TractorBeamRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState;
 import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey;
 import net.minecraft.client.Minecraft;
@@ -34,6 +38,7 @@ public final class ArmedPose {
     public static final RenderStateDataKey<Integer> COLOR = RenderStateDataKey.create(() -> "brightestday:armed_color");
     public static final RenderStateDataKey<Boolean> CHARGED = RenderStateDataKey.create(() -> "brightestday:ring_charged");
     public static final RenderStateDataKey<Float> ACTIVITY = RenderStateDataKey.create(() -> "brightestday:ring_activity");
+    public static final RenderStateDataKey<Boolean> CONSTRUCTING = RenderStateDataKey.create(() -> "brightestday:ring_constructing");
 
     public static final float AIM_INWARD = 0.1F;
     private static final float RAISE_SPEED = 0.25F;
@@ -55,6 +60,8 @@ public final class ArmedPose {
 
     public static void init() {
         ClientTickEvents.END_CLIENT_TICK.register(ArmedPose::tick);
+        ClientPlayNetworking.registerGlobalReceiver(ActiveConstructS2CPayload.TYPE, (payload, context) -> ActiveConstructs.setClient(payload.playerId(), payload.active()));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ActiveConstructs.clearClient());
     }
 
     private static void tick(Minecraft client) {
@@ -105,6 +112,7 @@ public final class ArmedPose {
             data.setData(COLOR, CorpsColors.of(player));
             data.setData(CHARGED, PowerRingItem.hasCharge(player));
             data.setData(ACTIVITY, activity(player, partialTicks));
+            data.setData(CONSTRUCTING, ActiveConstructs.hasActive(player));
         } else {
             data.setData(AMOUNT, 0.0F);
         }
@@ -137,7 +145,7 @@ public final class ArmedPose {
 
     public static void submitRingGlow(PlayerModel model, AvatarRenderState state, HumanoidArm arm, PoseStack poseStack, SubmitNodeCollector collector) {
         FabricRenderState data = state;
-        float amount = Math.min(data.getDataOrDefault(AMOUNT, 0.0F), data.getDataOrDefault(ACTIVITY, 0.0F));
+        float amount = Math.max(Math.min(data.getDataOrDefault(AMOUNT, 0.0F), data.getDataOrDefault(ACTIVITY, 0.0F)), data.getDataOrDefault(CONSTRUCTING, false) ? 1.0F : 0.0F);
         if (amount <= 0.001F || arm != state.mainArm || state.isInvisible || !data.getDataOrDefault(CHARGED, false)) return;
 
         float pulse = 0.75F + 0.25F * Mth.sin(state.ageInTicks * 0.3F);

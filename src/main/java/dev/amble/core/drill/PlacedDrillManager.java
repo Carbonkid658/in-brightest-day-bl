@@ -1,5 +1,6 @@
 package dev.amble.core.drill;
 
+import dev.amble.core.ringpowers.ActiveConstructs;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.PlacedDrillS2CPayload;
@@ -95,6 +96,7 @@ public final class PlacedDrillManager {
 
         PlacedDrill drill = new PlacedDrill(nextId++, level, hit.getBlockPos(), hit.getDirection(), color, size, player);
         DRILLS.add(drill);
+        ActiveConstructs.track(player, drill);
         syncWatchers(drill);
         Vec3 tip = drill.tip();
         level.playSound(null, tip.x, tip.y, tip.z, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.8F, 2.0F);
@@ -221,6 +223,7 @@ public final class PlacedDrillManager {
 
     private static void dissolve(PlacedDrill drill) {
         DRILLS.remove(drill);
+        ActiveConstructs.untrack(drill.owner, drill);
         for (BlockPos pos : drill.progress.keySet()) drill.level.destroyBlockProgress(crackId(drill, pos), pos, -1);
         drill.progress.clear();
         PlacedDrillS2CPayload removal = drill.payload(false);
