@@ -49,7 +49,6 @@ import dev.amble.client.render.LanternBlockEntityRenderer;
 import dev.amble.client.render.GlowAura;
 import dev.amble.client.render.LanternSuit;
 import dev.amble.client.render.SuitGlowLayer;
-import dev.amble.client.render.EyeGlowLayer;
 import dev.amble.client.render.SlottedRingLayer;
 import dev.amble.client.screens.LanternButtons;
 import dev.amble.client.screens.LanternScreen;
@@ -117,7 +116,6 @@ public class BrightestDayClient implements ClientModInitializer {
         LivingEntityRenderLayerRegistrationCallback.EVENT.register((entityType, entityRenderer, helper, context) -> {
             if (entityRenderer instanceof AvatarRenderer<?> avatarRenderer) {
                 helper.register(new SlottedRingLayer(avatarRenderer));
-                helper.register(new EyeGlowLayer(avatarRenderer));
                 helper.register(new SuitGlowLayer(avatarRenderer));
             }
         });

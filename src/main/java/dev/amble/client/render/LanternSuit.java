@@ -4,7 +4,9 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.ColorTweak;
 import dev.amble.core.ringpowers.CorpsColors;
+import dev.amble.core.ringpowers.EyePaint;
 import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.ringpowers.RingBenefits;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState;
 import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey;
@@ -28,6 +30,7 @@ public final class LanternSuit {
     public static final RenderStateDataKey<Identifier> GLOW = RenderStateDataKey.create(() -> "brightestday:suit_glow");
 
     private static final float FADE_TICKS = 24.0F;
+    private static final float EYE_FADE_TICKS = 6.0F;
     private static final Map<Integer, Fade> FADES = new HashMap<>();
     private static @Nullable ClientLevel level;
 
@@ -50,9 +53,12 @@ public final class LanternSuit {
                     && tweak.suit()
                     && PowerRingItem.hasCharge(player);
 
+            EyePaint eyes = BrightestDayAttachments.getEyes(player);
+            boolean eyesWanted = !eyes.isEmpty() && RingBenefits.isActive(player);
+
             Fade fade = FADES.get(player.getId());
             if (fade == null) {
-                if (!wanted) continue;
+                if (!wanted && !eyesWanted) continue;
                 fade = new Fade(tweak.mask());
                 FADES.put(player.getId(), fade);
             }
@@ -61,7 +67,11 @@ public final class LanternSuit {
                 fade.color = CorpsColors.of(player);
                 fade.maskOffset = tweak.maskOffset();
             }
-            fade.tick(wanted, tweak.mask());
+            if (eyesWanted) {
+                fade.eyes = eyes;
+                fade.eyeColor = CorpsColors.of(player);
+            }
+            fade.tick(wanted, tweak.mask(), eyesWanted);
         }
 
         FADES.entrySet().removeIf(entry -> {
@@ -79,15 +89,18 @@ public final class LanternSuit {
         if (fade == null || !(entity instanceof Player)) return;
 
         float progress = fade.progress(partialTicks);
-        if (progress <= 0.0F) return;
+        float eyeProgress = fade.eyeProgress(partialTicks);
+        if (progress <= 0.0F && eyeProgress <= 0.0F) return;
 
         float maskProgress = fade.maskProgress(partialTicks);
-        SuitTextures.Entry entry = SuitTextures.update(entity.getId(), state.skin, fade.corps, state.mainArm, fade.maskOffset, maskProgress, progress, fade.color);
+        SuitTextures.Entry entry = SuitTextures.update(entity.getId(), state.skin, fade.corps, state.mainArm, fade.maskOffset, maskProgress, progress, fade.color,
+                fade.eyes, eyeProgress, fade.eyeColor);
         if (entry == null) return;
 
         PlayerSkin skin = state.skin;
         state.skin = new PlayerSkin(new ClientAsset.ResourceTexture(entry.bodyId, entry.bodyId), skin.cape(), skin.elytra(), skin.model(), skin.secure());
-        if (progress < 1.0F || (maskProgress > 0.0F && maskProgress < 1.0F)) data.setData(GLOW, entry.glowId);
+        boolean suitShimmer = progress > 0.0F && (progress < 1.0F || (maskProgress > 0.0F && maskProgress < 1.0F));
+        if (suitShimmer || (eyeProgress > 0.0F && !fade.eyes.isEmpty())) data.setData(GLOW, entry.glowId);
     }
 
     private static final class Fade {
@@ -98,20 +111,30 @@ public final class LanternSuit {
         private int maskOffset;
         private float maskPrevious;
         private float maskCurrent;
+        private float eyePrevious;
+        private float eyeCurrent;
+        private EyePaint eyes = EyePaint.EMPTY;
+        private int eyeColor = LanternCorps.GREEN.color();
 
         private Fade(boolean mask) {
             this.maskPrevious = this.maskCurrent = mask ? 1.0F : 0.0F;
         }
 
-        private void tick(boolean wanted, boolean mask) {
+        private void tick(boolean wanted, boolean mask, boolean eyesWanted) {
             this.previous = this.current;
             this.current = Mth.approach(this.current, wanted ? 1.0F : 0.0F, 1.0F / FADE_TICKS);
             this.maskPrevious = this.maskCurrent;
             this.maskCurrent = Mth.approach(this.maskCurrent, mask ? 1.0F : 0.0F, 1.0F / FADE_TICKS);
+            this.eyePrevious = this.eyeCurrent;
+            this.eyeCurrent = Mth.approach(this.eyeCurrent, eyesWanted ? 1.0F : 0.0F, 1.0F / EYE_FADE_TICKS);
         }
 
         private float progress(float partialTicks) {
             return Mth.lerp(partialTicks, this.previous, this.current);
+        }
+
+        private float eyeProgress(float partialTicks) {
+            return Mth.lerp(partialTicks, this.eyePrevious, this.eyeCurrent);
         }
 
         private float maskProgress(float partialTicks) {
@@ -119,7 +142,7 @@ public final class LanternSuit {
         }
 
         private boolean hidden() {
-            return this.previous <= 0.0F && this.current <= 0.0F;
+            return this.previous <= 0.0F && this.current <= 0.0F && this.eyePrevious <= 0.0F && this.eyeCurrent <= 0.0F;
         }
     }
 

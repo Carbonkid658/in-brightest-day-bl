@@ -55,6 +55,12 @@ public final class FlightAnimator {
     private static final int MIN_PHASE_TICKS = 8;
     public static final int ROLL_TICKS = 10;
     private static final float ROLL_CAMERA_TILT = 25.0F;
+    private static final float HOVER_CAPE_LEAN = 70.0F;
+    private static final float FLIGHT_CAPE_LEAN = 22.0F;
+    private static final float HOVER_CAPE_FLAP = 20.0F;
+    private static final float FLIGHT_CAPE_FLAP = 4.0F;
+    private static final float CAPE_SIDE_SCALE = 0.5F;
+    private static final float CAPE_FLUTTER = 3.0F;
 
     public static final RenderStateDataKey<Vec3> DIVE_OFFSET = RenderStateDataKey.create(() -> "brightestday:dive_offset");
 
@@ -301,6 +307,27 @@ public final class FlightAnimator {
 
     public static void extractDive(Avatar entity, AvatarRenderState state, float partialTicks) {
         ((FabricRenderState) state).setData(DIVE_OFFSET, entity instanceof Player player ? diveOffset(player, partialTicks) : Vec3.ZERO);
+    }
+
+    public static void adjustCape(Avatar entity, AvatarRenderState state, float partialTicks) {
+        if (!(entity instanceof Player player)) return;
+        Motion motion = MOTIONS.get(player);
+        if (motion == null) return;
+
+        float flight = Mth.lerp(partialTicks, motion.oFlight, motion.flight);
+        if (flight <= 0.0F) return;
+
+        float blend = ease(Mth.lerp(partialTicks, motion.oFlightBlend, motion.flightBlend));
+        float speed = Mth.lerp(partialTicks, motion.oSpeed, motion.speed);
+        float maxLean = Mth.lerp(blend, HOVER_CAPE_LEAN, FLIGHT_CAPE_LEAN);
+        float lean = maxLean * (1.0F - (float) Math.exp(-state.capeLean / maxLean));
+        float time = player.tickCount + partialTicks;
+        float flutter = Mth.sin(time * (0.8F + Math.min(speed, 3.0F) * 0.5F)) * Math.min(speed, 2.0F) * CAPE_FLUTTER;
+        float flap = Mth.clamp(state.capeFlap, -6.0F, Mth.lerp(blend, HOVER_CAPE_FLAP, FLIGHT_CAPE_FLAP));
+
+        state.capeLean = Mth.lerp(flight, state.capeLean, Math.max(lean + flutter, 0.0F));
+        state.capeFlap = Mth.lerp(flight, state.capeFlap, flap);
+        state.capeLean2 = Mth.lerp(flight, state.capeLean2, state.capeLean2 * CAPE_SIDE_SCALE);
     }
 
     public static Vec3 diveOffset(Player player, float partialTicks) {

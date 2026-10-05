@@ -3,6 +3,7 @@ package dev.amble.client.render;
 import com.mojang.blaze3d.platform.NativeImage;
 import dev.amble.BrightestDay;
 import dev.amble.client.effects.VoxelRenderer;
+import dev.amble.core.ringpowers.EyePaint;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
@@ -35,6 +36,11 @@ final class SuitTextures {
     private static final float ORDER_WEIGHT = 0.65F;
     private static final float NOISE_WEIGHT = 0.35F;
     private static final int[] STRETCH = {0, 1, 1, 2};
+    private static final int FACE_TOP = 8;
+    private static final int FACE_LEFT = 8;
+    private static final int FACE_RIGHT = 16;
+    private static final int HAT_LEFT = 40;
+    private static final float EYE_GLOW_WHITEN = 0.2F;
 
     private static final Map<Integer, Entry> ENTRIES = new HashMap<>();
     private static final Map<String, Optional<int[]>> SUITS = new HashMap<>();
@@ -42,16 +48,19 @@ final class SuitTextures {
     private static final Map<Integer, float[]> THRESHOLDS = new HashMap<>();
     private static float @Nullable [] maskThresholds;
 
-    static @Nullable Entry update(int id, PlayerSkin playerSkin, LanternCorps corps, HumanoidArm ringArm, int maskOffset, float maskProgress, float progress, int color) {
+    static @Nullable Entry update(int id, PlayerSkin playerSkin, LanternCorps corps, HumanoidArm ringArm, int maskOffset, float maskProgress, float progress, int color,
+                                  EyePaint eyes, float eyeProgress, int eyeColor) {
         Identifier skinPath = playerSkin.body().texturePath();
         Skin skin = skin(skinPath);
         if (skin == null) return null;
 
         boolean slim = playerSkin.model() == PlayerModelType.SLIM;
-        int[] suit = suit(corps, ringArm, slim, maskOffset);
-        if (suit == null) return null;
+        int[] suit = progress > 0.0F ? suit(corps, ringArm, slim, maskOffset) : null;
+        if (suit == null) progress = 0.0F;
+        if (progress <= 0.0F && (eyeProgress <= 0.0F || eyes.isEmpty())) return null;
 
-        Key key = new Key(skinPath, corps, ringArm, slim, maskOffset, Math.round(maskProgress * STEPS), Math.round(progress * STEPS), color);
+        Key key = new Key(skinPath, corps, ringArm, slim, maskOffset, Math.round(maskProgress * STEPS), Math.round(progress * STEPS), color,
+                eyes, Math.round(eyeProgress * STEPS), eyeColor);
         Entry entry = ENTRIES.get(id);
         if (entry != null && entry.size != skin.size) {
             entry.close();
@@ -63,7 +72,8 @@ final class SuitTextures {
         }
         if (!key.equals(entry.key)) {
             entry.key = key;
-            build(entry, skin, suit, thresholds(slim, ringArm), key.step / (float) STEPS, key.maskStep / (float) STEPS, color);
+            build(entry, skin, suit, thresholds(slim, ringArm), key.step / (float) STEPS, key.maskStep / (float) STEPS, color,
+                    eyes, key.eyeStep / (float) STEPS, eyeColor);
         }
         return entry;
     }
@@ -81,7 +91,8 @@ final class SuitTextures {
         SKINS.clear();
     }
 
-    private static void build(Entry entry, Skin skin, int[] suit, float[] thresholds, float progress, float maskProgress, int color) {
+    private static void build(Entry entry, Skin skin, int @Nullable [] suit, float[] thresholds, float progress, float maskProgress, int color,
+                              EyePaint eyes, float eyeProgress, int eyeColor) {
         float[] maskThresholds = maskThresholds();
         NativeImage body = entry.body.getPixels();
         NativeImage glow = entry.glow.getPixels();
@@ -103,13 +114,21 @@ final class SuitTextures {
 
                 int out = base;
                 int lit = 0;
-                int suitPixel = suit[own];
-                if (ARGB.alpha(suitPixel) > 0) {
-                    out = mix(base, suitPixel, reveal);
+                if (suit != null && ARGB.alpha(suit[own]) > 0) {
+                    out = mix(base, suit[own], reveal);
                     out = ARGB.color(ARGB.alpha(out), ARGB.srgbLerp(edge * EDGE_TINT, out, glowColor));
                     lit = ARGB.color(edge, glowColor);
-                } else if (inner >= 0 && ARGB.alpha(suit[inner]) > 0) {
+                } else if (suit != null && inner >= 0 && ARGB.alpha(suit[inner]) > 0) {
                     out = ARGB.multiplyAlpha(base, 1.0F - reveal);
+                }
+
+                int eye = eyeProgress > 0.0F ? eyePixel(eyes, sx, sy, eyeColor) : 0;
+                if (eye != 0 && sx < FACE_RIGHT) {
+                    out = ARGB.opaque(ARGB.srgbLerp(eyeProgress, ARGB.opaque(out), eye));
+                    lit = ARGB.color(eyeProgress, VoxelRenderer.toWhite(eye, EYE_GLOW_WHITEN));
+                } else if (eye != 0) {
+                    out = ARGB.multiplyAlpha(out, 1.0F - eyeProgress);
+                    lit = 0;
                 }
 
                 body.setPixel(x, y, out);
@@ -119,6 +138,18 @@ final class SuitTextures {
 
         entry.body.upload();
         entry.glow.upload();
+    }
+
+    private static int eyePixel(EyePaint eyes, int sx, int sy, int eyeColor) {
+        if (sy < FACE_TOP || sy >= FACE_TOP + EyePaint.SIZE) return 0;
+        int column;
+        if (sx >= FACE_LEFT && sx < FACE_RIGHT) column = FACE_RIGHT - 1 - sx;
+        else if (sx >= HAT_LEFT && sx < HAT_LEFT + EyePaint.SIZE) column = HAT_LEFT + EyePaint.SIZE - 1 - sx;
+        else return 0;
+
+        int kind = eyes.get(column, sy - FACE_TOP);
+        if (kind == EyePaint.NONE) return 0;
+        return kind == EyePaint.WHITE ? 0xFFFFFFFF : ARGB.opaque(eyeColor);
     }
 
     private static float reveal(float progress, float threshold) {
@@ -290,7 +321,8 @@ final class SuitTextures {
 
     private record Skin(int[] pixels, int size) {}
 
-    private record Key(Identifier skin, LanternCorps corps, HumanoidArm ringArm, boolean slim, int maskOffset, int maskStep, int step, int color) {}
+    private record Key(Identifier skin, LanternCorps corps, HumanoidArm ringArm, boolean slim, int maskOffset, int maskStep, int step, int color,
+                       EyePaint eyes, int eyeStep, int eyeColor) {}
 
     static final class Entry {
         final Identifier bodyId;

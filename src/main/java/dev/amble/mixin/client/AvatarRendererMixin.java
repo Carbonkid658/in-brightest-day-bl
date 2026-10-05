@@ -3,7 +3,6 @@ package dev.amble.mixin.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.amble.client.effects.ArmedPose;
 import dev.amble.client.flight.FlightAnimator;
-import dev.amble.client.render.EyeGlowLayer;
 import dev.amble.client.render.GlowAura;
 import dev.amble.client.render.LanternSuit;
 import dev.amble.client.render.SlottedRingRenderer;
@@ -24,9 +23,13 @@ public abstract class AvatarRendererMixin {
         SlottedRingRenderer.extract(entity, state);
         ArmedPose.extract(entity, state, partialTicks);
         GlowAura.extract(entity, state);
-        EyeGlowLayer.extract(entity, state);
         LanternSuit.extract(entity, state, partialTicks);
         FlightAnimator.extractDive(entity, state, partialTicks);
+    }
+
+    @Inject(method = "extractCapeState", at = @At("TAIL"))
+    private void brightestday$tameFlightCape(Avatar entity, AvatarRenderState state, float partialTicks, CallbackInfo ci) {
+        FlightAnimator.adjustCape(entity, state, partialTicks);
     }
 
     @Inject(method = "setupRotations(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;FF)V", at = @At("TAIL"))

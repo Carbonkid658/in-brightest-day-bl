@@ -27,14 +27,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -48,18 +49,25 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public final class PowerWheel {
-    private static final int INNER = 30;
-    private static final int OUTER = 92;
-    private static final int SUB_INNER = 98;
-    private static final int SUB_OUTER = 146;
-    private static final int SUB_LATCH = SUB_INNER - 4;
-    private static final double SUB_SLICE_DEGREES = 32.0;
-    private static final double GAP_DEGREES = 1.2;
-    private static final int CELL = 2;
-    private static final double MAX_CURSOR = SUB_OUTER + 10.0;
-    private static final double MOUSE_SCALE = 0.5;
+    private static final double ROOT_RADIUS = 58.0;
+    private static final double SUB_RADIUS = 42.0;
+    private static final double DEAD_ZONE = 10.0;
+    private static final double SUB_DEAD_ZONE = 9.0;
+    private static final double SUBMENU_TRIGGER = ROOT_RADIUS + 6.0;
+    private static final double SUBMENU_CLOSE = ROOT_RADIUS - 22.0;
+    private static final double ROOT_REACH = ROOT_RADIUS + 16.0;
+    private static final double SUB_REACH = SUB_RADIUS + 14.0;
+    private static final int NODE_RADIUS = 11;
+    private static final int NODE_GROWTH = 4;
+    private static final int HUB_RADIUS = 19;
+    private static final int OPEN_TICKS = 3;
+    private static final float HOVER_SPEED = 0.55F;
+    private static final double MOUSE_SCALE = 0.55;
     private static final int TAP_TICKS = 5;
     private static final double TAP_DISTANCE = 3.0;
+    private static final int POINTER_DOTS = 7;
+    private static final double POINTER_SPREAD = 7.0;
+    private static final int TRAIL_SPACING = 5;
     private static final int HUD_MARGIN = 4;
     private static final int HUD_PADDING = 4;
 
@@ -112,9 +120,9 @@ public final class PowerWheel {
     private static final Item FALLBACK_ICON = Items.NETHER_STAR;
     private static final Map<Item, ItemStack> STACKS = new HashMap<>();
 
-    private static final PowerWheel CONSTRUCTS = new PowerWheel("construct_wheel", BrightestDayKeybinds.CYCLE_CONSTRUCT, false,
+    private static final PowerWheel CONSTRUCTS = new PowerWheel("construct_wheel", BrightestDayKeybinds.CYCLE_CONSTRUCT,
             PowerWheel::constructEntries, player -> ArmedRingPower.selectedConstruct(player).map(construct -> construct), PowerWheel::tapConstructs);
-    private static final PowerWheel ABILITIES = new PowerWheel("ability_wheel", BrightestDayKeybinds.ABILITY_WHEEL, true,
+    private static final PowerWheel ABILITIES = new PowerWheel("ability_wheel", BrightestDayKeybinds.ABILITY_WHEEL,
             PowerWheel::abilityEntries, ArmedRingPower::selectedAbility, PowerWheel::tapAbilities);
     private static final List<PowerWheel> WHEELS = List.of(CONSTRUCTS, ABILITIES);
 
@@ -128,7 +136,6 @@ public final class PowerWheel {
 
     private final String id;
     private final KeyMapping key;
-    private final boolean mirrored;
     private final Function<Player, List<Entry>> builder;
     private final Function<Player, Optional<RingPower<?>>> selection;
     private final Consumer<LocalPlayer> onTap;
@@ -141,12 +148,17 @@ public final class PowerWheel {
     private double travelled;
     private int hoveredEntry = -1;
     private int hoveredSub = -1;
+    private int submenu = -1;
+    private boolean backHovered;
+    private float[] rootHover = new float[0];
+    private float[] rootHoverO = new float[0];
+    private float[] subHover = new float[0];
+    private float[] subHoverO = new float[0];
 
-    private PowerWheel(String id, KeyMapping key, boolean mirrored, Function<Player, List<Entry>> builder,
+    private PowerWheel(String id, KeyMapping key, Function<Player, List<Entry>> builder,
                        Function<Player, Optional<RingPower<?>>> selection, Consumer<LocalPlayer> onTap) {
         this.id = id;
         this.key = key;
-        this.mirrored = mirrored;
         this.builder = builder;
         this.selection = selection;
         this.onTap = onTap;
@@ -177,16 +189,23 @@ public final class PowerWheel {
 
     private void steer(double dx, double dy) {
         double scale = MOUSE_SCALE / Minecraft.getInstance().getWindow().getGuiScale();
-        double localX = (this.mirrored ? -dx : dx) * scale;
-        this.cursorX = Math.max(this.cursorX + localX, 1.0);
+        this.cursorX += dx * scale;
         this.cursorY += dy * scale;
         this.travelled += Math.hypot(dx * scale, dy * scale);
-        double length = Math.hypot(this.cursorX, this.cursorY);
-        if (length > MAX_CURSOR) {
-            this.cursorX *= MAX_CURSOR / length;
-            this.cursorY *= MAX_CURSOR / length;
-        }
+        this.clampCursor();
         this.updateHover();
+    }
+
+    private void clampCursor() {
+        double centerX = this.submenu >= 0 ? nodeX(this.submenu, this.entries.size()) : 0.0;
+        double centerY = this.submenu >= 0 ? nodeY(this.submenu, this.entries.size()) : 0.0;
+        double reach = this.submenu >= 0 ? SUB_REACH : ROOT_REACH;
+        double localX = this.cursorX - centerX;
+        double localY = this.cursorY - centerY;
+        double length = Math.hypot(localX, localY);
+        if (length <= reach) return;
+        this.cursorX = centerX + localX * reach / length;
+        this.cursorY = centerY + localY * reach / length;
     }
 
     private boolean isCurrent(Player player, Entry entry) {
@@ -209,57 +228,143 @@ public final class PowerWheel {
                 return;
             }
             if (WHEELS.stream().anyMatch(wheel -> wheel != this && wheel.open)) return;
-            this.openWheel(player);
+            this.openWheel();
             return;
         }
 
         if (down && !this.entries.isEmpty()) {
             this.heldTicks++;
+            this.animateHover();
             return;
         }
         this.open = false;
         if (this.heldTicks <= TAP_TICKS && this.travelled < TAP_DISTANCE) {
             if (player != null) this.onTap.accept(player);
-        } else if (this.hoveredEntry >= 0 && this.hoveredEntry < this.entries.size()) {
-            Entry entry = this.entries.get(this.hoveredEntry);
-            if (this.hoveredSub >= 0 && this.hoveredSub < entry.subs().size()) {
-                entry.subs().get(this.hoveredSub).apply().run();
-            } else {
-                entry.apply().run();
-            }
+            return;
+        }
+        if (this.hoveredEntry < 0 || this.hoveredEntry >= this.entries.size()) return;
+
+        Entry entry = this.entries.get(this.hoveredEntry);
+        if (this.submenu == this.hoveredEntry && this.hoveredSub >= 0 && this.hoveredSub < entry.subs().size()) {
+            entry.subs().get(this.hoveredSub).apply().run();
+        } else if (!this.backHovered) {
+            entry.apply().run();
         }
     }
 
-    private void openWheel(LocalPlayer player) {
+    private void openWheel() {
         this.open = true;
         this.heldTicks = 0;
         this.travelled = 0.0;
+        this.cursorX = 0.0;
+        this.cursorY = 0.0;
+        this.hoveredEntry = -1;
         this.hoveredSub = -1;
-        this.hoveredEntry = 0;
-        for (int i = 0; i < this.entries.size(); i++) {
-            if (this.isCurrent(player, this.entries.get(i))) this.hoveredEntry = i;
-        }
-        double angle = Math.toRadians(sliceCenter(this.hoveredEntry, this.entries.size()));
-        double radius = (INNER + OUTER) / 2.0;
-        this.cursorX = Math.cos(angle) * radius;
-        this.cursorY = Math.sin(angle) * radius;
+        this.submenu = -1;
+        this.backHovered = false;
+        this.rootHover = new float[this.entries.size()];
+        this.rootHoverO = new float[this.entries.size()];
+        this.subHover = new float[0];
+        this.subHoverO = new float[0];
     }
 
     private void updateHover() {
-        if (this.entries.isEmpty()) return;
-        double radius = Math.hypot(this.cursorX, this.cursorY);
-        double angle = Math.toDegrees(Math.atan2(this.cursorY, this.cursorX));
+        int count = this.entries.size();
+        if (count == 0) return;
+        int previousEntry = this.hoveredEntry;
+        int previousSub = this.hoveredSub;
+        int previousMenu = this.submenu;
 
-        boolean latched = this.hoveredEntry >= 0 && this.hoveredEntry < this.entries.size()
-                && !this.entries.get(this.hoveredEntry).subs().isEmpty() && radius >= SUB_LATCH;
-        if (latched) {
-            Entry entry = this.entries.get(this.hoveredEntry);
-            double start = this.subStart(this.hoveredEntry, entry.subs().size());
-            this.hoveredSub = Mth.clamp((int) Math.floor((angle - start) / subSlice(entry.subs().size())), 0, entry.subs().size() - 1);
-        } else {
-            this.hoveredEntry = sliceAt(angle, this.entries.size());
+        if (this.submenu >= 0 && Math.hypot(this.cursorX, this.cursorY) < SUBMENU_CLOSE) {
+            this.submenu = -1;
             this.hoveredSub = -1;
+            this.backHovered = false;
         }
+
+        if (this.submenu >= 0) {
+            Entry entry = this.entries.get(this.submenu);
+            double localX = this.cursorX - nodeX(this.submenu, count);
+            double localY = this.cursorY - nodeY(this.submenu, count);
+            this.hoveredEntry = this.submenu;
+            this.hoveredSub = -1;
+            this.backHovered = false;
+            if (Math.hypot(localX, localY) >= SUB_DEAD_ZONE) {
+                double angle = Math.toDegrees(Math.atan2(localY, localX));
+                double back = backAngle(this.submenu, count);
+                double step = 360.0 / (entry.subs().size() + 1);
+                int slot = Math.floorMod((int) Math.round(Mth.wrapDegrees(angle - back) / step), entry.subs().size() + 1);
+                if (slot == 0) this.backHovered = true;
+                else this.hoveredSub = slot - 1;
+            }
+        } else {
+            double radius = Math.hypot(this.cursorX, this.cursorY);
+            this.hoveredEntry = radius < DEAD_ZONE ? -1 : rootSlot(Math.toDegrees(Math.atan2(this.cursorY, this.cursorX)), count);
+            if (this.hoveredEntry >= 0 && radius >= SUBMENU_TRIGGER && !this.entries.get(this.hoveredEntry).subs().isEmpty()) {
+                this.openSubmenu(this.hoveredEntry);
+            }
+        }
+
+        if (this.submenu != previousMenu) {
+            feedback(this.submenu >= 0 ? 1.4F : 1.0F, 0.18F);
+        } else if (this.hoveredEntry != previousEntry || this.hoveredSub != previousSub) {
+            if (this.hoveredEntry >= 0 || this.hoveredSub >= 0) feedback(1.7F + 0.05F * Math.max(this.hoveredSub, 0), 0.08F);
+        }
+    }
+
+    private void openSubmenu(int index) {
+        this.submenu = index;
+        int subs = this.entries.get(index).subs().size();
+        this.subHover = new float[subs];
+        this.subHoverO = new float[subs];
+        this.hoveredSub = -1;
+        this.backHovered = false;
+        this.clampCursor();
+    }
+
+    private void animateHover() {
+        if (this.rootHover.length != this.entries.size()) {
+            this.rootHover = new float[this.entries.size()];
+            this.rootHoverO = new float[this.entries.size()];
+        }
+        for (int i = 0; i < this.rootHover.length; i++) {
+            this.rootHoverO[i] = this.rootHover[i];
+            float target = i == this.hoveredEntry ? 1.0F : 0.0F;
+            this.rootHover[i] += (target - this.rootHover[i]) * HOVER_SPEED;
+        }
+        for (int j = 0; j < this.subHover.length; j++) {
+            this.subHoverO[j] = this.subHover[j];
+            float target = j == this.hoveredSub ? 1.0F : 0.0F;
+            this.subHover[j] += (target - this.subHover[j]) * HOVER_SPEED;
+        }
+    }
+
+    private static void feedback(float pitch, float volume) {
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), pitch, volume));
+    }
+
+    private static double rootAngle(int index, int count) {
+        return -90.0 + index * 360.0 / count;
+    }
+
+    private static int rootSlot(double angle, int count) {
+        double step = 360.0 / count;
+        return Math.floorMod((int) Math.round(Mth.wrapDegrees(angle + 90.0) / step), count);
+    }
+
+    private static double nodeX(int index, int count) {
+        return Math.cos(Math.toRadians(rootAngle(index, count))) * ROOT_RADIUS;
+    }
+
+    private static double nodeY(int index, int count) {
+        return Math.sin(Math.toRadians(rootAngle(index, count))) * ROOT_RADIUS;
+    }
+
+    private static double backAngle(int index, int count) {
+        return rootAngle(index, count) + 180.0;
+    }
+
+    private static double subAngle(int parent, int count, int sub, int subs) {
+        return backAngle(parent, count) + (sub + 1) * 360.0 / (subs + 1);
     }
 
     private record Group(String key, Item icon, List<String> members) {
@@ -385,39 +490,13 @@ public final class PowerWheel {
         return ICONS.getOrDefault(power, FALLBACK_ICON);
     }
 
-    private static double subSlice(int count) {
-        return Math.min(SUB_SLICE_DEGREES, 180.0 / Math.max(count, 1));
-    }
-
-    private static double sliceWidth(int count) {
-        return 180.0 / Math.max(count, 1);
-    }
-
-    private static double sliceCenter(int index, int count) {
-        return -90.0 + (index + 0.5) * sliceWidth(count);
-    }
-
-    private static int sliceAt(double angle, int count) {
-        return Mth.clamp((int) Math.floor((angle + 90.0) / sliceWidth(count)), 0, count - 1);
-    }
-
-    private double subStart(int index, int subs) {
-        double span = subs * subSlice(subs);
-        return Mth.clamp(sliceCenter(index, this.entries.size()) - span / 2.0, -90.0, Math.max(90.0 - span, -90.0));
-    }
 
     private static int darken(int color, float factor) {
         return ARGB.color(255, Math.round(ARGB.red(color) * factor), Math.round(ARGB.green(color) * factor), Math.round(ARGB.blue(color) * factor));
     }
 
-    private static int sliceColor(int color, boolean hovered, boolean current) {
-        if (hovered) return ARGB.color(0xB0, color);
-        if (current) return ARGB.color(0x90, darken(color, 0.6F));
-        return ARGB.color(0x70, darken(color, 0.3F));
-    }
-
-    private int screenX(GuiGraphicsExtractor graphics, int x) {
-        return this.mirrored ? graphics.guiWidth() - x : x;
+    private static float ease(float t) {
+        return t * t * (3.0F - 2.0F * t);
     }
 
     private void extractWheel(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
@@ -425,77 +504,192 @@ public final class PowerWheel {
         LocalPlayer player = client.player;
         if (!this.open || player == null || this.entries.isEmpty()) return;
 
+        float partialTicks = deltaTracker.getGameTimeDeltaPartialTick(false);
+        float opening = ease(Mth.clamp((this.heldTicks + partialTicks) / OPEN_TICKS, 0.0F, 1.0F));
         int color = ARGB.opaque(CorpsColors.of(player));
-        int centerY = graphics.guiHeight() / 2;
         int count = this.entries.size();
-        Entry focused = this.hoveredEntry >= 0 && this.hoveredEntry < count ? this.entries.get(this.hoveredEntry) : null;
-        double subStart = focused == null || focused.subs().isEmpty() ? 0.0 : this.subStart(this.hoveredEntry, focused.subs().size());
-        boolean[] currentMain = new boolean[count];
-        for (int i = 0; i < count; i++) currentMain[i] = this.isCurrent(player, this.entries.get(i));
-        boolean[] currentSub = new boolean[focused == null ? 0 : focused.subs().size()];
-        for (int j = 0; j < currentSub.length; j++) currentSub[j] = focused.subs().get(j).current().getAsBoolean();
+        int centerX = graphics.guiWidth() / 2;
+        int centerY = graphics.guiHeight() / 2;
 
-        for (int y = -SUB_OUTER; y < SUB_OUTER; y += CELL) {
-            int runStart = 0;
-            int runColor = 0;
-            for (int x = 0; x <= SUB_OUTER; x += CELL) {
-                int cellColor = x == SUB_OUTER ? 0 : this.cellColor(color, x + CELL * 0.5, y + CELL * 0.5, count, focused, subStart, currentMain, currentSub);
-                if (cellColor != runColor) {
-                    if (runColor != 0) {
-                        int a = this.screenX(graphics, runStart);
-                        int b = this.screenX(graphics, x);
-                        graphics.fill(Math.min(a, b), centerY + y, Math.max(a, b), centerY + y + CELL, runColor);
-                    }
-                    runStart = x;
-                    runColor = cellColor;
-                }
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(centerX, centerY);
+        graphics.pose().scale(0.6F + 0.4F * opening, 0.6F + 0.4F * opening);
+
+        float rootFade = this.submenu >= 0 ? 0.45F : 1.0F;
+        disc(graphics, 0, 0, (int) ROOT_RADIUS + NODE_RADIUS + 10, ARGB.color(Math.round(0x58 * opening), darken(color, 0.12F)));
+        ring(graphics, 0, 0, (int) ROOT_RADIUS, 1, ARGB.color(Math.round(0x50 * rootFade * opening), color));
+
+        for (int i = 0; i < count; i++) {
+            Entry entry = this.entries.get(i);
+            float hover = i < this.rootHover.length ? Mth.lerp(partialTicks, this.rootHoverO[i], this.rootHover[i]) : 0.0F;
+            boolean parent = i == this.submenu;
+            this.node(graphics, entry.icon(), nodeX(i, count), nodeY(i, count), parent ? 1.0F : hover, parent ? 1.0F : rootFade,
+                    this.isCurrent(player, entry), !entry.subs().isEmpty(), rootAngle(i, count), color, opening);
+        }
+
+        if (this.submenu >= 0) {
+            this.extractSubmenu(graphics, this.entries.get(this.submenu), partialTicks, color, opening);
+        } else {
+            this.pointer(graphics, 0.0, 0.0, ROOT_RADIUS, DEAD_ZONE, color, opening);
+        }
+
+        this.hub(graphics, player, color, opening);
+        graphics.pose().popMatrix();
+
+        Component label = this.label();
+        if (label != null) {
+            int labelY = centerY + (int) ((ROOT_RADIUS + NODE_RADIUS + 16) * (0.6F + 0.4F * opening));
+            if (this.submenu >= 0 && nodeY(this.submenu, count) > 0) labelY = centerY - (int) (ROOT_RADIUS + NODE_RADIUS + 26);
+            graphics.centeredText(client.font, label, centerX, labelY, ARGB.color(Math.round(255 * opening), 0xFFFFFF));
+        }
+    }
+
+    private void extractSubmenu(GuiGraphicsExtractor graphics, Entry entry, float partialTicks, int color, float opening) {
+        int count = this.entries.size();
+        double originX = nodeX(this.submenu, count);
+        double originY = nodeY(this.submenu, count);
+        int subs = entry.subs().size();
+
+        trail(graphics, 0.0, 0.0, originX, originY, ARGB.color(Math.round(0x90 * opening), color));
+        disc(graphics, (int) Math.round(originX), (int) Math.round(originY), (int) SUB_RADIUS + NODE_RADIUS + 8, ARGB.color(Math.round(0x60 * opening), darken(color, 0.1F)));
+        ring(graphics, (int) Math.round(originX), (int) Math.round(originY), (int) SUB_RADIUS, 1, ARGB.color(Math.round(0x50 * opening), color));
+
+        double back = Math.toRadians(backAngle(this.submenu, count));
+        int backX = (int) Math.round(originX + Math.cos(back) * SUB_RADIUS * 0.55);
+        int backY = (int) Math.round(originY + Math.sin(back) * SUB_RADIUS * 0.55);
+        int backColor = this.backHovered ? ARGB.color(0xE0, 0xFFFFFF) : ARGB.color(0x70, color);
+        disc(graphics, backX, backY, this.backHovered ? 4 : 3, backColor);
+
+        for (int j = 0; j < subs; j++) {
+            Sub sub = entry.subs().get(j);
+            double angle = subAngle(this.submenu, count, j, subs);
+            float hover = j < this.subHover.length ? Mth.lerp(partialTicks, this.subHoverO[j], this.subHover[j]) : 0.0F;
+            this.node(graphics, sub.icon(), originX + Math.cos(Math.toRadians(angle)) * SUB_RADIUS, originY + Math.sin(Math.toRadians(angle)) * SUB_RADIUS,
+                    hover, 1.0F, sub.current().getAsBoolean(), false, angle, color, opening);
+        }
+
+        this.pointer(graphics, originX, originY, SUB_RADIUS, SUB_DEAD_ZONE, color, opening);
+    }
+
+    private void node(GuiGraphicsExtractor graphics, Item icon, double x, double y, float hover, float fade, boolean current, boolean hasSubs,
+                      double angle, int color, float opening) {
+        int cx = (int) Math.round(x);
+        int cy = (int) Math.round(y);
+        int radius = NODE_RADIUS + Math.round(NODE_GROWTH * hover);
+        int fill = ARGB.srgbLerp(hover, darken(color, 0.28F), color);
+        disc(graphics, cx, cy, radius, ARGB.color(Math.round((0xA8 + 0x40 * hover) * fade * opening), fill));
+        ring(graphics, cx, cy, radius, 1, ARGB.color(Math.round((0x60 + 0x9F * hover) * fade * opening), ARGB.srgbLerp(hover, color, 0xFFFFFFFF)));
+        if (current) ring(graphics, cx, cy, radius + 3, 1, ARGB.color(Math.round(0xD0 * fade * opening), color));
+
+        if (hasSubs) {
+            double outward = Math.toRadians(angle);
+            for (int k = -1; k <= 1; k++) {
+                double dotAngle = outward + k * 0.32;
+                int dx = (int) Math.round(Math.cos(dotAngle) * (radius + 5));
+                int dy = (int) Math.round(Math.sin(dotAngle) * (radius + 5));
+                disc(graphics, cx + dx, cy + dy, 1, ARGB.color(Math.round(0xC0 * fade * opening), ARGB.srgbLerp(hover, color, 0xFFFFFFFF)));
             }
         }
 
-        for (int i = 0; i < count; i++) {
-            this.drawIcon(graphics, this.entries.get(i).icon(), sliceCenter(i, count), (INNER + OUTER) / 2.0, centerY);
-        }
-        if (focused == null) return;
-        for (int j = 0; j < focused.subs().size(); j++) {
-            this.drawIcon(graphics, focused.subs().get(j).icon(), subStart + (j + 0.5) * subSlice(focused.subs().size()), (SUB_INNER + SUB_OUTER) / 2.0, centerY);
-        }
-
-        Component label = focused.name();
-        if (this.hoveredSub >= 0 && this.hoveredSub < focused.subs().size()) {
-            label = Component.empty().append(focused.name()).append(" › ").append(focused.subs().get(this.hoveredSub).name());
-        }
-        int labelX = this.mirrored ? graphics.guiWidth() - HUD_MARGIN - client.font.width(label) : HUD_MARGIN;
-        graphics.text(client.font, label, labelX, centerY - SUB_OUTER - 12, 0xFFFFFFFF, true);
+        float scale = 1.0F + 0.35F * hover;
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(cx, cy);
+        graphics.pose().scale(scale, scale);
+        graphics.item(stack(icon), -8, -8);
+        graphics.pose().popMatrix();
     }
 
-    private int cellColor(int color, double x, double y, int count, @Nullable Entry focused, double subStart, boolean[] currentMain, boolean[] currentSub) {
-        double radius = Math.hypot(x, y);
-        double angle = Math.toDegrees(Math.atan2(y, x));
+    private void pointer(GuiGraphicsExtractor graphics, double originX, double originY, double radius, double deadZone, int color, float opening) {
+        double localX = this.cursorX - originX;
+        double localY = this.cursorY - originY;
+        double distance = Math.hypot(localX, localY);
+        int cursorX = (int) Math.round(this.cursorX);
+        int cursorY = (int) Math.round(this.cursorY);
 
-        if (radius >= INNER && radius < OUTER) {
-            double width = sliceWidth(count);
-            double offset = (angle + 90.0) % width;
-            if (offset < GAP_DEGREES / 2.0 || offset > width - GAP_DEGREES / 2.0) return 0;
-            int index = sliceAt(angle, count);
-            return sliceColor(color, index == this.hoveredEntry && this.hoveredSub < 0, currentMain[index]);
+        if (distance >= deadZone) {
+            double angle = Math.atan2(localY, localX);
+            for (int k = -POINTER_DOTS / 2; k <= POINTER_DOTS / 2; k++) {
+                double dotAngle = angle + Math.toRadians(k * POINTER_SPREAD);
+                float strength = 1.0F - Math.abs(k) / (POINTER_DOTS / 2.0F + 1.0F);
+                int px = (int) Math.round(originX + Math.cos(dotAngle) * (radius - NODE_RADIUS - 6));
+                int py = (int) Math.round(originY + Math.sin(dotAngle) * (radius - NODE_RADIUS - 6));
+                disc(graphics, px, py, k == 0 ? 2 : 1, ARGB.color(Math.round(0xE0 * strength * opening), ARGB.srgbLerp(strength, color, 0xFFFFFFFF)));
+            }
+            trail(graphics, originX, originY, this.cursorX, this.cursorY, ARGB.color(Math.round(0x80 * opening), color));
         }
-        if (focused != null && !focused.subs().isEmpty() && radius >= SUB_INNER && radius < SUB_OUTER) {
-            double local = angle - subStart;
-            double slice = subSlice(focused.subs().size());
-            if (local < 0.0 || local >= focused.subs().size() * slice) return 0;
-            double offset = local % slice;
-            if (offset < GAP_DEGREES / 2.0 || offset > slice - GAP_DEGREES / 2.0) return 0;
-            int index = (int) (local / slice);
-            return sliceColor(color, index == this.hoveredSub, currentSub[index]);
-        }
-        return 0;
+
+        disc(graphics, cursorX, cursorY, 4, ARGB.color(Math.round(0x70 * opening), color));
+        disc(graphics, cursorX, cursorY, 2, ARGB.color(Math.round(0xF0 * opening), 0xFFFFFF));
     }
 
-    private void drawIcon(GuiGraphicsExtractor graphics, Item icon, double degrees, double radius, int centerY) {
-        double angle = Math.toRadians(degrees);
-        int x = this.screenX(graphics, (int) Math.round(Math.cos(angle) * radius)) - 8;
-        int y = centerY + (int) Math.round(Math.sin(angle) * radius) - 8;
-        graphics.item(stack(icon), x, y);
+    private void hub(GuiGraphicsExtractor graphics, Player player, int color, float opening) {
+        disc(graphics, 0, 0, HUB_RADIUS, ARGB.color(Math.round(0xC8 * opening), darken(color, 0.18F)));
+        ring(graphics, 0, 0, HUB_RADIUS, 1, ARGB.color(Math.round(0xB0 * opening), color));
+        ring(graphics, 0, 0, (int) DEAD_ZONE, 1, ARGB.color(Math.round(0x40 * opening), color));
+
+        Item icon = this.hoveredIcon(player);
+        if (icon == null) return;
+        graphics.pose().pushMatrix();
+        graphics.pose().scale(1.5F, 1.5F);
+        graphics.item(stack(icon), -8, -8);
+        graphics.pose().popMatrix();
+    }
+
+    private Item hoveredIcon(Player player) {
+        if (this.hoveredEntry < 0 || this.hoveredEntry >= this.entries.size()) {
+            for (Entry entry : this.entries) {
+                if (this.isCurrent(player, entry)) return entry.currentSub().map(Sub::icon).orElse(entry.icon());
+            }
+            return null;
+        }
+        Entry entry = this.entries.get(this.hoveredEntry);
+        if (this.hoveredSub >= 0 && this.hoveredSub < entry.subs().size()) return entry.subs().get(this.hoveredSub).icon();
+        return entry.icon();
+    }
+
+    private Component label() {
+        if (this.hoveredEntry < 0 || this.hoveredEntry >= this.entries.size()) {
+            return this.travelled >= TAP_DISTANCE ? Component.translatable("gui.brightestday.wheel_cancel") : null;
+        }
+        Entry entry = this.entries.get(this.hoveredEntry);
+        if (this.backHovered) return Component.translatable("gui.brightestday.wheel_back");
+        if (this.hoveredSub >= 0 && this.hoveredSub < entry.subs().size()) {
+            return Component.empty().append(entry.name()).append(" › ").append(entry.subs().get(this.hoveredSub).name());
+        }
+        return entry.name();
+    }
+
+    private static void trail(GuiGraphicsExtractor graphics, double fromX, double fromY, double toX, double toY, int color) {
+        double length = Math.hypot(toX - fromX, toY - fromY);
+        int steps = (int) (length / TRAIL_SPACING);
+        for (int i = 1; i < steps; i++) {
+            double t = i / (double) steps;
+            int x = (int) Math.round(Mth.lerp(t, fromX, toX));
+            int y = (int) Math.round(Mth.lerp(t, fromY, toY));
+            graphics.fill(x, y, x + 1, y + 1, color);
+        }
+    }
+
+    private static void disc(GuiGraphicsExtractor graphics, int cx, int cy, int radius, int color) {
+        if (ARGB.alpha(color) == 0) return;
+        for (int dy = -radius; dy < radius; dy++) {
+            double row = dy + 0.5;
+            int half = (int) Math.round(Math.sqrt(Math.max(radius * radius - row * row, 0.0)));
+            if (half > 0) graphics.fill(cx - half, cy + dy, cx + half, cy + dy + 1, color);
+        }
+    }
+
+    private static void ring(GuiGraphicsExtractor graphics, int cx, int cy, int radius, int thickness, int color) {
+        if (ARGB.alpha(color) == 0) return;
+        int inner = radius - thickness;
+        for (int dy = -radius; dy < radius; dy++) {
+            double row = dy + 0.5;
+            int outerHalf = (int) Math.round(Math.sqrt(Math.max(radius * radius - row * row, 0.0)));
+            int innerHalf = Math.abs(row) < inner ? (int) Math.round(Math.sqrt(inner * inner - row * row)) : 0;
+            if (outerHalf <= innerHalf) continue;
+            graphics.fill(cx - outerHalf, cy + dy, cx - innerHalf, cy + dy + 1, color);
+            graphics.fill(cx + innerHalf, cy + dy, cx + outerHalf, cy + dy + 1, color);
+        }
     }
 
     private static void extractIndicator(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
