@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.impl;
 
+import dev.amble.core.ringpowers.CorpsCombat;
 import com.mojang.serialization.MapCodec;
 import dev.amble.BrightestDay;
 import dev.amble.core.BrightestDayAttachments;
@@ -110,7 +111,7 @@ public class ScanRingPower extends RingPower<Unit> {
         if (entity != null && (!entity.isAlive() || entity.level() != level || player.distanceTo(entity) > BREAK_DISTANCE)) return;
         if (entity == null && player.distanceToSqr(Vec3.atCenterOf(pending.pos())) > BREAK_DISTANCE * BREAK_DISTANCE) return;
 
-        if (!player.hasInfiniteMaterials() && !PowerRingItem.consumeCharge(player, USE_COST)) {
+        if (!player.hasInfiniteMaterials() && !PowerRingItem.consumeCharge(player, CorpsCombat.utilityCost(player, USE_COST))) {
             player.sendOverlayMessage(Component.translatable("message.brightestday.ring_depleted"));
             return;
         }

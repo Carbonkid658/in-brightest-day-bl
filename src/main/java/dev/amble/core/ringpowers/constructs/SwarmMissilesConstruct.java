@@ -1,5 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.ringpowers.CorpsArsenal;
+import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.attacks.projectile.SwarmManager;
@@ -9,7 +11,7 @@ import net.minecraft.sounds.SoundSource;
 
 public class SwarmMissilesConstruct extends ConstructRingPower {
     public SwarmMissilesConstruct() {
-        super(BrightestDay.id("swarm_missiles"));
+        super(BrightestDay.id("swarm_missiles"), CorpsArsenal.exclusive(LanternCorps.YELLOW));
     }
 
     @Override

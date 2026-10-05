@@ -1,5 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.ringpowers.CorpsArsenal;
+import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.BrightestDay;
 import dev.amble.core.sculpt.SculptManager;
 import net.minecraft.network.chat.Component;
@@ -9,7 +11,7 @@ public class SculptConstruct extends ConstructRingPower {
     private static final int USE_COST = 10;
 
     public SculptConstruct() {
-        super(BrightestDay.id("sculpt"));
+        super(BrightestDay.id("sculpt"), CorpsArsenal.exclusive(LanternCorps.GREEN));
     }
 
     @Override

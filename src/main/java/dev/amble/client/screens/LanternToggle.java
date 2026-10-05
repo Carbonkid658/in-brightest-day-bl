@@ -6,10 +6,7 @@ import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.InputWithModifiers;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.util.ARGB;
 
 import java.util.function.Consumer;
 
@@ -45,10 +42,7 @@ public class LanternToggle extends AbstractButton {
     @Override
     protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         boolean highlighted = this.isHoveredOrFocused();
-        Identifier sprite = this.selected
-                ? highlighted ? LanternWidgets.TOGGLE_SELECTED_HIGHLIGHTED : LanternWidgets.TOGGLE_SELECTED
-                : highlighted ? LanternWidgets.TOGGLE_HIGHLIGHTED : LanternWidgets.TOGGLE;
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, this.getX(), this.getY(), BOX_SIZE, BOX_SIZE, ARGB.white(this.alpha));
+        LanternWidgets.toggle(graphics, this.getX(), this.getY(), BOX_SIZE, LanternWidgets.accent(), this.selected, highlighted, this.alpha);
         graphics.text(this.font, this.getMessage(), this.getX() + BOX_SIZE + LABEL_GAP, this.getY() + (BOX_SIZE - this.font.lineHeight) / 2 + 1,
                 highlighted ? LanternWidgets.TEXT : LanternWidgets.TEXT_DIM, true);
     }

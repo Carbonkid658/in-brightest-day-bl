@@ -1,6 +1,5 @@
 package dev.amble.client.team;
 
-import dev.amble.BrightestDay;
 import dev.amble.client.screens.LanternWidgets;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayItems;
@@ -13,10 +12,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.FormattedCharSequence;
@@ -34,7 +31,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class TeamScreen extends Screen {
-    private static final Identifier PANEL = BrightestDay.id("lantern/panel");
     private static final int WIDTH = 248;
     private static final int HEIGHT = 232;
     private static final int MARGIN = 12;
@@ -121,7 +117,7 @@ public class TeamScreen extends Screen {
         this.hits.clear();
         if (this.minecraft.player == null || this.minecraft.level == null) return;
 
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, PANEL, this.left, this.top, WIDTH, HEIGHT);
+        LanternWidgets.panel(graphics, this.left, this.top, WIDTH, HEIGHT, LanternWidgets.accent());
         graphics.text(this.font, this.title, this.left + MARGIN, this.top + 11, LanternWidgets.TEXT, true);
         this.ownCorps().ifPresent(corps -> {
             Component name = corps.displayName();
@@ -330,7 +326,7 @@ public class TeamScreen extends Screen {
     private void button(GuiGraphicsExtractor graphics, int x, int y, int width, Component label, int mouseX, int mouseY, Runnable action) {
         Hit hit = new Hit(x, y, width, BUTTON_HEIGHT, action);
         boolean hovered = hit.contains(mouseX, mouseY);
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, LanternWidgets.BUTTON.get(true, hovered), x, y, width, BUTTON_HEIGHT);
+        LanternWidgets.button(graphics, x, y, width, BUTTON_HEIGHT, LanternWidgets.accent(), true, hovered, 1.0F);
         graphics.text(this.font, label, x + (width - this.font.width(label)) / 2, y + 3, hovered ? 0xFFFFFFFF : LanternWidgets.TEXT, true);
         this.hits.add(hit);
     }

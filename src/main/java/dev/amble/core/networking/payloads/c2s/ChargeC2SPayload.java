@@ -34,7 +34,7 @@ public record ChargeC2SPayload(boolean charging, int ticks) implements CustomPac
     public void handle(ServerPlayNetworking.Context context) {
         ServerPlayer player = context.player();
         boolean charging = this.charging && !player.isSpectator() && PowerRingItem.hasCharge(player) && !ArmedRingPower.isAbilityMode(player);
-        if (charging) ArmedRingPower.raise(player);
+        if (charging) ArmedRingPower.startCharge(player);
 
         ChargeS2CPayload relay = new ChargeS2CPayload(player.getId(), charging, Mth.clamp(this.ticks, 1, MAX_TICKS));
         ServerPlayNetworking.send(player, relay);

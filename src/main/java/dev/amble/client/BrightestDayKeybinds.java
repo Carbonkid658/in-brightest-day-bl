@@ -3,6 +3,7 @@ package dev.amble.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.BrightestDay;
 import dev.amble.client.flight.FlightControls;
+import dev.amble.client.screens.SpectrumScreen;
 import dev.amble.client.team.TeamScreen;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.networking.payloads.c2s.ConcussiveC2SPayload;
@@ -31,6 +32,7 @@ public final class BrightestDayKeybinds {
     public static final KeyMapping CONCUSSIVE_BLAST = register("concussive_blast", InputConstants.KEY_B);
     public static final KeyMapping ACID_VOMIT = register("acid_vomit", InputConstants.KEY_N);
     public static final KeyMapping TEAM = register("team", InputConstants.KEY_J);
+    public static final KeyMapping SPECTRUM = register("spectrum", InputConstants.KEY_K);
 
     public static final KeyMapping TOGGLE_LIGHT = register("toggle_light", InputConstants.KEY_V);
     public static final KeyMapping TOGGLE_SUIT = register("toggle_suit", InputConstants.KEY_PERIOD);
@@ -56,6 +58,13 @@ public final class BrightestDayKeybinds {
     private static void tick(Minecraft client) {
         if (client.player == null) return;
 
+        FlightControls.syncBoost(client.player, FLIGHT_BOOST.isDown());
+        if (client.gui.screen() != null) {
+            drain(FLIGHT, RAISE_RING, DISMISS_CONSTRUCT, CONCUSSIVE_BLAST, TEAM, TOGGLE_LIGHT, TOGGLE_SUIT, TOGGLE_MASK, SPECTRUM,
+                    FLIGHT_SPEED_UP, FLIGHT_SPEED_DOWN);
+            return;
+        }
+
         while (FLIGHT.consumeClick()) {
             ClientPlayNetworking.send(new UsePowerC2SPayload(RingPowerRegistry.FLIGHT.id()));
         }
@@ -73,7 +82,11 @@ public final class BrightestDayKeybinds {
         }
 
         while (TEAM.consumeClick()) {
-            if (client.gui.screen() == null) client.gui.setScreen(new TeamScreen(null));
+            client.gui.setScreen(new TeamScreen(null));
+        }
+
+        while (SPECTRUM.consumeClick()) {
+            client.gui.setScreen(new SpectrumScreen(null));
         }
 
         while (TOGGLE_LIGHT.consumeClick()) {
@@ -97,8 +110,13 @@ public final class BrightestDayKeybinds {
         while (FLIGHT_SPEED_DOWN.consumeClick()) {
             FlightControls.stepSpeed(client, client.player, -1);
         }
+    }
 
-        FlightControls.syncBoost(client.player, client.gui.screen() == null && FLIGHT_BOOST.isDown());
+    private static void drain(KeyMapping... keys) {
+        for (KeyMapping key : keys) {
+            while (key.consumeClick()) {
+            }
+        }
     }
 
     private static void setTweak(Minecraft client, ColorTweak tweak) {

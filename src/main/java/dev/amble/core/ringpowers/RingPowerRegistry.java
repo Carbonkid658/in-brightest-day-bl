@@ -5,6 +5,8 @@ import dev.amble.core.ringpowers.constructs.BeamConstruct;
 import dev.amble.core.ringpowers.constructs.BlastConstruct;
 import dev.amble.core.ringpowers.constructs.BoomerangDiscConstruct;
 import dev.amble.core.ringpowers.constructs.ChainBoltConstruct;
+import dev.amble.core.ringpowers.constructs.ConstructRingPower;
+import dev.amble.core.ringpowers.constructs.CrystalPrisonConstruct;
 import dev.amble.core.ringpowers.constructs.DrillConstruct;
 import dev.amble.core.ringpowers.constructs.EnergyWhipConstruct;
 import dev.amble.core.ringpowers.constructs.EntityShieldConstruct;
@@ -18,6 +20,7 @@ import dev.amble.core.ringpowers.constructs.LumberjackConstruct;
 import dev.amble.core.ringpowers.constructs.NovaBurstConstruct;
 import dev.amble.core.ringpowers.constructs.OreProbeConstruct;
 import dev.amble.core.ringpowers.constructs.PiercingLanceConstruct;
+import dev.amble.core.ringpowers.constructs.PlasmaBurstConstruct;
 import dev.amble.core.ringpowers.constructs.RapidBarrageConstruct;
 import dev.amble.core.ringpowers.constructs.SculptConstruct;
 import dev.amble.core.ringpowers.constructs.SentryTurretConstruct;
@@ -39,6 +42,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.Optional;
 
@@ -72,6 +76,8 @@ public final class RingPowerRegistry {
     public static final EnergyWhipConstruct ENERGY_WHIP = register(new EnergyWhipConstruct());
     public static final SentryTurretConstruct SENTRY_TURRET = register(new SentryTurretConstruct());
     public static final ToolForgeConstruct TOOL_FORGE = register(new ToolForgeConstruct());
+    public static final PlasmaBurstConstruct PLASMA_BURST = register(new PlasmaBurstConstruct());
+    public static final CrystalPrisonConstruct CRYSTAL_PRISON = register(new CrystalPrisonConstruct());
     public static final TractorBeamRingPower TRACTOR_BEAM = register(new TractorBeamRingPower());
     public static final ScanRingPower SCAN = register(new ScanRingPower());
     public static final ConcussiveRingPower CONCUSSIVE = register(new ConcussiveRingPower());
@@ -94,8 +100,14 @@ public final class RingPowerRegistry {
     }
 
     public static List<RingPower<?>> forCorps(LanternCorps corps, @Nullable LanternCorps borrowed) {
+        return forCorps(corps, borrowed, Set.of());
+    }
+
+    public static List<RingPower<?>> forCorps(LanternCorps corps, @Nullable LanternCorps borrowed, Set<LanternCorps> mimicked) {
         return REGISTRY.values().stream()
-                .filter(power -> power.isAvailableTo(corps) || borrowed != null && power.isAvailableTo(borrowed))
+                .filter(power -> power.isAvailableTo(corps)
+                        || borrowed != null && power.isAvailableTo(borrowed)
+                        || power instanceof ConstructRingPower && mimicked.stream().anyMatch(power::isAvailableTo))
                 .toList();
     }
 

@@ -1,6 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
 import com.mojang.serialization.MapCodec;
+import dev.amble.core.ringpowers.CorpsArsenal;
 import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
@@ -27,7 +28,7 @@ import java.util.Set;
 public abstract class ConstructRingPower extends RingPower<Unit> {
 
     protected ConstructRingPower(Identifier id) {
-        this(id, EnumSet.allOf(LanternCorps.class));
+        this(id, CorpsArsenal.SHARED);
     }
 
     protected ConstructRingPower(Identifier id, Set<LanternCorps> corps) {
@@ -104,6 +105,10 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
 
     public int chargeTicks() {
         return 25;
+    }
+
+    public int releaseTicks() {
+        return -1;
     }
 
     public abstract void fire(ServerPlayer player, int radius, int color);

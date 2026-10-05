@@ -21,6 +21,11 @@ public class BrightestDayCreativeTabs {
                         BuiltInRegistries.BLOCK.stream()
                                 .filter(block -> block instanceof LanternBlock)
                                 .forEach(output::accept);
+                        output.accept(BrightestDayBlocks.BLUE_LANTERN_SHRINE);
+                        output.accept(BrightestDayBlocks.SPECTRUM_FORGE);
+                        output.accept(BrightestDayBlocks.ZAMARONIAN_CRYSTAL);
+                        output.accept(BrightestDayBlocks.YELLOW_BATTERY_CORE);
+                        output.accept(BrightestDayBlocks.SAPPHIRE_BATTERY_CORE);
                     })
                     .build()
     );

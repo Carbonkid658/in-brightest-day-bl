@@ -9,7 +9,12 @@
 		"PlayerMixin",
 		"AvatarMixin",
 		"GlideLivingEntityMixin",
-		"ServerGamePacketListenerImplMixin"
+		"ServerGamePacketListenerImplMixin",
+		"AbstractVillagerMixin",
+		"AnimalMixin",
+		"TamableAnimalMixin",
+		"ItemEntityMixin",
+		"ZombieVillagerMixin"
 	],
 	"client": [
 		"client.AbstractClientPlayerMixin",

@@ -15,13 +15,13 @@ public class BrightestDayConfig {
                     .build())
             .build();
 
-    private static final int CONFIG_VERSION = 1;
+    private static final int CONFIG_VERSION = 2;
 
     @SerialEntry
     public int configVersion = 0;
 
     @SerialEntry
-    public int blastCost = 60;
+    public int blastCost = 150;
     @SerialEntry
     public double blastRange = 48.0;
     @SerialEntry
@@ -29,7 +29,7 @@ public class BrightestDayConfig {
     @SerialEntry
     public float blastDirectDamage = 6.0F;
     @SerialEntry
-    public float blastSplashDamage = 4.0F;
+    public float blastSplashDamage = 3.0F;
     @SerialEntry
     public double blastKnockback = 1.8;
     @SerialEntry
@@ -46,7 +46,7 @@ public class BrightestDayConfig {
     @SerialEntry
     public int beamMaxTicks = 140;
     @SerialEntry
-    public int beamDrainPerSecond = 20;
+    public int beamDrainPerSecond = 30;
 
     @SerialEntry
     public float healBeamAmount = 1.0F;
@@ -89,7 +89,7 @@ public class BrightestDayConfig {
     @SerialEntry
     public float concussiveDamage = 3.0F;
     @SerialEntry
-    public int concussiveCost = 25;
+    public int concussiveCost = 100;
     @SerialEntry
     public int concussiveCooldownTicks = 20;
 
@@ -123,13 +123,13 @@ public class BrightestDayConfig {
     public double spotlightRange = 48.0;
 
     @SerialEntry
-    public int swarmCost = 120;
+    public int swarmCost = 150;
     @SerialEntry
     public int swarmChargeTicks = 20;
     @SerialEntry
     public int swarmDarts = 6;
     @SerialEntry
-    public float swarmDamage = 3.0F;
+    public float swarmDamage = 4.0F;
     @SerialEntry
     public double swarmRange = 32.0;
     @SerialEntry
@@ -138,18 +138,18 @@ public class BrightestDayConfig {
     public double swarmKnockback = 0.25;
 
     @SerialEntry
-    public int lanceCost = 200;
+    public int lanceCost = 250;
     @SerialEntry
-    public int lanceChargeTicks = 35;
+    public int lanceChargeTicks = 28;
     @SerialEntry
-    public float lanceDamage = 16.0F;
+    public float lanceDamage = 30.0F;
     @SerialEntry
     public double lanceRange = 64.0;
     @SerialEntry
     public double lanceKnockback = 0.3;
 
     @SerialEntry
-    public int chainCost = 140;
+    public int chainCost = 150;
     @SerialEntry
     public int chainChargeTicks = 20;
     @SerialEntry
@@ -166,37 +166,37 @@ public class BrightestDayConfig {
     public double chainKnockback = 0.2;
 
     @SerialEntry
-    public int discCost = 90;
+    public int discCost = 100;
     @SerialEntry
     public int discChargeTicks = 15;
     @SerialEntry
-    public float discDamage = 5.0F;
+    public float discDamage = 11.0F;
     @SerialEntry
     public double discRange = 20.0;
     @SerialEntry
     public double discKnockback = 0.4;
 
     @SerialEntry
-    public int novaCost = 400;
+    public int novaCost = 250;
     @SerialEntry
     public int novaChargeTicks = 30;
     @SerialEntry
-    public float novaDamage = 10.0F;
+    public float novaDamage = 14.0F;
     @SerialEntry
     public double novaRadius = 7.0;
     @SerialEntry
     public double novaKnockback = 2.2;
 
     @SerialEntry
-    public int slamCost = 200;
+    public int slamCost = 250;
     @SerialEntry
     public int slamChargeTicks = 12;
     @SerialEntry
-    public float slamBaseDamage = 6.0F;
+    public float slamBaseDamage = 9.0F;
     @SerialEntry
     public float slamDamagePerBlock = 0.25F;
     @SerialEntry
-    public float slamMaxDamage = 14.0F;
+    public float slamMaxDamage = 18.0F;
     @SerialEntry
     public double slamMinRadius = 5.0;
     @SerialEntry
@@ -207,7 +207,7 @@ public class BrightestDayConfig {
     public double slamLaunch = 1.1;
 
     @SerialEntry
-    public int barrageCost = 50;
+    public int barrageCost = 120;
     @SerialEntry
     public int barrageChargeTicks = 6;
     @SerialEntry
@@ -219,16 +219,16 @@ public class BrightestDayConfig {
     @SerialEntry
     public int barrageMaxTicks = 200;
     @SerialEntry
-    public int barrageDrainPerSecond = 40;
+    public int barrageDrainPerSecond = 30;
     @SerialEntry
     public double barrageSpreadDegrees = 1.8;
 
     @SerialEntry
-    public int fistCost = 120;
+    public int fistCost = 150;
     @SerialEntry
     public int fistChargeTicks = 15;
     @SerialEntry
-    public float fistDamage = 12.0F;
+    public float fistDamage = 18.0F;
     @SerialEntry
     public double fistRange = 7.0;
     @SerialEntry
@@ -239,11 +239,11 @@ public class BrightestDayConfig {
     public float fistImpactDamage = 4.0F;
 
     @SerialEntry
-    public int whipCost = 70;
+    public int whipCost = 100;
     @SerialEntry
     public int whipChargeTicks = 8;
     @SerialEntry
-    public float whipDamage = 6.0F;
+    public float whipDamage = 11.0F;
     @SerialEntry
     public double whipLength = 8.0;
     @SerialEntry
@@ -334,6 +334,80 @@ public class BrightestDayConfig {
     @SerialEntry
     public double gliderMobFallSpeed = 0.12;
 
+    @SerialEntry
+    public int plasmaCost = 250;
+    @SerialEntry
+    public int plasmaChargeTicks = 40;
+
+    @SerialEntry
+    public int crystalCost = 150;
+    @SerialEntry
+    public int crystalChargeTicks = 15;
+    @SerialEntry
+    public int crystalPrisonTicks = 80;
+    @SerialEntry
+    public double crystalRange = 32.0;
+
+    @SerialEntry
+    public int rageKillPlayer = 150;
+    @SerialEntry
+    public int rageKillAnimal = 25;
+    @SerialEntry
+    public int rageHurtByPlayer = 5;
+    @SerialEntry
+    public int avariceDebris = 60;
+    @SerialEntry
+    public int avariceDiamond = 30;
+    @SerialEntry
+    public int avariceEmerald = 10;
+    @SerialEntry
+    public int fearStealthKill = 20;
+    @SerialEntry
+    public int fearFeebleKill = 15;
+    @SerialEntry
+    public int fearFlee = 5;
+    @SerialEntry
+    public int willLowHit = 10;
+    @SerialEntry
+    public int willOutclassKill = 80;
+    @SerialEntry
+    public int willHostileMinute = 15;
+    @SerialEntry
+    public int hopeCure = 100;
+    @SerialEntry
+    public int hopeTrade = 5;
+    @SerialEntry
+    public int hopePlant = 1;
+    @SerialEntry
+    public int compassionRescue = 20;
+    @SerialEntry
+    public int compassionGift = 15;
+    @SerialEntry
+    public int loveBreed = 10;
+    @SerialEntry
+    public int loveTame = 40;
+    @SerialEntry
+    public int loveGift = 5;
+
+    @SerialEntry
+    public int redOfferRage = 600;
+    @SerialEntry
+    public float redOfferDailyChance = 0.25F;
+    @SerialEntry
+    public int greenRingWill = 600;
+    @SerialEntry
+    public int greenPlayersPerRing = 4;
+    @SerialEntry
+    public int indigoMinPlayers = 3;
+    @SerialEntry
+    public int bluePathDistance = 2000;
+    @SerialEntry
+    public int bluePathSpacing = 32;
+    @SerialEntry
+    public int hopeShrine = 8;
+    @SerialEntry
+    public int meteorNight = 3;
+
     public static BrightestDayConfig get() {
         return HANDLER.instance();
     }
@@ -352,6 +426,31 @@ public class BrightestDayConfig {
             config.novaCost = Math.max(config.novaCost, defaults.novaCost);
             config.flightDrainPerSecond = Math.min(config.flightDrainPerSecond, defaults.flightDrainPerSecond);
             config.flightBoostDrainPerSecond = Math.min(config.flightBoostDrainPerSecond, defaults.flightBoostDrainPerSecond);
+        }
+        if (config.configVersion < 2) {
+            config.blastCost = defaults.blastCost;
+            config.blastSplashDamage = defaults.blastSplashDamage;
+            config.beamDrainPerSecond = defaults.beamDrainPerSecond;
+            config.concussiveCost = defaults.concussiveCost;
+            config.swarmCost = defaults.swarmCost;
+            config.swarmDamage = defaults.swarmDamage;
+            config.lanceCost = defaults.lanceCost;
+            config.lanceChargeTicks = defaults.lanceChargeTicks;
+            config.lanceDamage = defaults.lanceDamage;
+            config.chainCost = defaults.chainCost;
+            config.discCost = defaults.discCost;
+            config.discDamage = defaults.discDamage;
+            config.novaCost = defaults.novaCost;
+            config.novaDamage = defaults.novaDamage;
+            config.slamCost = defaults.slamCost;
+            config.slamBaseDamage = defaults.slamBaseDamage;
+            config.slamMaxDamage = defaults.slamMaxDamage;
+            config.barrageCost = defaults.barrageCost;
+            config.barrageDrainPerSecond = defaults.barrageDrainPerSecond;
+            config.fistCost = defaults.fistCost;
+            config.fistDamage = defaults.fistDamage;
+            config.whipCost = defaults.whipCost;
+            config.whipDamage = defaults.whipDamage;
         }
         config.configVersion = CONFIG_VERSION;
         HANDLER.save();

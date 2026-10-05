@@ -1,5 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.ringpowers.CorpsArsenal;
+import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
@@ -10,7 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 public class LightOrbConstruct extends ConstructRingPower {
 
     public LightOrbConstruct() {
-        super(BrightestDay.id("light_orb"));
+        super(BrightestDay.id("light_orb"), CorpsArsenal.shared(LanternCorps.BLUE));
     }
 
     @Override

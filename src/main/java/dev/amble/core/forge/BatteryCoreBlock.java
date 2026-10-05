@@ -1,0 +1,38 @@
+package dev.amble.core.forge;
+
+import dev.amble.core.ringpowers.LanternCorps;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
+
+import java.util.function.Supplier;
+
+public class BatteryCoreBlock extends Block {
+    private final LanternCorps corps;
+    private final Supplier<Block> shell;
+
+    public BatteryCoreBlock(LanternCorps corps, Supplier<Block> shell, Properties properties) {
+        super(properties);
+        this.corps = corps;
+        this.shell = shell;
+    }
+
+    public LanternCorps corps() {
+        return this.corps;
+    }
+
+    public Block shell() {
+        return this.shell.get();
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
+        super.setPlacedBy(level, pos, state, placer, itemStack);
+        if (level instanceof ServerLevel server) CentralPowerBattery.track(server, pos, this.corps);
+    }
+}

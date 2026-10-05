@@ -1,5 +1,7 @@
 package dev.amble.core.beams;
 
+import dev.amble.core.progression.RankTask;
+import dev.amble.core.progression.RingRanks;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.HealBeamS2CPayload;
@@ -10,6 +12,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -79,7 +82,9 @@ public final class HealBeamManager {
             }
 
             if (beam.age % HEAL_INTERVAL == 0) {
+                float before = target.getHealth();
                 target.heal(BrightestDayConfig.get().healBeamAmount);
+                if (target instanceof Player) RingRanks.progress(player, RankTask.BLUE_HEAL, Math.round(target.getHealth() - before));
                 if (target.isOnFire()) target.clearFire();
             }
         }

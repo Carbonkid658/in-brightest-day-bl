@@ -6,6 +6,8 @@ import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.blocks.LanternBlock;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.progression.Emotion;
+import dev.amble.core.progression.SpectrumMeters;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -29,6 +31,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -103,7 +106,7 @@ public final class RingLoyalty {
 
     private static void depart(ServerLevel level, Vec3 origin, ItemStack ring, @Nullable UUID formerBearer) {
         MinecraftServer server = level.getServer();
-        ServerPlayer target = findWorthy(server, level, origin, formerBearer);
+        ServerPlayer target = findWorthy(server, level, origin, formerBearer, corps(ring));
         if (target == null) {
             drop(level, origin, ring);
             return;
@@ -117,25 +120,42 @@ public final class RingLoyalty {
         flight.level.playSound(null, start.x, start.y, start.z, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.5F, 1.4F);
     }
 
-    private static @Nullable ServerPlayer findWorthy(MinecraftServer server, ServerLevel level, Vec3 origin, @Nullable UUID exclude) {
+    private static @Nullable ServerPlayer findWorthy(MinecraftServer server, ServerLevel level, Vec3 origin, @Nullable UUID exclude, LanternCorps corps) {
         double radius = BrightestDayConfig.get().ringLoyaltySearchRadius;
-        ServerPlayer nearest = null;
-        double nearestDistance = radius * radius;
+        Emotion emotion = Emotion.of(corps).orElse(null);
+        ServerPlayer best = null;
+        int bestMeter = -1;
+        double bestDistance = Double.MAX_VALUE;
         for (ServerPlayer candidate : level.players()) {
             if (!isWorthy(candidate, exclude)) continue;
             double distance = candidate.position().distanceToSqr(origin);
-            if (distance <= nearestDistance) {
-                nearest = candidate;
-                nearestDistance = distance;
+            if (distance > radius * radius) continue;
+            int meter = emotion == null ? 0 : SpectrumMeters.get(candidate, emotion);
+            if (meter > bestMeter || meter == bestMeter && distance < bestDistance) {
+                best = candidate;
+                bestMeter = meter;
+                bestDistance = distance;
             }
         }
-        if (nearest != null) return nearest;
+        if (best != null) return best;
 
         List<ServerPlayer> elsewhere = new ArrayList<>();
         for (ServerPlayer candidate : server.getPlayerList().getPlayers()) {
             if (isWorthy(candidate, exclude)) elsewhere.add(candidate);
         }
-        return elsewhere.isEmpty() ? null : elsewhere.get(level.getRandom().nextInt(elsewhere.size()));
+        if (elsewhere.isEmpty()) return null;
+        if (emotion != null) return elsewhere.stream().max(Comparator.comparingInt(candidate -> SpectrumMeters.get(candidate, emotion))).orElse(null);
+        return elsewhere.get(level.getRandom().nextInt(elsewhere.size()));
+    }
+
+    public static void deliver(ServerPlayer target, ItemStack ring) {
+        Vec3 start = skyEntry(target);
+        FLIGHTS.add(new Flight(target.level(), start, target.getUUID(), ring, null));
+        target.level().playSound(null, start.x, start.y, start.z, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.5F, 1.4F);
+    }
+
+    public static boolean inFlight(LanternCorps corps) {
+        return FLIGHTS.stream().anyMatch(flight -> corps(flight.ring) == corps);
     }
 
     private static boolean isWorthy(ServerPlayer player, @Nullable UUID exclude) {

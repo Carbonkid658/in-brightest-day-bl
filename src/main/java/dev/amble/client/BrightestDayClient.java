@@ -38,6 +38,8 @@ import dev.amble.client.wheel.PowerWheel;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.TractorEffects;
 import dev.amble.client.effects.WallEffects;
+import dev.amble.client.effects.BatteryEffects;
+import dev.amble.client.effects.SanctuaryEffects;
 import dev.amble.client.forge.ForgeClient;
 import dev.amble.client.flight.FlightAnimations;
 import dev.amble.client.flight.FlightAnimator;
@@ -45,6 +47,8 @@ import dev.amble.client.flight.AileronRolls;
 import dev.amble.client.team.ClientTeams;
 import dev.amble.client.flight.FlightTrail;
 import dev.amble.client.hud.FlightSpeedHud;
+import dev.amble.client.hud.EmotionVignette;
+import dev.amble.client.hud.PilgrimageHud;
 import dev.amble.client.hud.RingChargeHud;
 import dev.amble.client.render.LanternBlockEntityRenderer;
 import dev.amble.client.render.GlowAura;
@@ -73,6 +77,8 @@ public class BrightestDayClient implements ClientModInitializer {
         BlastEffects.init();
         ShieldEffects.init();
         WallEffects.init();
+        BatteryEffects.init();
+        SanctuaryEffects.init();
         BeamEffects.init();
         RemoteAim.init();
         HealBeamEffects.init();
@@ -113,6 +119,8 @@ public class BrightestDayClient implements ClientModInitializer {
         IrisCompat.init();
         LanternButtons.init();
         RingChargeHud.init();
+        EmotionVignette.init();
+        PilgrimageHud.init();
         FlightSpeedHud.init();
         MenuScreens.register(BrightestDayMenus.LANTERN, LanternScreen::new);
         LivingEntityRenderLayerRegistrationCallback.EVENT.register((entityType, entityRenderer, helper, context) -> {

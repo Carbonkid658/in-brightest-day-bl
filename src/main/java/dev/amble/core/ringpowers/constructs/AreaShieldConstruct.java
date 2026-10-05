@@ -1,5 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.ringpowers.CorpsArsenal;
+import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.shields.ShieldManager;
@@ -14,7 +16,7 @@ public class AreaShieldConstruct extends ConstructRingPower {
     private static final int COST_PER_BLOCK = 30;
 
     public AreaShieldConstruct() {
-        super(BrightestDay.id("area_shield"));
+        super(BrightestDay.id("area_shield"), CorpsArsenal.shared(LanternCorps.BLUE));
     }
 
     @Override

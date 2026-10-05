@@ -13,10 +13,10 @@ import java.util.function.IntFunction;
 
 public enum LanternCorps implements StringRepresentable, Translatable {
     GREEN("green", 0x00E03C, true, true),
-    BLUE("blue", 0x2D8CFF, false, true),
+    BLUE("blue", 0x2D8CFF, true, true),
     YELLOW("yellow", 0xFFE01A, true, true),
     ORANGE("orange", 0xFF8A00, true, true),
-    RED("red", 0xE0141E, false, true),
+    RED("red", 0xE0141E, true, true),
     INDIGO("indigo", 0x5B2DB3, true, true),
     STAR_SAPPHIRE("star_sapphire", 0xE040C8, true, true),
     WHITE("white", 0xF4F4F4, true, false),

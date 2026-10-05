@@ -6,7 +6,7 @@ import dev.amble.core.beams.BeamManager;
 import net.minecraft.server.level.ServerPlayer;
 
 public class BeamConstruct extends ConstructRingPower {
-    private static final int USE_COST = 100;
+    private static final int USE_COST = 120;
 
     public BeamConstruct() {
         super(BrightestDay.id("beam"));
