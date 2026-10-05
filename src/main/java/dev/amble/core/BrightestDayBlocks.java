@@ -56,7 +56,7 @@ public class BrightestDayBlocks {
         Block lantern = registerBlockWithItem(name,
                 properties -> new LanternBlock(corps, properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
                         .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
-                new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
+                new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")).stacksTo(1));
         LANTERNS.put(corps, lantern);
         return lantern;
     }
