@@ -3,6 +3,7 @@ package dev.amble.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.BrightestDay;
 import dev.amble.client.flight.FlightControls;
+import dev.amble.client.team.TeamScreen;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.networking.payloads.c2s.ConcussiveC2SPayload;
 import dev.amble.core.networking.payloads.c2s.DismissConstructC2SPayload;
@@ -29,6 +30,7 @@ public final class BrightestDayKeybinds {
     public static final KeyMapping DISMISS_CONSTRUCT = register("dismiss_construct", InputConstants.KEY_G);
     public static final KeyMapping CONCUSSIVE_BLAST = register("concussive_blast", InputConstants.KEY_B);
     public static final KeyMapping ACID_VOMIT = register("acid_vomit", InputConstants.KEY_N);
+    public static final KeyMapping TEAM = register("team", InputConstants.KEY_J);
 
     public static final KeyMapping TOGGLE_LIGHT = register("toggle_light", InputConstants.KEY_V);
     public static final KeyMapping TOGGLE_SUIT = register("toggle_suit", InputConstants.KEY_PERIOD);
@@ -68,6 +70,10 @@ public final class BrightestDayKeybinds {
 
         while (CONCUSSIVE_BLAST.consumeClick()) {
             if (BrightestDayAttachments.get(client.player, RingPowerRegistry.CONCUSSIVE).isPresent()) ClientPlayNetworking.send(ConcussiveC2SPayload.INSTANCE);
+        }
+
+        while (TEAM.consumeClick()) {
+            if (client.gui.screen() == null) client.gui.setScreen(new TeamScreen(null));
         }
 
         while (TOGGLE_LIGHT.consumeClick()) {

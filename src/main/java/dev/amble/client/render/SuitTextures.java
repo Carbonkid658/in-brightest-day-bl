@@ -143,8 +143,8 @@ final class SuitTextures {
     private static int eyePixel(EyePaint eyes, int sx, int sy, int eyeColor) {
         if (sy < FACE_TOP || sy >= FACE_TOP + EyePaint.SIZE) return 0;
         int column;
-        if (sx >= FACE_LEFT && sx < FACE_RIGHT) column = FACE_RIGHT - 1 - sx;
-        else if (sx >= HAT_LEFT && sx < HAT_LEFT + EyePaint.SIZE) column = HAT_LEFT + EyePaint.SIZE - 1 - sx;
+        if (sx >= FACE_LEFT && sx < FACE_RIGHT) column = sx - FACE_LEFT;
+        else if (sx >= HAT_LEFT && sx < HAT_LEFT + EyePaint.SIZE) column = sx - HAT_LEFT;
         else return 0;
 
         int kind = eyes.get(column, sy - FACE_TOP);

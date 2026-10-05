@@ -317,6 +317,11 @@ public class BrightestDayConfig {
     public double ringLoyaltySearchRadius = 512.0;
 
     @SerialEntry
+    public double teamInviteRange = 64.0;
+    @SerialEntry
+    public int teamMaxSize = 6;
+
+    @SerialEntry
     public int gliderCost = 150;
     @SerialEntry
     public int gliderChargeTicks = 15;

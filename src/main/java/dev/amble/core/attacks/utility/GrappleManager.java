@@ -1,6 +1,7 @@
 package dev.amble.core.attacks.utility;
 
 import dev.amble.core.ringpowers.ActiveConstructs;
+import dev.amble.core.team.RingDamage;
 import dev.amble.core.attacks.projectile.ProjectileTargeting;
 import dev.amble.core.networking.payloads.s2c.GrappleS2CPayload;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
@@ -249,7 +250,7 @@ public final class GrappleManager {
         attach(hook);
 
         if (ProjectileTargeting.isTarget(owner, target) && target instanceof LivingEntity living) {
-            living.hurtServer(hook.level, hook.level.damageSources().playerAttack(owner), ENTITY_DAMAGE);
+            living.hurtServer(hook.level, RingDamage.source(hook.level, owner), ENTITY_DAMAGE);
         }
         Vec3 at = hook.position;
         hook.level.playSound(null, at.x, at.y, at.z, SoundEvents.TRIDENT_HIT, SoundSource.PLAYERS, 0.9F, 1.3F);

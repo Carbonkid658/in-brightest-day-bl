@@ -1,5 +1,6 @@
 package dev.amble.core.attacks.projectile;
 
+import dev.amble.core.team.RingDamage;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -98,7 +99,7 @@ public final class ProjectileTargeting {
         ServerLevel level = player.level();
         if (entity instanceof LivingEntity living) {
             living.setInvulnerableTime(0);
-            living.hurtServer(level, level.damageSources().playerAttack(player), damage);
+            living.hurtServer(level, RingDamage.source(level, player), damage);
         }
         entity.push(push);
         entity.needsSync = true;

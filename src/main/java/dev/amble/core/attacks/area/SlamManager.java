@@ -1,6 +1,7 @@
 package dev.amble.core.attacks.area;
 
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.team.RingDamage;
 import dev.amble.core.networking.payloads.s2c.SlamS2CPayload;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -121,9 +122,9 @@ public final class SlamManager {
         double maxRadius = Math.max(config.slamMaxRadius, minRadius);
         double radius = Mth.clamp(minRadius + fall * config.slamRadiusPerBlock, minRadius, maxRadius);
         float damage = Math.min(config.slamBaseDamage + (float) fall * config.slamDamagePerBlock, config.slamMaxDamage);
-        DamageSource source = level.damageSources().playerAttack(player);
+        DamageSource source = RingDamage.source(level, player);
 
-        for (Entity entity : level.getEntities(player, new AABB(center, center).inflate(radius, VERTICAL_REACH, radius), entity -> !entity.isSpectator() && entity.isPickable())) {
+        for (Entity entity : level.getEntities(player, new AABB(center, center).inflate(radius, VERTICAL_REACH, radius), entity -> !entity.isSpectator() && !player.isAlliedTo(entity) && entity.isPickable())) {
             Vec3 to = entity.position().subtract(center);
             double distance = to.horizontalDistance();
             if (distance > radius || Math.abs(to.y) > VERTICAL_REACH) continue;

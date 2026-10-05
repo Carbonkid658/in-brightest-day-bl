@@ -2,6 +2,7 @@ package dev.amble.core.ringpowers.impl;
 
 import com.mojang.serialization.MapCodec;
 import dev.amble.BrightestDay;
+import dev.amble.core.team.RingDamage;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
@@ -70,7 +71,7 @@ public class ConcussiveRingPower extends RingPower<Unit> {
         double range = config.concussiveRange;
         double coneCos = Math.cos(Math.toRadians(config.concussiveConeDegrees / 2.0));
 
-        for (Entity entity : level.getEntities(player, new AABB(eye, eye).inflate(range), entity -> !entity.isSpectator() && entity.isPickable())) {
+        for (Entity entity : level.getEntities(player, new AABB(eye, eye).inflate(range), entity -> !entity.isSpectator() && !player.isAlliedTo(entity) && entity.isPickable())) {
             Vec3 to = entity.getBoundingBox().getCenter().subtract(eye);
             double distance = to.length();
             if (distance > range || distance < 1.0E-3) continue;
@@ -80,7 +81,7 @@ public class ConcussiveRingPower extends RingPower<Unit> {
 
             double centered = coneCos >= 1.0 ? 1.0 : (cos - coneCos) / (1.0 - coneCos);
             double strength = config.concussiveKnockback * Math.max(MIN_STRENGTH, (1.0 - distance / range) * (0.5 + 0.5 * centered));
-            if (entity instanceof LivingEntity living) living.hurtServer(level, level.damageSources().playerAttack(player), config.concussiveDamage);
+            if (entity instanceof LivingEntity living) living.hurtServer(level, RingDamage.source(level, player), config.concussiveDamage);
             entity.push(to.normalize().add(look).normalize().scale(strength).add(0.0, LIFT * strength, 0.0));
             entity.needsSync = true;
         }

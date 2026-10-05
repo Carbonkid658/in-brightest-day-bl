@@ -1,6 +1,7 @@
 package dev.amble.core.attacks.weapon;
 
 import dev.amble.core.ringpowers.ActiveConstructs;
+import dev.amble.core.team.RingDamage;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.TurretBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TurretS2CPayload;
@@ -209,7 +210,7 @@ public final class TurretManager {
             double distance = to.length();
             if (distance <= BOLT_SPEED + BOLT_RADIUS + living.getBbWidth() * 0.5) {
                 ServerPlayer owner = server.getPlayerList().getPlayer(bolt.owner);
-                DamageSource source = owner != null ? bolt.level.damageSources().playerAttack(owner) : bolt.level.damageSources().magic();
+                DamageSource source = owner != null ? RingDamage.source(bolt.level, owner) : bolt.level.damageSources().magic();
                 living.hurtServer(bolt.level, source, BrightestDayConfig.get().turretBoltDamage);
                 Vec3 hit = living.getBoundingBox().getCenter();
                 bolt.level.playSound(null, hit.x, hit.y, hit.z, SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 0.8F, 1.7F);

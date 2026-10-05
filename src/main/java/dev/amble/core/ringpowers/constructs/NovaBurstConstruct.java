@@ -1,6 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.team.RingDamage;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.attacks.area.AreaAttacks;
 import dev.amble.core.networking.payloads.s2c.NovaS2CPayload;
@@ -41,9 +42,9 @@ public class NovaBurstConstruct extends ConstructRingPower {
         BrightestDayConfig config = BrightestDayConfig.get();
         double radius = config.novaRadius;
         Vec3 center = player.getBoundingBox().getCenter();
-        DamageSource source = level.damageSources().playerAttack(player);
+        DamageSource source = RingDamage.source(level, player);
 
-        for (Entity entity : level.getEntities(player, new AABB(center, center).inflate(radius), entity -> !entity.isSpectator() && entity.isPickable())) {
+        for (Entity entity : level.getEntities(player, new AABB(center, center).inflate(radius), entity -> !entity.isSpectator() && !player.isAlliedTo(entity) && entity.isPickable())) {
             Vec3 to = entity.getBoundingBox().getCenter().subtract(center);
             double distance = to.length();
             if (distance > radius || !player.hasLineOfSight(entity)) continue;

@@ -1,6 +1,7 @@
 package dev.amble.core.acid;
 
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.team.RingDamage;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.AcidS2CPayload;
@@ -119,7 +120,7 @@ public final class AcidManager {
         for (int i = 1; i < path.size(); i++) {
             Vec3 from = path.get(i - 1);
             Vec3 to = path.get(i);
-            for (Entity entity : level.getEntities(player, new AABB(from, to).inflate(HIT_PADDING), entity -> entity instanceof LivingEntity && entity.isAlive() && !entity.isSpectator())) {
+            for (Entity entity : level.getEntities(player, new AABB(from, to).inflate(HIT_PADDING), entity -> entity instanceof LivingEntity && !player.isAlliedTo(entity) && entity.isAlive() && !entity.isSpectator())) {
                 AABB box = entity.getBoundingBox().inflate(HIT_PADDING);
                 if (box.contains(from) || box.clip(from, to).isPresent()) hit.add(entity);
             }
@@ -128,7 +129,7 @@ public final class AcidManager {
         for (Entity entity : hit) {
             LivingEntity living = (LivingEntity) entity;
             living.igniteForSeconds(config.acidFireSeconds);
-            living.hurtServer(level, level.damageSources().playerAttack(player), config.acidDamage);
+            living.hurtServer(level, RingDamage.source(level, player), config.acidDamage);
             if (config.acidArmorWear <= 0) continue;
             for (EquipmentSlot slot : EquipmentSlot.VALUES) {
                 if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) continue;

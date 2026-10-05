@@ -1,6 +1,7 @@
 package dev.amble.core.attacks.area;
 
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.team.RingDamage;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.BarrageBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.BarrageS2CPayload;
@@ -114,7 +115,7 @@ public final class BarrageManager {
             Entity target = entityHit.getEntity();
             if (target instanceof LivingEntity living) {
                 living.setInvulnerableTime(0);
-                living.hurtServer(level, level.damageSources().playerAttack(player), config.barrageDamage);
+                living.hurtServer(level, RingDamage.source(level, player), config.barrageDamage);
             }
             target.push(direction.scale(PUSH));
             target.needsSync = true;

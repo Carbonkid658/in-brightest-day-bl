@@ -1,6 +1,7 @@
 package dev.amble.core.attacks.weapon;
 
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.team.RingDamage;
 import dev.amble.core.networking.payloads.s2c.FistS2CPayload;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -123,7 +124,7 @@ public final class FistManager {
                 entity -> entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !player.isAlliedTo(entity) && entity != player.getVehicle())) {
             if (!punch.hit.add(entity.getId())) continue;
 
-            if (entity instanceof LivingEntity living) living.hurtServer(punch.level, punch.level.damageSources().playerAttack(player), config.fistDamage);
+            if (entity instanceof LivingEntity living) living.hurtServer(punch.level, RingDamage.source(punch.level, player), config.fistDamage);
             entity.push(punch.direction.scale(config.fistKnockback).add(0.0, LIFT, 0.0));
             entity.needsSync = true;
             Vec3 center = entity.getBoundingBox().getCenter();
@@ -143,7 +144,7 @@ public final class FistManager {
 
             double falloff = 1.0 - distance / radius;
             if (!punch.hit.contains(entity.getId()) && entity instanceof LivingEntity living) {
-                living.hurtServer(punch.level, punch.level.damageSources().playerAttack(player), (float) (config.fistImpactDamage * falloff));
+                living.hurtServer(punch.level, RingDamage.source(punch.level, player), (float) (config.fistImpactDamage * falloff));
             }
             away = distance < 1.0E-3 ? punch.direction.reverse() : away.normalize();
             entity.push(away.scale(IMPACT_KNOCKBACK * falloff).add(0.0, LIFT * falloff, 0.0));

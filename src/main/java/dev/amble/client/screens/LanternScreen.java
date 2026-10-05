@@ -1,5 +1,6 @@
 package dev.amble.client.screens;
 
+import dev.amble.client.team.TeamScreen;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.SetColorTweakC2SPayload;
@@ -72,6 +73,13 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
                 new ItemStack(Items.ENDER_EYE),
                 Component.translatable("gui.brightestday.eyes"),
                 () -> this.minecraft.gui.setScreen(new EyesScreen(this)),
+                LanternWidgets.BUTTON
+        ));
+        this.addRenderableWidget(new IconButton(
+                this.leftPos - IconButton.SIZE - 2, this.topPos + 8 + IconButton.SIZE * 2,
+                new ItemStack(Items.LEAD),
+                Component.translatable("gui.brightestday.team.title"),
+                () -> this.minecraft.gui.setScreen(new TeamScreen(this)),
                 LanternWidgets.BUTTON
         ));
 

@@ -1,6 +1,7 @@
 package dev.amble.core.attacks.weapon;
 
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.team.RingDamage;
 import dev.amble.core.networking.payloads.s2c.WhipS2CPayload;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -179,7 +180,7 @@ public final class WhipManager {
             crack.hit.add(entity.getId());
             Vec3 radial = crack.forward.scale(Mth.cos(angle)).add(crack.side.scale(Mth.sin(angle)));
             Vec3 tangent = crack.forward.scale(Mth.sin(angle)).subtract(crack.side.scale(Mth.cos(angle))).scale(crack.sweepSide);
-            if (entity instanceof LivingEntity living) living.hurtServer(crack.level, crack.level.damageSources().playerAttack(player), config.whipDamage);
+            if (entity instanceof LivingEntity living) living.hurtServer(crack.level, RingDamage.source(crack.level, player), config.whipDamage);
             entity.push(tangent.scale(config.whipKnockback).add(radial.scale(OUTWARD)).add(0.0, LIFT, 0.0));
             entity.needsSync = true;
         }
@@ -195,7 +196,7 @@ public final class WhipManager {
         if (eye.distanceTo(center) > crack.length * progress + target.getBbWidth() + 0.5) return;
 
         crack.hit.add(target.getId());
-        if (target instanceof LivingEntity living) living.hurtServer(crack.level, crack.level.damageSources().playerAttack(player), BrightestDayConfig.get().whipLashDamage);
+        if (target instanceof LivingEntity living) living.hurtServer(crack.level, RingDamage.source(crack.level, player), BrightestDayConfig.get().whipLashDamage);
         Vec3 pull = player.position().subtract(target.position());
         double distance = pull.length();
         if (distance > 1.0E-3) {

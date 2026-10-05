@@ -1,6 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.team.RingDamage;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.BlastS2CPayload;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -63,9 +64,9 @@ public class BlastConstruct extends ConstructRingPower {
             if (direct != null) impact = direct.getBoundingBox().getCenter();
         }
         boolean hit = direct != null || aim.eye().distanceTo(impact) < range - 1.0E-3;
-        DamageSource source = level.damageSources().playerAttack(player);
+        DamageSource source = RingDamage.source(level, player);
 
-        for (Entity entity : level.getEntities(player, new AABB(impact, impact).inflate(blastRadius))) {
+        for (Entity entity : level.getEntities(player, new AABB(impact, impact).inflate(blastRadius), entity -> !player.isAlliedTo(entity))) {
             Vec3 center = entity.getBoundingBox().getCenter();
             double distance = center.distanceTo(impact);
             if (distance > blastRadius && entity != direct) continue;
