@@ -2,9 +2,9 @@
 	"format_version": "1.21.11",
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "brightestday:item/sapphire_power_ring_in_hand",
-		"1": "brightestday:item/sapphire_power_ring_in_hand_emission",
-		"particle": "brightestday:item/sapphire_power_ring_in_hand"
+		"0": "brightestday:item/star_sapphire_power_ring_in_hand",
+		"1": "brightestday:item/star_sapphire_power_ring_in_hand_emission",
+		"particle": "brightestday:item/star_sapphire_power_ring_in_hand"
 	},
 	"elements": [
 		{
