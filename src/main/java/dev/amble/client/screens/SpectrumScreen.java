@@ -1,5 +1,6 @@
 package dev.amble.client.screens;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.progression.Emotion;
 import dev.amble.core.progression.RankTask;
@@ -36,6 +37,7 @@ public class SpectrumScreen extends Screen {
 
     private final @Nullable Screen parent;
     private Emotion selected;
+    private boolean chosen;
     private int left;
     private int top;
 
@@ -49,9 +51,10 @@ public class SpectrumScreen extends Screen {
     protected void init() {
         this.left = (this.width - WIDTH) / 2;
         this.top = (this.height - HEIGHT) / 2;
-        if (this.minecraft.player != null) {
+        if (!this.chosen && this.minecraft.player != null) {
             PowerRingItem.getWornCorps(this.minecraft.player).flatMap(Emotion::of).ifPresent(emotion -> this.selected = emotion);
         }
+        this.chosen = true;
     }
 
     private int rowY(int index) {
@@ -168,7 +171,7 @@ public class SpectrumScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (event.button() == 0) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             int x = this.left + MARGIN;
             Emotion[] emotions = Emotion.values();
             for (int i = 0; i < emotions.length; i++) {

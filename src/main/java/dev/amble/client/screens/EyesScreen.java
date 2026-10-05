@@ -1,5 +1,6 @@
 package dev.amble.client.screens;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.networking.payloads.c2s.SetEyesC2SPayload;
 import dev.amble.core.ringpowers.CorpsColors;
@@ -100,7 +101,7 @@ public class EyesScreen extends Screen {
         int cell = this.cellAt(event.x(), event.y());
         if (cell < 0) return false;
 
-        this.stroke = event.button() == 1 ? EyePaint.NONE : this.brush;
+        this.stroke = event.button() == InputConstants.MOUSE_BUTTON_RIGHT ? EyePaint.NONE : this.brush;
         this.painting = true;
         this.paint(cell);
         return true;

@@ -1,5 +1,6 @@
 package dev.amble.client.team;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.client.screens.LanternWidgets;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayItems;
@@ -337,7 +338,7 @@ public class TeamScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (event.button() == 0) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             for (Hit hit : List.copyOf(this.hits)) {
                 if (!hit.contains(event.x(), event.y())) continue;
                 this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
