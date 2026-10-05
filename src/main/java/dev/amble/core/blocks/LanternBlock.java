@@ -4,18 +4,22 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.blockentities.LanternBlockEntity;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.loyalty.RingLoyalty;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.util.Prediction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -31,6 +35,7 @@ import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -42,6 +47,7 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
     public static final IntegerProperty ROTATION = BlockStateProperties.ROTATION_16;
     private static final VoxelShape SHAPE = Shapes.or(Block.column(2.0F, 8.2F, 9.2F), Block.column(4.0F, 0.0F, 9.25F));
     public static final BooleanProperty WATERLOGGED =BlockStateProperties.WATERLOGGED;
+    private static final double FRONT_CONE = 0.5;
 
     private final LanternCorps corps;
 
@@ -64,6 +70,17 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
             FluidState replacedFluidState = context.getLevel().getFluidState(pos);
             return this.defaultBlockState().setValue(ROTATION, RotationSegment.convertToSegment(context.getRotation())).setValue(WATERLOGGED, replacedFluidState.is(Fluids.WATER));
         }
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
+        super.setPlacedBy(level, pos, state, placer, itemStack);
+        if (!(level instanceof ServerLevel serverLevel) || !(placer instanceof Player player)) return;
+
+        ItemStack ring = BrightestDayAttachments.getRing(player);
+        if (PowerRingItem.getCorps(ring).orElse(null) != this.corps) return;
+        RingLoyalty.bind(ring, serverLevel, pos);
+        BrightestDayAttachments.setRing(player, ring);
     }
 
     protected FluidState getFluidState(final BlockState state) {
@@ -107,7 +124,7 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
     @Override
     protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (!(stack.getItem() instanceof PowerRingItem)) return InteractionResult.TRY_WITH_EMPTY_HAND;
-        return this.recharge(level, pos, player, stack, false);
+        return this.recharge(state, level, pos, player, stack, false);
     }
 
     @Override
@@ -115,7 +132,7 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
         if (!player.isSecondaryUseActive()) {
             ItemStack slotted = BrightestDayAttachments.getRing(player);
             if (slotted.isEmpty()) return super.useWithoutItem(state, level, pos, player, hitResult);
-            return this.recharge(level, pos, player, slotted, true);
+            return this.recharge(state, level, pos, player, slotted, true);
         }
 
         if (!level.isClientSide()) {
@@ -133,7 +150,14 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
         return InteractionResult.SUCCESS;
     }
 
-    private InteractionResult recharge(Level level, BlockPos pos, Player player, ItemStack ring, boolean slotted) {
+    public static boolean isInFront(BlockState state, BlockPos pos, Player player) {
+        float yaw = RotationSegment.convertToDegrees(state.getValue(ROTATION)) * Mth.DEG_TO_RAD;
+        Vec3 toPlayer = player.position().subtract(Vec3.atBottomCenterOf(pos)).multiply(1.0, 0.0, 1.0);
+        if (toPlayer.lengthSqr() < 1.0E-4) return false;
+        return toPlayer.normalize().dot(new Vec3(Mth.sin(yaw), 0.0, -Mth.cos(yaw))) >= FRONT_CONE;
+    }
+
+    private InteractionResult recharge(BlockState state, Level level, BlockPos pos, Player player, ItemStack ring, boolean slotted) {
         if (!ArmedRingPower.isArmed(player)) {
             if (!level.isClientSide()) player.sendOverlayMessage(Component.translatable("message.brightestday.arm_to_charge"));
             return InteractionResult.FAIL;
@@ -147,10 +171,16 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
             return InteractionResult.FAIL;
         }
 
+        if (!isInFront(state, pos, player)) {
+            if (!level.isClientSide()) player.sendOverlayMessage(Component.translatable("message.brightestday.face_lantern"));
+            return InteractionResult.FAIL;
+        }
+
         if (PowerRingItem.getRingPower(ring) >= BrightestDayComponents.MAX_POWER) return InteractionResult.PASS;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
 
         PowerRingItem.setMaxPower(ring);
+        if (level instanceof ServerLevel serverLevel) RingLoyalty.bind(ring, serverLevel, pos);
         if (slotted) BrightestDayAttachments.setRing(player, ring);
 
         player.sendSystemMessage(Component.translatable(this.corps.oathKey())

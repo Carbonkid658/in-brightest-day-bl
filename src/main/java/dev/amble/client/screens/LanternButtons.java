@@ -32,7 +32,7 @@ public final class LanternButtons {
             IconButton button = new IconButton(0, 0,
                     new ItemStack(BrightestDayItems.GREEN_POWER_RING),
                     Component.translatable("gui.brightestday.lantern"),
-                    () -> ClientPlayNetworking.send(OpenLanternC2SPayload.INSTANCE));
+                    () -> openLantern(screen));
 
             position(screen, button);
             Screens.getWidgets(screen).add(button);
@@ -44,15 +44,28 @@ public final class LanternButtons {
         });
     }
 
+    private static void openLantern(Screen screen) {
+        if (!(screen instanceof CreativeModeInventoryScreen creative)) {
+            ClientPlayNetworking.send(OpenLanternC2SPayload.INSTANCE);
+            return;
+        }
+
+        ItemStack carried = creative.getMenu().getCarried();
+        creative.getMenu().setCarried(ItemStack.EMPTY);
+        ClientPlayNetworking.send(new OpenLanternC2SPayload(carried.copy()));
+    }
+
     private static void updateTooltip(Minecraft client, IconButton button, int[] shownCharge) {
         if (client.player == null) return;
         ItemStack ring = PowerRingItem.getWornRing(client.player);
         Optional<LanternCorps> corps = PowerRingItem.getCorps(ring);
-        int charge = corps.isPresent() ? Math.round(PowerRingItem.getChargeFraction(ring) * 100) : -1;
+        int charge = corps.isEmpty() ? -1 : !PowerRingItem.usesPower(ring) ? -2 : Math.round(PowerRingItem.getChargeFraction(ring) * 100);
         if (charge == shownCharge[0]) return;
         shownCharge[0] = charge;
 
-        Component detail = corps.isPresent()
+        Component detail = charge == -2
+                ? corps.get().displayName().copy().withColor(CorpsColors.of(client.player))
+                : corps.isPresent()
                 ? Component.translatable("gui.brightestday.ring_charge", charge).withColor(CorpsColors.of(client.player))
                 : Component.translatable("gui.brightestday.no_ring").withStyle(ChatFormatting.GRAY);
         button.setTooltip(Tooltip.create(Component.translatable("gui.brightestday.lantern").append("\n").append(detail)));

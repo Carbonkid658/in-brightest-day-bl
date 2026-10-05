@@ -1,17 +1,16 @@
 package dev.amble.client.screens;
 
-import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 import java.util.function.IntConsumer;
 
-public class MaskHeightSlider extends AbstractSliderButton {
+public class MaskHeightSlider extends LanternSlider {
     private final int range;
     private final IntConsumer onChange;
 
     public MaskHeightSlider(int x, int y, int width, int height, int offset, int range, IntConsumer onChange) {
-        super(x, y, width, height, Component.empty(), (offset + range) / (2.0 * range));
+        super(x, y, width, height, (offset + range) / (2.0 * range));
         this.range = range;
         this.onChange = onChange;
         this.updateMessage();

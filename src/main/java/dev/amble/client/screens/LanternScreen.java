@@ -9,12 +9,10 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import dev.amble.core.menus.LanternMenu;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Checkbox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
@@ -25,7 +23,6 @@ import org.jspecify.annotations.Nullable;
 import java.util.Optional;
 
 public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
-    private static final Identifier SLOT_SPRITE = Identifier.withDefaultNamespace("container/slot");
     private static final int IMAGE_WIDTH = 176;
     private static final int IMAGE_HEIGHT = 206;
     private static final int SLIDER_X = 8;
@@ -45,17 +42,14 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
     private static final int BAR_WIDTH = 90;
     private static final int BAR_HEIGHT = 5;
 
-    private static final int PANEL = 0xFFC6C6C6;
-    private static final int HIGHLIGHT = 0xFFFFFFFF;
-    private static final int SHADOW = 0xFF555555;
-    private static final int OUTLINE = 0xFF000000;
-    private static final int LABEL = 0xFF404040;
+    private static final int RING_SLOT_INSET = 5;
+    private static final int RING_SLOT_SIZE = 26;
 
     private @Nullable ColorTweakSlider brightness;
     private @Nullable ColorTweakSlider saturation;
-    private @Nullable Checkbox aura;
-    private @Nullable Checkbox suit;
-    private @Nullable Checkbox mask;
+    private @Nullable LanternToggle aura;
+    private @Nullable LanternToggle suit;
+    private @Nullable LanternToggle mask;
     private @Nullable MaskHeightSlider maskHeight;
 
     public LanternScreen(LanternMenu menu, Inventory inventory, Component title) {
@@ -70,13 +64,15 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
                 this.leftPos - IconButton.SIZE - 2, this.topPos + 4,
                 new ItemStack(Items.CRAFTING_TABLE),
                 Component.translatable("gui.brightestday.inventory"),
-                this::returnToInventory
+                this::returnToInventory,
+                LanternWidgets.BUTTON
         ));
         this.addRenderableWidget(new IconButton(
                 this.leftPos - IconButton.SIZE - 2, this.topPos + 6 + IconButton.SIZE,
                 new ItemStack(Items.ENDER_EYE),
                 Component.translatable("gui.brightestday.eyes"),
-                () -> this.minecraft.gui.setScreen(new EyesScreen(this))
+                () -> this.minecraft.gui.setScreen(new EyesScreen(this)),
+                LanternWidgets.BUTTON
         ));
 
         ColorTweak tweak = BrightestDayAttachments.getColorTweak(this.minecraft.player);
@@ -88,28 +84,19 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
                 "gui.brightestday.saturation", tweak.saturation(), ColorTweak.MIN_SATURATION, 1.0F, value -> this.updateTweak()));
 
         Component auraLabel = Component.translatable("gui.brightestday.aura");
-        int auraWidth = Checkbox.getBoxSize(this.font) + 4 + this.font.width(auraLabel);
-        this.aura = this.addRenderableWidget(Checkbox.builder(auraLabel, this.font)
-                .pos(this.leftPos + IMAGE_WIDTH - AURA_MARGIN - auraWidth, this.topPos + AURA_Y)
-                .selected(tweak.aura())
-                .onValueChange((checkbox, value) -> this.updateTweak())
-                .build());
+        this.aura = this.addRenderableWidget(new LanternToggle(
+                this.leftPos + IMAGE_WIDTH - AURA_MARGIN - LanternToggle.width(this.font, auraLabel), this.topPos + AURA_Y,
+                auraLabel, this.font, tweak.aura(), value -> this.updateTweak()));
 
         Component suitLabel = Component.translatable("gui.brightestday.suit");
-        int suitWidth = Checkbox.getBoxSize(this.font) + 4 + this.font.width(suitLabel);
-        this.suit = this.addRenderableWidget(Checkbox.builder(suitLabel, this.font)
-                .pos(this.aura.getX() - SUIT_GAP - suitWidth, this.topPos + AURA_Y)
-                .selected(tweak.suit())
-                .onValueChange((checkbox, value) -> this.updateTweak())
-                .build());
+        this.suit = this.addRenderableWidget(new LanternToggle(
+                this.aura.getX() - SUIT_GAP - LanternToggle.width(this.font, suitLabel), this.topPos + AURA_Y,
+                suitLabel, this.font, tweak.suit(), value -> this.updateTweak()));
 
         Component maskLabel = Component.translatable("gui.brightestday.mask");
-        int maskWidth = Checkbox.getBoxSize(this.font) + 4 + this.font.width(maskLabel);
-        this.mask = this.addRenderableWidget(Checkbox.builder(maskLabel, this.font)
-                .pos(this.leftPos + SLIDER_X, this.topPos + MASK_Y)
-                .selected(tweak.mask())
-                .onValueChange((checkbox, value) -> this.updateTweak())
-                .build());
+        int maskWidth = LanternToggle.width(this.font, maskLabel);
+        this.mask = this.addRenderableWidget(new LanternToggle(
+                this.leftPos + SLIDER_X, this.topPos + MASK_Y, maskLabel, this.font, tweak.mask(), value -> this.updateTweak()));
 
         int maskSliderX = SLIDER_X + maskWidth + MASK_SLIDER_GAP;
         this.maskHeight = this.addRenderableWidget(new MaskHeightSlider(
@@ -141,61 +128,50 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         super.extractBackground(graphics, mouseX, mouseY, a);
-        drawPanel(graphics, this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, LanternWidgets.BACKGROUND, this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
 
         for (Slot slot : this.menu.slots) {
-            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_SPRITE, this.leftPos + slot.x - 1, this.topPos + slot.y - 1, 18, 18);
+            if (slot == this.menu.getSlot(0)) {
+                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, LanternWidgets.RING_SLOT,
+                        this.leftPos + slot.x - RING_SLOT_INSET, this.topPos + slot.y - RING_SLOT_INSET, RING_SLOT_SIZE, RING_SLOT_SIZE);
+            } else {
+                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, LanternWidgets.SLOT, this.leftPos + slot.x - 1, this.topPos + slot.y - 1, 18, 18);
+            }
         }
 
         ItemStack ring = this.menu.getRing();
         Optional<LanternCorps> corps = PowerRingItem.getCorps(ring);
-        int color = corps.map(this::tint).orElse(SHADOW);
-
-        int slotX = this.leftPos + LanternMenu.RING_SLOT_X - 2;
-        int slotY = this.topPos + LanternMenu.RING_SLOT_Y - 2;
-        if (corps.isPresent()) graphics.outline(slotX, slotY, 20, 20, color);
+        if (corps.isPresent() && !PowerRingItem.usesPower(ring)) return;
 
         int barX = this.leftPos + INFO_X;
         int barY = this.topPos + BAR_Y;
-        graphics.fill(barX - 1, barY - 1, barX + BAR_WIDTH + 1, barY + BAR_HEIGHT + 1, SHADOW);
-        graphics.fill(barX, barY, barX + BAR_WIDTH, barY + BAR_HEIGHT, 0xFF373737);
+        graphics.fill(barX - 1, barY - 1, barX + BAR_WIDTH + 1, barY + BAR_HEIGHT + 1, LanternWidgets.BAR_FRAME);
+        graphics.fill(barX, barY, barX + BAR_WIDTH, barY + BAR_HEIGHT, LanternWidgets.BAR_EMPTY);
         if (corps.isPresent()) {
             int filled = Math.round(BAR_WIDTH * PowerRingItem.getChargeFraction(ring));
-            graphics.fill(barX, barY, barX + filled, barY + BAR_HEIGHT, color);
+            graphics.fill(barX, barY, barX + filled, barY + BAR_HEIGHT, this.tint(corps.get()));
             graphics.fill(barX, barY, barX + filled, barY + 1, ARGB.color(96, 255, 255, 255));
         }
     }
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-        super.extractLabels(graphics, mouseX, mouseY);
+        graphics.text(this.font, this.title, this.titleLabelX, this.titleLabelY, LanternWidgets.TEXT, true);
+        graphics.text(this.font, this.playerInventoryTitle, this.inventoryLabelX, this.inventoryLabelY, LanternWidgets.TEXT_DIM, false);
 
         ItemStack ring = this.menu.getRing();
         Optional<LanternCorps> corps = PowerRingItem.getCorps(ring);
         if (corps.isEmpty()) {
-            graphics.text(this.font, Component.translatable("gui.brightestday.no_ring"), INFO_X, BAR_Y - 12, LABEL, false);
+            graphics.text(this.font, Component.translatable("gui.brightestday.no_ring"), INFO_X, BAR_Y - 12, LanternWidgets.TEXT_DIM, false);
             return;
         }
 
         String name = Component.translatable(corps.get().getTranslationKey()).getString();
         if (this.font.width(name) > INFO_WIDTH) name = this.font.plainSubstrByWidth(name, INFO_WIDTH - this.font.width("…")) + "…";
-        graphics.text(this.font, name, INFO_X, BAR_Y - 12, this.tint(corps.get()), false);
+        graphics.text(this.font, name, INFO_X, BAR_Y - 12, this.tint(corps.get()), true);
+        if (!PowerRingItem.usesPower(ring)) return;
 
         int percent = Math.round(PowerRingItem.getChargeFraction(ring) * 100);
-        graphics.text(this.font, percent + "%", INFO_X + BAR_WIDTH + PERCENT_GAP, BAR_Y - 2, LABEL, false);
-    }
-
-    private static void drawPanel(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
-        int x1 = x + width;
-        int y1 = y + height;
-        graphics.fill(x + 1, y + 1, x1 - 1, y1 - 1, PANEL);
-        graphics.fill(x + 1, y, x1 - 1, y + 1, OUTLINE);
-        graphics.fill(x + 1, y1 - 1, x1 - 1, y1, OUTLINE);
-        graphics.fill(x, y + 1, x + 1, y1 - 1, OUTLINE);
-        graphics.fill(x1 - 1, y + 1, x1, y1 - 1, OUTLINE);
-        graphics.fill(x + 1, y + 1, x1 - 3, y + 3, HIGHLIGHT);
-        graphics.fill(x + 1, y + 1, x + 3, y1 - 3, HIGHLIGHT);
-        graphics.fill(x + 3, y1 - 3, x1 - 1, y1 - 1, SHADOW);
-        graphics.fill(x1 - 3, y + 3, x1 - 1, y1 - 1, SHADOW);
+        graphics.text(this.font, percent + "%", INFO_X + BAR_WIDTH + PERCENT_GAP, BAR_Y - 2, LanternWidgets.TEXT, false);
     }
 }

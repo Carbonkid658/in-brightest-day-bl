@@ -2,6 +2,7 @@ package dev.amble.client;
 
 import dev.amble.client.effects.ArmedPose;
 import dev.amble.client.effects.BeamEffects;
+import dev.amble.client.effects.RemoteAim;
 import dev.amble.client.effects.HealBeamEffects;
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.ConstructClient;
@@ -40,6 +41,7 @@ import dev.amble.client.effects.WallEffects;
 import dev.amble.client.forge.ForgeClient;
 import dev.amble.client.flight.FlightAnimations;
 import dev.amble.client.flight.FlightAnimator;
+import dev.amble.client.flight.AileronRolls;
 import dev.amble.client.flight.FlightTrail;
 import dev.amble.client.hud.FlightSpeedHud;
 import dev.amble.client.hud.RingChargeHud;
@@ -66,10 +68,12 @@ public class BrightestDayClient implements ClientModInitializer {
         FlightAnimator.init();
         FlightAnimations.init();
         FlightTrail.init();
+        AileronRolls.init();
         BlastEffects.init();
         ShieldEffects.init();
         WallEffects.init();
         BeamEffects.init();
+        RemoteAim.init();
         HealBeamEffects.init();
         ArmedPose.init();
         ElementAura.init();

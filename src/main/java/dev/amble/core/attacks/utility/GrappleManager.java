@@ -6,6 +6,7 @@ import dev.amble.core.networking.payloads.s2c.GrappleS2CPayload;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.BlockPos;
@@ -94,6 +95,10 @@ public final class GrappleManager {
         });
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) ->
                 !(entity instanceof ServerPlayer player && source.is(DamageTypeTags.IS_FALL) && isFallSafe(player)));
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            HOOKS.clear();
+            SAFE_FALL.clear();
+        });
     }
 
     public static boolean isActive(ServerPlayer player) {

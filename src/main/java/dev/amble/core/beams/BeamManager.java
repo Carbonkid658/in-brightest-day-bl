@@ -6,6 +6,7 @@ import dev.amble.core.networking.payloads.s2c.BeamS2CPayload;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -42,6 +43,7 @@ public final class BeamManager {
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(BeamManager::tick);
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> stop(handler.player));
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> BEAMS.clear());
     }
 
     public static void start(ServerPlayer player, int color) {
@@ -66,7 +68,7 @@ public final class BeamManager {
             boolean selected = ArmedRingPower.selectedConstruct(player).orElse(null) == RingPowerRegistry.BEAM;
             boolean outOfCharge = !PowerRingItem.hasCharge(player)
                     || drainTick && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, BrightestDayConfig.get().beamDrainPerSecond);
-            if (++beam.age > BrightestDayConfig.get().beamMaxTicks || !player.isAlive() || !ArmedRingPower.isArmed(player) || !selected || outOfCharge) {
+            if (++beam.age > BrightestDayConfig.get().beamMaxTicks || player.isRemoved() || !player.isAlive() || !ArmedRingPower.isArmed(player) || !selected || outOfCharge) {
                 stop(player);
                 continue;
             }

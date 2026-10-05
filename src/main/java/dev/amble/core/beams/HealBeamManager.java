@@ -5,6 +5,7 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.HealBeamS2CPayload;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -40,6 +41,7 @@ public final class HealBeamManager {
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(HealBeamManager::tick);
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> stop(handler.player));
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> BEAMS.clear());
     }
 
     public static void start(ServerPlayer player, LivingEntity target, int color) {

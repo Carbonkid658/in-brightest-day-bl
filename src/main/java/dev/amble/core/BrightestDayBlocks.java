@@ -20,55 +20,22 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
 
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class BrightestDayBlocks {
 
+    private static final Map<LanternCorps, Block> LANTERNS = new EnumMap<>(LanternCorps.class);
 
-    public static final Block GREEN_LANTERN_BLOCK = registerBlockWithItem("green_lantern",
-            properties -> new LanternBlock(LanternCorps.GREEN, properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
-                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
-            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
-
-    public static final Block YELLOW_LANTERN_BLOCK = registerBlockWithItem("yellow_lantern",
-            properties -> new LanternBlock(LanternCorps.YELLOW, properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
-                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
-            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
-
-    public static final Block BLACK_LANTERN_BLOCK = registerBlockWithItem("black_lantern",
-            properties -> new LanternBlock(LanternCorps.BLACK, properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
-                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
-            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
-
-    public static final Block WHITE_LANTERN_BLOCK = registerBlockWithItem("white_lantern",
-            properties -> new LanternBlock(LanternCorps.WHITE, properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
-                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
-            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
-
-    public static final Block RED_LANTERN_BLOCK = registerBlockWithItem("red_lantern",
-            properties -> new LanternBlock(LanternCorps.RED, properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
-                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
-            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
-
-    public static final Block ORANGE_LANTERN_BLOCK = registerBlockWithItem("orange_lantern",
-            properties -> new LanternBlock(LanternCorps.ORANGE, properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
-                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
-            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
-
-    public static final Block BLUE_LANTERN_BLOCK = registerBlockWithItem("blue_lantern",
-            properties -> new LanternBlock(LanternCorps.BLUE, properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
-                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
-            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
-
-    public static final Block INDIGO_LANTERN_BLOCK = registerBlockWithItem("indigo_lantern",
-            properties -> new LanternBlock(LanternCorps.INDIGO, properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
-                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
-            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
-
-    public static final Block STAR_SAPPHIRE_LANTERN_BLOCK = registerBlockWithItem("sapphire_lantern",
-            properties -> new LanternBlock(LanternCorps.STAR_SAPPHIRE, properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
-                    .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
-            new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
+    public static final Block GREEN_LANTERN_BLOCK = registerLantern("green_lantern", LanternCorps.GREEN);
+    public static final Block YELLOW_LANTERN_BLOCK = registerLantern("yellow_lantern", LanternCorps.YELLOW);
+    public static final Block RED_LANTERN_BLOCK = registerLantern("red_lantern", LanternCorps.RED);
+    public static final Block ORANGE_LANTERN_BLOCK = registerLantern("orange_lantern", LanternCorps.ORANGE);
+    public static final Block BLUE_LANTERN_BLOCK = registerLantern("blue_lantern", LanternCorps.BLUE);
+    public static final Block INDIGO_LANTERN_BLOCK = registerLantern("indigo_lantern", LanternCorps.INDIGO);
+    public static final Block STAR_SAPPHIRE_LANTERN_BLOCK = registerLantern("sapphire_lantern", LanternCorps.STAR_SAPPHIRE);
 
     public static final Block HARD_LIGHT = registerBlock("hard_light",
             properties -> new HardLightBlock(properties.strength(-1.0F, 3600000.0F).noLootTable().noOcclusion()
@@ -80,6 +47,19 @@ public class BrightestDayBlocks {
             properties -> new ConstructLightBlock(properties.strength(-1.0F, 3600000.0F).noLootTable().noOcclusion().noCollision().replaceable()
                     .lightLevel(_ -> 15).pushReaction(PushReaction.POPPED).isValidSpawn((state, level, pos, type) -> false)
                     .isSuffocating((state, level, pos) -> false).isViewBlocking((state, level, pos, box) -> false)));
+
+    public static Optional<Block> lantern(LanternCorps corps) {
+        return Optional.ofNullable(LANTERNS.get(corps));
+    }
+
+    private static Block registerLantern(String name, LanternCorps corps) {
+        Block lantern = registerBlockWithItem(name,
+                properties -> new LanternBlock(corps, properties.lightLevel(_ -> 12).mapColor(MapColor.METAL).forceSolidOn().strength(3.5F)
+                        .sound(SoundType.LANTERN).noOcclusion().pushReaction(PushReaction.POPPED)),
+                new Item.Properties().component(DataComponents.TOOLTIP_STYLE, BrightestDay.id("ring")));
+        LANTERNS.put(corps, lantern);
+        return lantern;
+    }
 
     private static <T extends Block> T registerBlockWithItem(String name, Function<BlockBehaviour.Properties, T> function, Item.Properties itemProperties) {
         T block = registerBlock(name, function);

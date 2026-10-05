@@ -2,6 +2,7 @@ package dev.amble.core.attacks.projectile;
 
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.SwarmS2CPayload;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
@@ -75,6 +76,7 @@ public final class SwarmManager {
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(SwarmManager::tick);
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> clear(handler.player));
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> VOLLEYS.clear());
     }
 
     public static void clear(ServerPlayer player) {

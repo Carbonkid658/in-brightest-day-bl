@@ -5,6 +5,7 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.walls.WallManager;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.BlockPos;
@@ -78,6 +79,11 @@ public final class SculptManager {
             SESSIONS.remove(handler.player);
             SHAPES.remove(handler.player.getUUID());
         });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            SHAPES.clear();
+            SESSIONS.clear();
+            SCULPTURES.clear();
+        });
     }
 
     public static boolean isSculpting(ServerPlayer player) {
@@ -139,7 +145,7 @@ public final class SculptManager {
     private static void tick(MinecraftServer server) {
         for (ServerPlayer player : List.copyOf(SESSIONS.keySet())) {
             boolean selected = ArmedRingPower.selectedConstruct(player).orElse(null) == RingPowerRegistry.SCULPT;
-            if (!player.isAlive() || !ArmedRingPower.isArmed(player) || !selected || !PowerRingItem.hasCharge(player)) {
+            if (player.isRemoved() || !player.isAlive() || !ArmedRingPower.isArmed(player) || !selected || !PowerRingItem.hasCharge(player)) {
                 stop(player, false);
                 continue;
             }

@@ -40,6 +40,7 @@ import dev.amble.core.light.LightOrbManager;
 import dev.amble.core.beams.BeamManager;
 import dev.amble.core.beams.HealBeamManager;
 import dev.amble.core.ringpowers.CorpsSynergy;
+import dev.amble.core.loyalty.RingLoyalty;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -96,6 +97,7 @@ public class BrightestDay implements ModInitializer {
 		DrillModes.init();
 		HealBeamManager.init();
 		CorpsSynergy.init();
+		RingLoyalty.init();
 	}
 
 	public static Identifier id(String path) {

@@ -40,8 +40,6 @@ public class BrightestDayModelProvider extends FabricModelProvider {
         itemModelGenerators.generateSpyglass(BrightestDayItems.BLACK_POWER_RING);
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.GREEN_LANTERN_BLOCK.asItem());
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.YELLOW_LANTERN_BLOCK.asItem());
-        itemModelGenerators.generateSpyglass(BrightestDayBlocks.BLACK_LANTERN_BLOCK.asItem());
-        itemModelGenerators.generateSpyglass(BrightestDayBlocks.WHITE_LANTERN_BLOCK.asItem());
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.RED_LANTERN_BLOCK.asItem());
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.ORANGE_LANTERN_BLOCK.asItem());
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.BLUE_LANTERN_BLOCK.asItem());

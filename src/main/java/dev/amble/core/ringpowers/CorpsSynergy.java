@@ -3,6 +3,7 @@ package dev.amble.core.ringpowers;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.amble.BrightestDay;
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
 import io.netty.buffer.ByteBuf;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
@@ -18,10 +19,7 @@ import net.minecraft.world.entity.player.Player;
 
 public final class CorpsSynergy {
     private static final int CHECK_INTERVAL = 10;
-    private static final double LINK_ENTER_RADIUS = 48.0;
-    private static final double LINK_EXIT_RADIUS = 60.0;
-    private static final double DREAD_ENTER_RADIUS = 16.0;
-    private static final double DREAD_EXIT_RADIUS = 20.0;
+    private static final double EXIT_MARGIN = 1.25;
     private static final float HOPE_COST_MULTIPLIER = 0.25F;
     public static final float HOPE_BUBBLE_SCALE = 1.5F;
     private static final float DREAD_COST_MULTIPLIER = 2.0F;
@@ -89,14 +87,15 @@ public final class CorpsSynergy {
     private static void tick(MinecraftServer server) {
         if (server.getTickCount() % CHECK_INTERVAL != 0) return;
 
+        BrightestDayConfig config = BrightestDayConfig.get();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             State previous = get(player);
             LanternCorps corps = PowerRingItem.hasCharge(player) ? PowerRingItem.getWornCorps(player).orElse(null) : null;
 
-            boolean hope = corps == LanternCorps.GREEN && isNear(player, LanternCorps.BLUE, previous.hope() ? LINK_EXIT_RADIUS : LINK_ENTER_RADIUS);
-            boolean will = corps == LanternCorps.BLUE && isNear(player, LanternCorps.GREEN, previous.will() ? LINK_EXIT_RADIUS : LINK_ENTER_RADIUS);
+            boolean hope = corps == LanternCorps.GREEN && isNear(player, LanternCorps.BLUE, radius(config.synergyLinkRadius, previous.hope()));
+            boolean will = corps == LanternCorps.BLUE && isNear(player, LanternCorps.GREEN, radius(config.synergyLinkRadius, previous.will()));
             boolean dread = (corps == LanternCorps.YELLOW || corps == LanternCorps.RED)
-                    && isNear(player, LanternCorps.BLUE, previous.dread() ? DREAD_EXIT_RADIUS : DREAD_ENTER_RADIUS);
+                    && isNear(player, LanternCorps.BLUE, radius(config.synergyDreadRadius, previous.dread()));
             State next = new State(hope, will, dread);
             if (next.equals(previous)) continue;
 
@@ -114,6 +113,10 @@ public final class CorpsSynergy {
                         .withColor(LanternCorps.BLUE.color()));
             }
         }
+    }
+
+    private static double radius(double enter, boolean linked) {
+        return linked ? enter * EXIT_MARGIN : enter;
     }
 
     private static boolean isNear(ServerPlayer player, LanternCorps corps, double radius) {

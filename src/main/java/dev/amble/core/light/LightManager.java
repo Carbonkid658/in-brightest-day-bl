@@ -1,6 +1,9 @@
 package dev.amble.core.light;
 
 import dev.amble.core.BrightestDayBlocks;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -21,6 +24,11 @@ public final class LightManager {
 
     public static void init() {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> clearSpot(handler.player));
+        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> clearSpot(oldPlayer));
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+            if (entity instanceof ServerPlayer player) clearSpot(player);
+        });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> SPOTS.clear());
     }
 
     public static boolean owns(ServerLevel level, BlockPos pos) {

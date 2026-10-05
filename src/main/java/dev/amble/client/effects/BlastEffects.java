@@ -267,7 +267,7 @@ public final class BlastEffects {
         return player.getPosition(partialTicks)
                 .add(0.0, SHOULDER_HEIGHT, 0.0)
                 .add(right.scale(side * SHOULDER_OFFSET))
-                .add(player.getViewVector(partialTicks).scale(ARM_LENGTH));
+                .add(RemoteAim.look(player, partialTicks).scale(ARM_LENGTH));
     }
 
     private static void tick(Minecraft client) {

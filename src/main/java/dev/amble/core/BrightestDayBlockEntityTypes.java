@@ -12,8 +12,6 @@ public class BrightestDayBlockEntityTypes {
             FabricBlockEntityTypeBuilder.create(LanternBlockEntity::new,
                     BrightestDayBlocks.GREEN_LANTERN_BLOCK,
                     BrightestDayBlocks.YELLOW_LANTERN_BLOCK,
-                    BrightestDayBlocks.BLACK_LANTERN_BLOCK,
-                    BrightestDayBlocks.WHITE_LANTERN_BLOCK,
                     BrightestDayBlocks.RED_LANTERN_BLOCK,
                     BrightestDayBlocks.ORANGE_LANTERN_BLOCK,
                     BrightestDayBlocks.BLUE_LANTERN_BLOCK,

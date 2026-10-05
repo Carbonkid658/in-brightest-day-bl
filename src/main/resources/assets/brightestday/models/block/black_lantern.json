@@ -1,7 +1,0 @@
-{
-	"parent": "brightestday:block/lantern_base",
-	"textures": {
-		"0": "brightestday:block/black_lantern",
-		"1": "brightestday:block/black_lantern_emission"
-	}
-}

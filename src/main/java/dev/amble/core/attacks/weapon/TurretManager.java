@@ -5,6 +5,7 @@ import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.TurretBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TurretS2CPayload;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -96,6 +97,10 @@ public final class TurretManager {
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(TurretManager::tick);
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            TURRETS.clear();
+            BOLTS.clear();
+        });
     }
 
     public static boolean place(ServerPlayer player, int color) {

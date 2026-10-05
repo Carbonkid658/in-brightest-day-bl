@@ -15,8 +15,13 @@ public class BrightestDayConfig {
                     .build())
             .build();
 
+    private static final int CONFIG_VERSION = 1;
+
     @SerialEntry
-    public int blastCost = 100;
+    public int configVersion = 0;
+
+    @SerialEntry
+    public int blastCost = 60;
     @SerialEntry
     public double blastRange = 48.0;
     @SerialEntry
@@ -172,7 +177,7 @@ public class BrightestDayConfig {
     public double discKnockback = 0.4;
 
     @SerialEntry
-    public int novaCost = 250;
+    public int novaCost = 400;
     @SerialEntry
     public int novaChargeTicks = 30;
     @SerialEntry
@@ -289,11 +294,27 @@ public class BrightestDayConfig {
     @SerialEntry
     public double flightMaxBoostSpeed = 5.0;
     @SerialEntry
-    public int flightDrainPerSecond = 15;
+    public int flightDrainPerSecond = 8;
     @SerialEntry
-    public int flightBoostDrainPerSecond = 30;
+    public int flightBoostDrainPerSecond = 18;
     @SerialEntry
     public boolean showFlightSpeedometer = true;
+    @SerialEntry
+    public boolean showFlightTrails = true;
+    @SerialEntry
+    public boolean aileronRolls = true;
+    @SerialEntry
+    public double aileronRollDodge = 1.4;
+
+    @SerialEntry
+    public double synergyLinkRadius = 96.0;
+    @SerialEntry
+    public double synergyDreadRadius = 16.0;
+
+    @SerialEntry
+    public int ringLoyaltyDeaths = 3;
+    @SerialEntry
+    public double ringLoyaltySearchRadius = 512.0;
 
     @SerialEntry
     public int gliderCost = 150;
@@ -314,5 +335,20 @@ public class BrightestDayConfig {
 
     public static void load() {
         HANDLER.load();
+        migrate(HANDLER.instance());
+    }
+
+    private static void migrate(BrightestDayConfig config) {
+        if (config.configVersion >= CONFIG_VERSION) return;
+
+        BrightestDayConfig defaults = new BrightestDayConfig();
+        if (config.configVersion < 1) {
+            config.blastCost = Math.min(config.blastCost, defaults.blastCost);
+            config.novaCost = Math.max(config.novaCost, defaults.novaCost);
+            config.flightDrainPerSecond = Math.min(config.flightDrainPerSecond, defaults.flightDrainPerSecond);
+            config.flightBoostDrainPerSecond = Math.min(config.flightBoostDrainPerSecond, defaults.flightBoostDrainPerSecond);
+        }
+        config.configVersion = CONFIG_VERSION;
+        HANDLER.save();
     }
 }

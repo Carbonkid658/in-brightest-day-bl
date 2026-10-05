@@ -1,6 +1,7 @@
 package dev.amble.client.effects.drill;
 
 import dev.amble.client.effects.BlastEffects;
+import dev.amble.client.effects.RemoteAim;
 import dev.amble.client.effects.ConstructClient;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.VoxelRenderer;
@@ -110,7 +111,7 @@ public final class DrillEffects {
 
             ClientDrill drill = entry.getValue();
             Vec3 eye = player.getEyePosition(partialTicks);
-            Vec3 look = player.getViewVector(partialTicks);
+            Vec3 look = RemoteAim.look(player, partialTicks);
             BlockHitResult hit = DrillGeometry.target(client.level, player, eye, look);
             Vec3 start = BlastEffects.hand(player, partialTicks);
             Vec3 tip = hit != null ? hit.getLocation().add(look.scale(TIP_BITE)) : eye.add(look.scale(DrillGeometry.REACH * IDLE_REACH));

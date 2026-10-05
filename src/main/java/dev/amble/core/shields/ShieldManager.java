@@ -4,6 +4,7 @@ import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.networking.payloads.s2c.ShieldRemoveS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ShieldSpawnS2CPayload;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -85,6 +86,7 @@ public final class ShieldManager {
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(ShieldManager::tick);
         ServerLivingEntityEvents.ALLOW_DAMAGE.register(ShieldManager::allowDamage);
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> SHIELDS.clear());
     }
 
     public static float entityShieldRadius(Entity entity) {

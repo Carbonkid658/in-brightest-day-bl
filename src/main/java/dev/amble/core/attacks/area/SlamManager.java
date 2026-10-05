@@ -4,6 +4,7 @@ import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.SlamS2CPayload;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.BlockPos;
@@ -58,6 +59,7 @@ public final class SlamManager {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> SLAMS.remove(handler.player));
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) ->
                 !(entity instanceof ServerPlayer player && source.is(DamageTypeTags.IS_FALL) && SLAMS.containsKey(player)));
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> SLAMS.clear());
     }
 
     public static boolean isSlamming(ServerPlayer player) {

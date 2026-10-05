@@ -71,6 +71,7 @@ final class SuitTextures {
     static void release(int id) {
         Entry entry = ENTRIES.remove(id);
         if (entry != null) entry.close();
+        SKINS.keySet().removeIf(path -> ENTRIES.values().stream().noneMatch(remaining -> remaining.key != null && remaining.key.skin().equals(path)));
     }
 
     static void clear() {

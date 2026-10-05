@@ -7,6 +7,10 @@ import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -14,6 +18,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.level.Level;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
@@ -22,6 +27,21 @@ import java.util.function.Consumer;
 public class PowerRingItem extends Item {
     public PowerRingItem(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
+        if (hand != InteractionHand.MAIN_HAND || !player.isSecondaryUseActive()) return super.use(level, player, hand);
+        if (level.isClientSide()) return InteractionResult.SUCCESS;
+
+        ItemStack ring = player.getItemInHand(hand);
+        ItemStack previous = BrightestDayAttachments.getRing(player);
+        BrightestDayAttachments.setRing(player, ring);
+        player.setItemInHand(hand, previous.copy());
+        level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ARMOR_EQUIP_GOLD.value(), SoundSource.PLAYERS, 1.0F, 1.2F);
+        player.sendOverlayMessage(Component.translatable("message.brightestday.ring_equipped", getCorps(ring).map(LanternCorps::displayName).orElse(ring.getHoverName()))
+                .withColor(getCorps(ring).orElse(LanternCorps.GREEN).color()));
+        return InteractionResult.SUCCESS_SERVER;
     }
 
     @Override
@@ -52,6 +72,10 @@ public class PowerRingItem extends Item {
         return ItemStack.EMPTY;
     }
 
+    public static boolean usesPower(ItemStack ring) {
+        return getCorps(ring).map(LanternCorps::hasRingPower).orElse(true);
+    }
+
     public static Optional<LanternCorps> getWornCorps(Player player) {
         return getCorps(getWornRing(player));
     }
@@ -70,7 +94,7 @@ public class PowerRingItem extends Item {
     }
 
     public static boolean hasCharge(Player player) {
-        return player.hasInfiniteMaterials() || getRingPower(getWornRing(player)) > 0;
+        return player.hasInfiniteMaterials() || player.isCreative() || getRingPower(getWornRing(player)) > 0;
     }
 
     public static boolean drainWorn(Player player, int amount) {
@@ -96,11 +120,12 @@ public class PowerRingItem extends Item {
 
     public static int getRingPower(ItemStack ring) {
         if (!(ring.getItem() instanceof PowerRingItem)) return 0;
+        if (!usesPower(ring)) return BrightestDayComponents.MAX_POWER;
         return ring.getOrDefault(BrightestDayComponents.POWER_TYPE, 0);
     }
 
     public static void drainRing(ItemStack ring, int amount) {
-        if (!(ring.getItem() instanceof PowerRingItem)) return;
+        if (!(ring.getItem() instanceof PowerRingItem) || !usesPower(ring)) return;
         int current = ring.getOrDefault(BrightestDayComponents.POWER_TYPE, 0);
         if (current <= 0) return;
 
@@ -108,7 +133,7 @@ public class PowerRingItem extends Item {
     }
 
     public static void chargeRing(ItemStack ring, int amount) {
-        if (!(ring.getItem() instanceof PowerRingItem)) return;
+        if (!(ring.getItem() instanceof PowerRingItem) || !usesPower(ring)) return;
         int current = ring.getOrDefault(BrightestDayComponents.POWER_TYPE, BrightestDayComponents.MAX_POWER);
         if (current >= BrightestDayComponents.MAX_POWER) return;
 
@@ -116,13 +141,14 @@ public class PowerRingItem extends Item {
     }
 
     public static void setMaxPower(ItemStack ring) {
-        if (!(ring.getItem() instanceof PowerRingItem)) return;
+        if (!(ring.getItem() instanceof PowerRingItem) || !usesPower(ring)) return;
         ring.set(BrightestDayComponents.POWER_TYPE, BrightestDayComponents.MAX_POWER);
     }
 
     @Override
     public void appendHoverText(ItemStack itemStack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag) {
         super.appendHoverText(itemStack, context, display, builder, tooltipFlag);
+        if (!usesPower(itemStack)) return;
 
         double percentage = ((double) PowerRingItem.getRingPower(itemStack) / BrightestDayComponents.MAX_POWER) * 100;
 

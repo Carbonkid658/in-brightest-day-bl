@@ -5,6 +5,7 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.DrillS2CPayload;
 import dev.amble.core.ringpowers.constructs.DrillConstruct;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -71,6 +72,7 @@ public final class DrillManager {
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(DrillManager::tick);
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> stop(handler.player));
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> DRILLS.clear());
     }
 
     public static void start(ServerPlayer player, int size, int color) {
@@ -101,7 +103,7 @@ public final class DrillManager {
             int drain = BrightestDayConfig.get().drillDrainPerSecond + BrightestDayConfig.get().drillDrainPerSize * (drill.size - 1);
             boolean outOfCharge = !PowerRingItem.hasCharge(player)
                     || drainTick && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, drain);
-            if (!player.isAlive() || player.isSpectator() || player.level() != drill.level || !ArmedRingPower.isArmed(player) || !selected || outOfCharge) {
+            if (player.isRemoved() || !player.isAlive() || player.isSpectator() || player.level() != drill.level || !ArmedRingPower.isArmed(player) || !selected || outOfCharge) {
                 stop(player);
                 continue;
             }

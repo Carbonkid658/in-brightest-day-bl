@@ -29,8 +29,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(BrightestDayItems.BLACK_POWER_RING, "Black Power Ring");
         builder.add(BrightestDayBlocks.GREEN_LANTERN_BLOCK, "Green Lantern");
         builder.add(BrightestDayBlocks.YELLOW_LANTERN_BLOCK, "Yellow Lantern");
-        builder.add(BrightestDayBlocks.BLACK_LANTERN_BLOCK, "Black Lantern");
-        builder.add(BrightestDayBlocks.WHITE_LANTERN_BLOCK, "White Lantern");
         builder.add(BrightestDayBlocks.RED_LANTERN_BLOCK, "Red Lantern");
         builder.add(BrightestDayBlocks.ORANGE_LANTERN_BLOCK, "Orange Lantern");
         builder.add(BrightestDayBlocks.BLUE_LANTERN_BLOCK, "Blue Lantern");
@@ -114,6 +112,13 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
                 By my black hand, the dead shall rise!""");
 
         builder.add("message.brightestday.wrong_lantern", "This lantern only answers to the %s.");
+        builder.add("message.brightestday.face_lantern", "Stand before the lantern's face to charge your ring.");
+        builder.add("message.brightestday.ring_equipped", "%s ring equipped.");
+        builder.add("message.brightestday.loyalty_wavers", "Your ring's loyalty wavers. Fall %s more time(s) and it will seek another bearer.");
+        builder.add("message.brightestday.loyalty_departed", "Your ring has left you in search of a worthier bearer.");
+        builder.add("message.brightestday.loyalty_chosen", "A ring has chosen you. Welcome to the %s.");
+        builder.add("message.brightestday.loyalty_lantern_found", "Your Power Battery awaits at %s, %s, %s in %s.");
+        builder.add("message.brightestday.loyalty_lantern_lost", "Your ring's Power Battery was lost. A new one has been forged for you.");
         builder.add("message.brightestday.arm_to_charge", "Raise your ring to the lantern to charge it.");
         builder.add("message.brightestday.no_constructs", "Your ring cannot manifest constructs.");
         builder.add("message.brightestday.nothing_to_heal", "No one to heal.");
@@ -191,6 +196,22 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("config.brightestday.option.flight_boost_drain.desc", "Ring charge drained per second while boosting at the default speed.");
         builder.add("config.brightestday.option.show_flight_speedometer", "Show Speedometer");
         builder.add("config.brightestday.option.show_flight_speedometer.desc", "Whether the flight speedometer appears while ring-flying.");
+        builder.add("config.brightestday.option.show_flight_trails", "Show Flight Trails");
+        builder.add("config.brightestday.option.show_flight_trails.desc", "Whether ring-fliers leave a glowing trail behind them.");
+        builder.add("config.brightestday.option.aileron_rolls", "Aileron Rolls");
+        builder.add("config.brightestday.option.aileron_rolls.desc", "Double-tap a strafe key while flying at speed to barrel roll in that direction.");
+        builder.add("config.brightestday.option.aileron_roll_dodge", "Aileron Roll Dodge");
+        builder.add("config.brightestday.option.aileron_roll_dodge.desc", "How hard an aileron roll pushes you sideways.");
+        builder.add("config.brightestday.group.synergy", "Corps Synergy");
+        builder.add("config.brightestday.option.synergy_link_radius", "Hope/Will Range");
+        builder.add("config.brightestday.option.synergy_link_radius.desc", "How close Blue and Green Lanterns must be to empower each other.");
+        builder.add("config.brightestday.option.synergy_dread_radius", "Hope Dread Range");
+        builder.add("config.brightestday.option.synergy_dread_radius.desc", "How close a Blue Lantern must be to weaken Yellow and Red Lanterns.");
+        builder.add("config.brightestday.group.loyalty", "Ring Loyalty");
+        builder.add("config.brightestday.option.ring_loyalty_deaths", "Deaths Before Leaving");
+        builder.add("config.brightestday.option.ring_loyalty_deaths.desc", "How many times a bearer can die before their ring leaves to find a worthier bearer. 0 means rings never leave.");
+        builder.add("config.brightestday.option.ring_loyalty_search_radius", "Search Radius");
+        builder.add("config.brightestday.option.ring_loyalty_search_radius.desc", "How far a departing ring flies to find a new bearer before seeking one anywhere in the world.");
         builder.add("brightestday.ring_power.drill", "Drill");
         builder.add("config.brightestday.group.drill", "Drill");
         builder.add("config.brightestday.option.drill_cost", "Charge Cost");

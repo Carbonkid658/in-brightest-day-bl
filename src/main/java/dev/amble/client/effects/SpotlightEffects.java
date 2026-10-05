@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -39,7 +40,8 @@ public final class SpotlightEffects {
         for (AbstractClientPlayer player : client.level.players()) {
             if (!LightRingPower.isEmitting(player) || !PowerRingItem.hasCharge(player) || player.isInvisible()) continue;
 
-            HitResult hit = player.pick(range, partialTicks, false);
+            Vec3 eye = player.getEyePosition(partialTicks);
+            HitResult hit = client.level.clip(new ClipContext(eye, eye.add(RemoteAim.look(player, partialTicks).scale(range)), ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
             Vec3 from = BlastEffects.hand(player, partialTicks);
             Vec3 to = hit.getLocation();
             Vec3 path = to.subtract(from);

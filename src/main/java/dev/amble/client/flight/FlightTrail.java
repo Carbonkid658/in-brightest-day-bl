@@ -1,5 +1,6 @@
 package dev.amble.client.flight;
 
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.ringpowers.CorpsColors;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -89,7 +90,7 @@ public final class FlightTrail {
             Vec3 velocity = player.position().subtract(player.xo, player.yo, player.zo);
             double speed = velocity.length();
             boolean flying = FlightRingPower.isFlying(player);
-            boolean emit = flying && speed > EMIT_SPEED;
+            boolean emit = flying && speed > EMIT_SPEED && BrightestDayConfig.get().showFlightTrails;
             float targetAura = flying ? Mth.clamp((float) ((speed - AURA_START_SPEED) / (FlightRingPower.BOOST_SPEED - AURA_START_SPEED)), 0.0F, 1.0F) : 0.0F;
 
             Trail trail = TRAILS.get(player);

@@ -2,6 +2,7 @@ package dev.amble.core.attacks.weapon;
 
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.FistS2CPayload;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -64,6 +65,7 @@ public final class FistManager {
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(FistManager::tick);
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> PUNCHES.clear());
     }
 
     public static void punch(ServerPlayer player, int color) {

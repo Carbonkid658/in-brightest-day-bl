@@ -4,6 +4,7 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.TractorS2CPayload;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.ringpowers.impl.TractorBeamRingPower;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -56,6 +57,7 @@ public final class TractorManager {
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(TractorManager::tick);
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> release(handler.player));
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> GRIPS.clear());
     }
 
     public static boolean isHolding(ServerPlayer player) {

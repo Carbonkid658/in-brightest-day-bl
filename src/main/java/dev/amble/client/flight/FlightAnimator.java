@@ -13,6 +13,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -49,6 +50,11 @@ public final class FlightAnimator {
     private static final float DIVE_PIVOT = 0.75F;
     private static final float DIVE_MODEL_CENTER = 0.94F;
     private static final float DIVE_BOX_CENTER = 0.3F;
+    private static final double REMOTE_VELOCITY_SMOOTHING = 0.35;
+    private static final int LANDING_GRACE_TICKS = 4;
+    private static final int MIN_PHASE_TICKS = 8;
+    public static final int ROLL_TICKS = 10;
+    private static final float ROLL_CAMERA_TILT = 25.0F;
 
     public static final RenderStateDataKey<Vec3> DIVE_OFFSET = RenderStateDataKey.create(() -> "brightestday:dive_offset");
 
@@ -68,6 +74,12 @@ public final class FlightAnimator {
         float limbX, oLimbX;
         float limbZ, oLimbZ;
         Phase phase = Phase.NONE;
+        Vec3 velocity = Vec3.ZERO;
+        int landingTicks;
+        int phaseTicks;
+        float spin, oSpin;
+        int rollTicks;
+        int rollDirection;
     }
 
     public static void init() {
@@ -83,15 +95,20 @@ public final class FlightAnimator {
     }
 
     private static void update(Minecraft client, AbstractClientPlayer player) {
-        boolean flying = FlightRingPower.isFlying(player);
+        boolean airborne = FlightRingPower.isFlying(player);
         Motion motion = MOTIONS.get(player);
         if (motion == null) {
-            if (!flying) return;
+            if (!airborne) return;
             motion = new Motion();
             MOTIONS.put(player, motion);
         }
 
-        Vec3 velocity = player.position().subtract(player.xo, player.yo, player.zo);
+        motion.landingTicks = airborne ? 0 : motion.landingTicks + 1;
+        boolean flying = airborne || FlightRingPower.canFly(player) && motion.phase != Phase.NONE && motion.landingTicks < LANDING_GRACE_TICKS;
+
+        Vec3 rawVelocity = player.position().subtract(player.xo, player.yo, player.zo);
+        motion.velocity = player == client.player ? rawVelocity : motion.velocity.lerp(rawVelocity, REMOTE_VELOCITY_SMOOTHING);
+        Vec3 velocity = motion.velocity;
         double speed = velocity.length();
         float bodyYaw = player.yBodyRot * Mth.DEG_TO_RAD;
         Vec3 facing = new Vec3(-Mth.sin(bodyYaw), 0.0, Mth.cos(bodyYaw));
@@ -108,6 +125,8 @@ public final class FlightAnimator {
         motion.oFlightBlend = motion.flightBlend;
         motion.oLimbX = motion.limbX;
         motion.oLimbZ = motion.limbZ;
+        motion.oSpin = motion.spin;
+        tickRoll(motion);
 
         motion.speed = (float) speed;
         motion.forward = forward;
@@ -154,6 +173,24 @@ public final class FlightAnimator {
         }
     }
 
+    private static void tickRoll(Motion motion) {
+        if (motion.rollTicks <= 0) {
+            motion.spin = motion.oSpin = 0.0F;
+            return;
+        }
+        motion.rollTicks--;
+        float progress = 1.0F - motion.rollTicks / (float) ROLL_TICKS;
+        motion.spin = ease(progress) * 360.0F * motion.rollDirection;
+    }
+
+    public static boolean aileronRoll(Player player, boolean right) {
+        Motion motion = MOTIONS.get(player);
+        if (motion == null || motion.rollTicks > 0) return false;
+        motion.rollTicks = ROLL_TICKS;
+        motion.rollDirection = right ? 1 : -1;
+        return true;
+    }
+
     private static void sonicBoom(ClientLevel level, Player player, Vec3 velocity, int color) {
         Vec3 direction = velocity.normalize();
         Vec3 reference = Math.abs(direction.y) > 0.9 ? new Vec3(1.0, 0.0, 0.0) : new Vec3(0.0, 1.0, 0.0);
@@ -185,21 +222,17 @@ public final class FlightAnimator {
             return;
         }
 
+        if (motion.phaseTicks > 0) motion.phaseTicks--;
         switch (motion.phase) {
-            case NONE -> {
-                FlightAnimations.loop(controller, FlightAnimations.HOVER);
-                motion.phase = Phase.HOVER;
-            }
+            case NONE -> enterPhase(controller, motion, Phase.HOVER, FlightAnimations.HOVER);
             case HOVER -> {
-                if (motion.forward > FlightRingPower.DIVE_ENTER_SPEED) {
-                    FlightAnimations.loop(controller, FlightAnimations.FLIGHT);
-                    motion.phase = Phase.FLIGHT;
+                if (motion.phaseTicks == 0 && motion.forward > FlightRingPower.DIVE_ENTER_SPEED) {
+                    enterPhase(controller, motion, Phase.FLIGHT, FlightAnimations.FLIGHT);
                 }
             }
             case FLIGHT -> {
-                if (motion.forward < FlightRingPower.DIVE_EXIT_SPEED) {
-                    FlightAnimations.loop(controller, FlightAnimations.HOVER);
-                    motion.phase = Phase.HOVER;
+                if (motion.phaseTicks == 0 && motion.forward < FlightRingPower.DIVE_EXIT_SPEED) {
+                    enterPhase(controller, motion, Phase.HOVER, FlightAnimations.HOVER);
                 }
             }
         }
@@ -208,6 +241,12 @@ public final class FlightAnimator {
         float hoverSpeed = 1.0F + Math.min(motion.speed, 1.2F) * 1.2F;
         float flightSpeed = 0.7F + intensity * 1.3F;
         FlightAnimations.setSpeed(controller, Mth.lerp(ease(motion.flightBlend), hoverSpeed, flightSpeed));
+    }
+
+    private static void enterPhase(PlayerAnimationController controller, Motion motion, Phase phase, Identifier animation) {
+        FlightAnimations.loop(controller, animation);
+        motion.phase = phase;
+        motion.phaseTicks = MIN_PHASE_TICKS;
     }
 
     public static Optional<AdjustmentModifier.PartModifier> adjustment(Avatar avatar, String bone) {
@@ -226,7 +265,7 @@ public final class FlightAnimator {
             case "body" -> rotation(
                     Mth.lerp(partialTicks, motion.oBodyPitch, motion.bodyPitch) * flight,
                     0.0F,
-                    Mth.lerp(partialTicks, motion.oRoll, motion.roll) * flight);
+                    (Mth.lerp(partialTicks, motion.oRoll, motion.roll) + Mth.lerp(partialTicks, motion.oSpin, motion.spin)) * flight);
             case "head" -> {
                 float bodyPitch = Mth.lerp(partialTicks, motion.oBodyPitch, motion.bodyPitch);
                 float bodyYaw = Mth.rotLerp(partialTicks, player.yBodyRotO, player.yBodyRot);
@@ -306,9 +345,10 @@ public final class FlightAnimator {
     public static float cameraRoll(Player player, float partialTicks) {
         Motion motion = MOTIONS.get(player);
         if (motion == null) return 0.0F;
-        return Mth.lerp(partialTicks, motion.oRoll, motion.roll)
-                * Mth.lerp(partialTicks, motion.oFlight, motion.flight)
-                * CAMERA_ROLL_SCALE;
+        float spin = Mth.lerp(partialTicks, motion.oSpin, motion.spin) / 360.0F;
+        float tilt = Mth.sin(Math.abs(spin) * Mth.PI) * ROLL_CAMERA_TILT * Math.signum(spin);
+        return (Mth.lerp(partialTicks, motion.oRoll, motion.roll) * CAMERA_ROLL_SCALE + tilt)
+                * Mth.lerp(partialTicks, motion.oFlight, motion.flight);
     }
 
     private FlightAnimator() {}

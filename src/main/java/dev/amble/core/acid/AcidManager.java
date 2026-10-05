@@ -6,6 +6,7 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.AcidS2CPayload;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -44,6 +45,7 @@ public final class AcidManager {
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(AcidManager::tick);
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> SPEWING.remove(handler.player));
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> SPEWING.clear());
     }
 
     public static boolean isSpewing(ServerPlayer player) {
@@ -73,7 +75,7 @@ public final class AcidManager {
         for (ServerPlayer player : List.copyOf(SPEWING.keySet())) {
             int age = SPEWING.merge(player, 1, Integer::sum);
             boolean drained = age % 20 == 0 && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, config.acidDrainPerSecond);
-            if (!player.isAlive() || player.isSpectator() || !PowerRingItem.hasCharge(player) || drained
+            if (player.isRemoved() || !player.isAlive() || player.isSpectator() || !PowerRingItem.hasCharge(player) || drained
                     || BrightestDayAttachments.get(player, RingPowerRegistry.ACID).isEmpty()) {
                 stop(player);
                 continue;

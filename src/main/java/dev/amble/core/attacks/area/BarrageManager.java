@@ -6,6 +6,7 @@ import dev.amble.core.networking.payloads.s2c.BarrageBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.BarrageS2CPayload;
 import dev.amble.core.ringpowers.constructs.RapidBarrageConstruct;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
@@ -47,6 +48,7 @@ public final class BarrageManager {
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(BarrageManager::tick);
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> stop(handler.player));
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> BARRAGES.clear());
     }
 
     public static void start(ServerPlayer player, int color) {
@@ -77,7 +79,7 @@ public final class BarrageManager {
             boolean selected = ArmedRingPower.selectedConstruct(player).orElse(null) instanceof RapidBarrageConstruct;
             boolean outOfCharge = !PowerRingItem.hasCharge(player)
                     || drainTick && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, config.barrageDrainPerSecond);
-            if (++barrage.age > config.barrageMaxTicks || !player.isAlive() || player.isSpectator() || !ArmedRingPower.isArmed(player) || !selected || outOfCharge) {
+            if (++barrage.age > config.barrageMaxTicks || player.isRemoved() || !player.isAlive() || player.isSpectator() || !ArmedRingPower.isArmed(player) || !selected || outOfCharge) {
                 stop(player);
                 continue;
             }

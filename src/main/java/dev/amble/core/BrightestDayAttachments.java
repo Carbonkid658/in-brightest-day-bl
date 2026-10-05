@@ -13,11 +13,9 @@ import dev.amble.core.ringpowers.RingPowerRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.gamerules.GameRules;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -167,16 +165,5 @@ public class BrightestDayAttachments {
         instance.power().onRevoked(player, instance.data());
     }
 
-    public static void init() {
-        ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-            if (!(entity instanceof ServerPlayer player)) return;
-            if (player.level().getGameRules().get(GameRules.KEEP_INVENTORY)) return;
-
-            ItemStack ring = getRing(player);
-            if (ring.isEmpty()) return;
-
-            player.spawnAtLocation(player.level(), ring);
-            setRing(player, ItemStack.EMPTY);
-        });
-    }
+    public static void init() {}
 }

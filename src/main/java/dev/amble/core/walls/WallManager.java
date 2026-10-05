@@ -4,6 +4,7 @@ import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.networking.payloads.s2c.WallRemoveS2CPayload;
 import dev.amble.core.networking.payloads.s2c.WallSpawnS2CPayload;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -60,6 +61,7 @@ public final class WallManager {
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(WallManager::tick);
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> WALLS.clear());
     }
 
     public static boolean raise(ServerLevel level, List<BlockPos> candidates, int color, ServerPlayer caster) {

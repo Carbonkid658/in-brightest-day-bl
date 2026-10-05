@@ -44,6 +44,7 @@ public final class RingChargeHud {
         int y = graphics.guiHeight() - ICON_SIZE - 3;
 
         graphics.item(ring, x, y);
+        if (!PowerRingItem.usesPower(ring)) return;
 
         int barX = x + ICON_SIZE + 2;
         int filled = Math.round(ICON_SIZE * charge);
