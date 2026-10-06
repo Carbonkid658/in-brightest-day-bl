@@ -1,12 +1,31 @@
 package dev.amble.core.oath;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 public final class OathMatcher {
     private static final int SKIP = 2;
     private static final int FUZZY_MIN_LENGTH = 4;
+    private static final Map<String, Set<String>> ALIASES = Map.ofEntries(
+            Map.entry("tor", Set.of("tore", "torr")),
+            Map.entry("lorek", Set.of("lore")),
+            Map.entry("san", Set.of("sun", "son", "sans")),
+            Map.entry("nok", Set.of("knock", "nock")),
+            Map.entry("var", Set.of("far")),
+            Map.entry("ter", Set.of("tear", "tur")),
+            Map.entry("ker", Set.of("care", "cur", "core")),
+            Map.entry("lok", Set.of("lock", "look")),
+            Map.entry("tar", Set.of("tarr")),
+            Map.entry("formorra", Set.of("for", "more", "mora", "morra", "marra", "moore")),
+            Map.entry("lo", Set.of("low", "lowe")),
+            Map.entry("sen", Set.of("send", "sin", "scene")),
+            Map.entry("gorro", Set.of("gore", "goro", "gora")),
+            Map.entry("evil's", Set.of("evil", "evils")),
+            Map.entry("sinestro's", Set.of("sinister")));
 
     private final List<String> words;
     private volatile int committed;
@@ -20,6 +39,16 @@ public final class OathMatcher {
         List<String> words = new ArrayList<>();
         for (String token : oath.trim().split("\\s+")) words.add(normalize(token));
         return words;
+    }
+
+    public static Set<String> grammar(List<String> words) {
+        Set<String> grammar = new LinkedHashSet<>();
+        for (String word : words) {
+            if (word.isEmpty()) continue;
+            grammar.add(word);
+            grammar.addAll(ALIASES.getOrDefault(word, Set.of()));
+        }
+        return grammar;
     }
 
     public static String normalize(String token) {
@@ -63,7 +92,7 @@ public final class OathMatcher {
     }
 
     private static boolean matches(String expected, String heard) {
-        if (expected.isEmpty() || expected.equals(heard)) return true;
+        if (expected.isEmpty() || expected.equals(heard) || ALIASES.getOrDefault(expected, Set.of()).contains(heard)) return true;
         return expected.length() >= FUZZY_MIN_LENGTH && distance(expected, heard) <= 1;
     }
 

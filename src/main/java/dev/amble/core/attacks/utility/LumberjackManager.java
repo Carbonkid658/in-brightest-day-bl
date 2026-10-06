@@ -25,6 +25,7 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.GameMasterBlock;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.SoundType;
@@ -217,6 +218,7 @@ public final class LumberjackManager {
     }
 
     private static boolean natural(BlockState state) {
+        if (state.is(BlockTags.WART_BLOCKS) || state.is(Blocks.SHROOMLIGHT)) return true;
         return state.is(BlockTags.LEAVES) && state.hasProperty(LeavesBlock.PERSISTENT) && !state.getValue(LeavesBlock.PERSISTENT);
     }
 

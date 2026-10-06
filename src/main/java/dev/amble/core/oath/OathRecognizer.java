@@ -22,9 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -111,12 +109,8 @@ final class OathRecognizer {
         if (state != State.READY) return null;
         Model loaded = model;
         if (loaded == null) return null;
-        Set<String> vocabulary = new LinkedHashSet<>();
-        for (String word : words) {
-            if (!word.isEmpty()) vocabulary.add(word);
-        }
         JsonArray grammar = new JsonArray();
-        vocabulary.forEach(grammar::add);
+        OathMatcher.grammar(words).forEach(grammar::add);
         grammar.add("[unk]");
         try {
             return new Listener(new Recognizer(loaded, SAMPLE_RATE, grammar.toString()));

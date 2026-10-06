@@ -117,7 +117,7 @@ public final class Pilgrimage {
             if (!world.mayBeBlessed(player.getUUID(), server.overworld().getGameTime(), BlueSanctuary.BLESSING_COOLDOWN)
                     || PowerRingItem.getWornCorps(player).orElse(null) == LanternCorps.BLUE) continue;
             State state = get(player);
-            if (state.active() && !player.isSpectator() && !player.isCreative()) {
+            if (state.active() && !state.complete() && !player.isSpectator() && !player.isCreative()) {
                 String reason = violation(player);
                 if (reason != null) {
                     voidPilgrimage(player, reason);

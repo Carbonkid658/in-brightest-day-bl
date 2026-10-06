@@ -131,13 +131,13 @@ public final class BlueSanctuary {
             double horizontal = Math.sqrt(Mth.lengthSquared(player.getX() - center.x, player.getZ() - center.z));
             if (horizontal > VISIBLE_RANGE) continue;
             watched = true;
-            if (player.isSpectator() || player.isCreative()) continue;
+            if (player.isSpectator()) continue;
 
             boolean hopeful = SpectrumMeters.passes(player, Emotion.HOPE);
             boolean walked = Pilgrimage.complete(player);
             double height = player.getY() - center.y;
             boolean inside = horizontal < BARRIER_RADIUS + 0.5 && height > -BARRIER_BELOW && height < BARRIER_HEIGHT;
-            if (!(hopeful && walked) && inside) {
+            if (!(hopeful && walked) && inside && !player.isCreative()) {
                 Vec3 out = player.position().subtract(center).multiply(1.0, 0.0, 1.0);
                 out = out.lengthSqr() < 1.0E-4 ? new Vec3(1.0, 0.0, 0.0) : out.normalize();
                 player.setDeltaMovement(out.scale(BARRIER_PUSH).add(0.0, 0.3, 0.0));
