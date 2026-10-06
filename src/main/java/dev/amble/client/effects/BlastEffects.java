@@ -104,9 +104,11 @@ public final class BlastEffects {
         final Vec3 end;
         final int color;
         final long seed;
+        final float scale;
         int age;
 
-        Blast(Vec3 start, Vec3 control, Vec3 end, int color, long seed) {
+        Blast(Vec3 start, Vec3 control, Vec3 end, int color, long seed, float scale) {
+            this.scale = scale;
             this.start = start;
             this.control = control;
             this.end = end;
@@ -268,7 +270,7 @@ public final class BlastEffects {
         Vec3 control = shooter instanceof Player player
                 ? start.add(player.getViewVector(1.0F).scale(start.distanceTo(end) * 0.5))
                 : start.lerp(end, 0.5);
-        BLASTS.add(new Blast(start, control, end, ARGB.opaque(payload.color()), client.level.getRandom().nextLong()));
+        BLASTS.add(new Blast(start, control, end, ARGB.opaque(payload.color()), client.level.getRandom().nextLong(), payload.scale()));
     }
 
     private static Vec3 hand(Player player) {
@@ -393,9 +395,10 @@ public final class BlastEffects {
         float heat = Mth.clamp(burstTime / 3.0F, 0.0F, 1.0F);
         int tint = VoxelRenderer.toWhite(ARGB.srgbLerp(heat, ARGB.opaque(WHITE_HOT), blast.color), 1.0F - life);
 
-        for (int i = 0; i < BURST_VOXELS; i++) {
+        int voxels = Math.round(BURST_VOXELS * blast.scale);
+        for (int i = 0; i < voxels; i++) {
             Vec3 direction = new Vec3(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).normalize();
-            float speed = BURST_SPEED * (0.4F + random.nextFloat() * 0.6F);
+            float speed = BURST_SPEED * blast.scale * (0.4F + random.nextFloat() * 0.6F);
             float distance = speed * burstTime * (1.0F - 0.03F * burstTime);
             float half = BURST_VOXEL_SIZE * life * (0.6F + random.nextFloat() * 0.4F) * 0.5F;
             if (half < VoxelRenderer.PIXEL * 0.25F) continue;

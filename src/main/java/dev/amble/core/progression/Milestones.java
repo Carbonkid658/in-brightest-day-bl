@@ -216,11 +216,11 @@ public final class Milestones {
         versus(orange, 3, "orange_steal", 2000, Trigger.STEAL, detail("lantern"),
                 "orange_steal_solo", 3000, Trigger.STEAL, always());
         pool(orange, 3, "orange_debris", 16, Trigger.MINE, detail("debris"));
+        pool(orange, 3, "orange_lumber", 25, Trigger.CONSTRUCT, construct("lumberjack"));
         pool(orange, 3, "orange_netherite", 1, Trigger.SECOND, holding(Items.NETHERITE_INGOT, 4));
         pool(orange, 3, "orange_trades", 25, Trigger.TRADE, always());
         versus(orange, 4, "orange_ring_kill", 1, Trigger.KILL, bearer(),
                 "orange_vault", 1, Trigger.SECOND, holding(Items.DIAMOND_BLOCK, 16));
-        pool(orange, 4, "orange_lumber", 25, Trigger.CONSTRUCT, construct("lumberjack"));
         pool(orange, 4, "orange_avarice", 1, Trigger.SECOND, meter(Emotion.AVARICE, Emotion.MAX));
         pool(orange, 4, "orange_ingots", 1, Trigger.SECOND, holding(Items.NETHERITE_INGOT, 8));
         pool(orange, 4, "orange_emerald_vault", 1, Trigger.SECOND, holding(Items.EMERALD_BLOCK, 32));
@@ -247,7 +247,7 @@ public final class Milestones {
 
         LanternCorps indigo = LanternCorps.INDIGO;
         versus(indigo, 2, "indigo_mimic", 4, Trigger.MIMIC, always(), Milestone.Mode.DISTINCT,
-                "indigo_survey", 40, Trigger.SCAN, always());
+                "indigo_tractor", 120, Trigger.TRACTOR, always());
         versus(indigo, 2, "indigo_gifts", 10, Trigger.GIFT, always(),
                 "indigo_shepherd", 10, Trigger.BREED, always());
         pool(indigo, 2, "indigo_rescue", 10, Trigger.RESCUE, hunted(false));
@@ -261,7 +261,6 @@ public final class Milestones {
         pool(indigo, 3, "indigo_mercy", 600, Trigger.SECOND, (player, context) -> EmotionSources.peaceful(player));
         versus(indigo, 4, "indigo_convert", 1, Trigger.CONVERT, always(),
                 "indigo_guardian_angel", 25, Trigger.RESCUE, hunted(false));
-        pool(indigo, 4, "indigo_tractor", 120, Trigger.TRACTOR, always());
         pool(indigo, 4, "indigo_compassion", 1, Trigger.SECOND, meter(Emotion.COMPASSION, Emotion.MAX));
         versus(indigo, 4, "indigo_spectrum", 6, Trigger.MIMIC, always(), Milestone.Mode.DISTINCT,
                 "indigo_menagerie", 10, Trigger.TAME, always());

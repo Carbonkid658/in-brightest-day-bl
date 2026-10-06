@@ -39,8 +39,7 @@ public final class RingRanks {
     private static final float[] ARSENAL = {0.0F, 1.0F / 3.0F, 0.55F, 0.78F, 1.0F};
     private static final float[] CAPACITY = {0.0F, 0.6F, 0.73F, 0.86F, 1.0F};
     private static final Map<RingPower<?>, Integer> RANK_GATED = Map.of(
-            RingPowerRegistry.TRACTOR_BEAM, 3,
-            RingPowerRegistry.LUMBERJACK, 3);
+            RingPowerRegistry.LUMBERJACK, 2);
     private static final List<String> PRIORITY = List.of(
             "blast", "entity_shield", "boomerang_disc", "energy_whip", "chain_bolt", "wall", "piercing_lance", "swarm_missiles",
             "rapid_barrage", "area_shield", "beam", "giant_fist", "nova_burst", "ground_slam", "sentry_turret", "glider",

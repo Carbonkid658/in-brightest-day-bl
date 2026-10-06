@@ -8,6 +8,7 @@ import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.BlastS2CPayload;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -25,6 +26,10 @@ import org.jspecify.annotations.Nullable;
 
 public class BlastConstruct extends ConstructRingPower {
     private static final double LIFT = 0.35;
+    private static final int MAX_SIZE = 5;
+    private static final int EMPOWERED_MAX_SIZE = 6;
+    private static final float SCALE_PER_SIZE = 0.4F;
+    private static final float KNOCKBACK_PER_SIZE = 0.2F;
 
     private static final ExplosionDamageCalculator BLOCKS_ONLY = new ExplosionDamageCalculator() {
         @Override
@@ -48,6 +53,36 @@ public class BlastConstruct extends ConstructRingPower {
     }
 
     @Override
+    public boolean usesSize() {
+        return true;
+    }
+
+    @Override
+    public int maxSize() {
+        return MAX_SIZE;
+    }
+
+    @Override
+    public int empoweredMaxSize() {
+        return EMPOWERED_MAX_SIZE;
+    }
+
+    @Override
+    public int cost(int size) {
+        int clamped = this.costSize(size);
+        return this.useCost() * clamped * (clamped + 1) / 2;
+    }
+
+    @Override
+    public Component describeSize(int size) {
+        return Component.translatable("construct.brightestday.blast.size", this.clampSize(size), this.cost(size));
+    }
+
+    public static float scale(int size) {
+        return 1.0F + SCALE_PER_SIZE * (Math.max(size, 1) - 1);
+    }
+
+    @Override
     public int chargeTicks() {
         return BrightestDayConfig.get().blastChargeTicks;
     }
@@ -57,7 +92,8 @@ public class BlastConstruct extends ConstructRingPower {
         ServerLevel level = player.level();
         BrightestDayConfig config = BrightestDayConfig.get();
         double range = config.blastRange;
-        double blastRadius = config.blastRadius;
+        float scale = scale(radius);
+        double blastRadius = config.blastRadius * scale;
         Aim aim = aim(player, range);
         Vec3 impact = aim.end();
         Entity direct = aim.entity();
@@ -75,26 +111,26 @@ public class BlastConstruct extends ConstructRingPower {
 
             double falloff = entity == direct ? 1.0 : 1.0 - distance / blastRadius;
             if (entity instanceof LivingEntity living) {
-                float damage = (float) (config.blastSplashDamage * falloff) + (entity == direct ? config.blastDirectDamage : 0.0F);
+                float damage = (float) (config.blastSplashDamage * scale * falloff) + (entity == direct ? config.blastDirectDamage : 0.0F);
                 living.hurtServer(level, source, damage);
             }
 
             Vec3 away = center.subtract(impact);
             away = away.lengthSqr() < 1.0E-4 ? aim.look() : away.normalize();
-            Vec3 push = away.add(aim.look()).normalize().scale(config.blastKnockback * falloff).add(0.0, LIFT * falloff, 0.0);
+            Vec3 push = away.add(aim.look()).normalize().scale(config.blastKnockback * (1.0F + KNOCKBACK_PER_SIZE * (Math.max(radius, 1) - 1)) * falloff).add(0.0, LIFT * falloff, 0.0);
             entity.push(push);
             entity.needsSync = true;
         }
 
         if (hit) {
-            level.explode(player, null, BLOCKS_ONLY, impact.x, impact.y, impact.z, config.blastExplosionPower, false,
+            level.explode(player, null, BLOCKS_ONLY, impact.x, impact.y, impact.z, config.blastExplosionPower * scale, false,
                     config.blastBreaksBlocks ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE);
         }
 
         level.playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.BREEZE_SHOOT, SoundSource.PLAYERS, 1.0F, 1.4F);
         level.playSound(null, impact.x, impact.y, impact.z, SoundEvents.FIREWORK_ROCKET_LARGE_BLAST, SoundSource.PLAYERS, 1.2F, 0.8F);
 
-        BlastS2CPayload payload = new BlastS2CPayload(player.getId(), impact, color);
+        BlastS2CPayload payload = new BlastS2CPayload(player.getId(), impact, color, scale);
         ServerPlayNetworking.send(player, payload);
         for (ServerPlayer watcher : PlayerLookup.tracking(player)) {
             if (watcher != player) ServerPlayNetworking.send(watcher, payload);

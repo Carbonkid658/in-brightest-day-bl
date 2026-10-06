@@ -242,6 +242,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
             player.sendOverlayMessage(Component.translatable("message.brightestday.no_constructs"));
             return;
         }
+        radius = construct.get().clampSize(player, radius);
 
         long now = level.getGameTime();
         Long last = LAST_FIRED.get(player);

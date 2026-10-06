@@ -202,7 +202,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("milestone.brightestday.indigo_shepherd", "Breed %s animals");
         builder.add("milestone.brightestday.indigo_rescue", "Save %s creatures from their hunters");
         builder.add("milestone.brightestday.indigo_scan", "Scan your surroundings %s times");
-        builder.add("milestone.brightestday.indigo_survey", "Survey your surroundings with %s scans");
         builder.add("milestone.brightestday.indigo_flight", "Fly %s blocks");
         builder.add("milestone.brightestday.indigo_save", "Save %s players near death from their attackers");
         builder.add("milestone.brightestday.indigo_save_solo", "Save %s villagers or pets from their hunters");
@@ -439,6 +438,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(RingPowerRegistry.HEAL_BEAM.getTranslationKey(), "Healing Beam");
         builder.add(RingPowerRegistry.WALL.getTranslationKey(), "Wall");
         builder.add("message.brightestday.construct_size", "%s size: %s");
+        builder.add("construct.brightestday.blast.size", "%s (%s charge)");
         builder.add("message.brightestday.wall_blocked", "There's no room for a wall there.");
         builder.add(RingPowerRegistry.SCULPT.getTranslationKey(), "Sculpt");
         builder.add(SculptShape.FREEFORM.translationKey(), "Freeform");

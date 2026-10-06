@@ -14,7 +14,7 @@ public class LumberjackConstruct extends ConstructRingPower {
     private static final int CHARGE_TICKS = 15;
 
     public LumberjackConstruct() {
-        super(BrightestDay.id("lumberjack"), EnumSet.allOf(LanternCorps.class));
+        super(BrightestDay.id("lumberjack"), EnumSet.complementOf(EnumSet.of(LanternCorps.RED)));
     }
 
     @Override
