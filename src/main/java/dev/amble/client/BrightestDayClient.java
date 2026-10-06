@@ -54,6 +54,7 @@ import dev.amble.client.hud.FlightSpeedHud;
 import dev.amble.client.hud.EmotionVignette;
 import dev.amble.client.hud.PilgrimageHud;
 import dev.amble.client.hud.RingChargeHud;
+import dev.amble.client.hud.OathHud;
 import dev.amble.client.hud.RingFeed;
 import dev.amble.client.render.LanternBlockEntityRenderer;
 import dev.amble.client.render.GlowAura;
@@ -102,6 +103,7 @@ public class BrightestDayClient implements ClientModInitializer {
         SculptClient.init();
         PowerWheel.init();
         RingFeed.init();
+        OathHud.init();
         RingInput.init();
         AbilityClient.init();
         ConcussiveEffects.init();

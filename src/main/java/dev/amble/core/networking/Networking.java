@@ -68,6 +68,7 @@ import dev.amble.core.networking.payloads.s2c.CommsIncomingS2CPayload;
 import dev.amble.core.networking.payloads.s2c.CommsTalkingS2CPayload;
 import dev.amble.core.networking.payloads.s2c.CommsTargetS2CPayload;
 import dev.amble.core.networking.payloads.s2c.MegaphoneS2CPayload;
+import dev.amble.core.networking.payloads.s2c.OathS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TeamInvitesS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ShieldSpawnS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TractorS2CPayload;
@@ -94,6 +95,7 @@ public class Networking {
         PayloadTypeRegistry.clientboundPlay().register(CommsIncomingS2CPayload.TYPE, CommsIncomingS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(CommsTalkingS2CPayload.TYPE, CommsTalkingS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(MegaphoneS2CPayload.TYPE, MegaphoneS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(OathS2CPayload.TYPE, OathS2CPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(DrillModeC2SPayload.TYPE, DrillModeC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(OpenLanternC2SPayload.TYPE, OpenLanternC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(FireConstructC2SPayload.TYPE, FireConstructC2SPayload.CODEC);

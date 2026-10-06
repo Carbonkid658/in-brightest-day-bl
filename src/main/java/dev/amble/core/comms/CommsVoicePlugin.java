@@ -9,6 +9,7 @@ import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
 import de.maxhenkel.voicechat.api.opus.OpusDecoder;
 import de.maxhenkel.voicechat.api.opus.OpusEncoder;
 import dev.amble.BrightestDay;
+import dev.amble.core.oath.OathCharge;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Map;
@@ -40,6 +41,7 @@ public class CommsVoicePlugin implements VoicechatPlugin {
     }
 
     private static final Map<UUID, Codec> CODECS = new ConcurrentHashMap<>();
+    private static final Map<UUID, OpusDecoder> OATH_DECODERS = new ConcurrentHashMap<>();
 
     @Override
     public String getPluginId() {
@@ -50,6 +52,23 @@ public class CommsVoicePlugin implements VoicechatPlugin {
     public void registerEvents(EventRegistration registration) {
         registration.registerEvent(VoicechatServerStartedEvent.class, this::onServerStarted);
         registration.registerEvent(MicrophonePacketEvent.class, this::onMicrophone);
+    }
+
+    private void listen(MicrophonePacketEvent event, VoicechatConnection sender) {
+        UUID id = sender.getPlayer().getUuid();
+        if (!OathCharge.listening(id)) {
+            OpusDecoder decoder = OATH_DECODERS.remove(id);
+            if (decoder != null) decoder.close();
+            return;
+        }
+
+        OpusDecoder decoder = OATH_DECODERS.computeIfAbsent(id, key -> event.getVoicechat().createDecoder());
+        byte[] opus = event.getPacket().getOpusEncodedData();
+        if (opus.length == 0) {
+            decoder.resetState();
+            return;
+        }
+        OathCharge.hear(id, decoder.decode(opus));
     }
 
     private void amplify(MicrophonePacketEvent event, VoicechatConnection sender) {
@@ -92,12 +111,17 @@ public class CommsVoicePlugin implements VoicechatPlugin {
                 .setName("Megaphones")
                 .setDescription("Lanterns amplifying their voice with a hard-light megaphone")
                 .build());
+        Comms.setVoiceReady(id -> {
+            VoicechatConnection connection = api.getConnectionOf(id);
+            return connection != null && connection.isConnected() && !connection.isDisabled();
+        });
         BrightestDay.LOGGER.info("Ring comms registered with Simple Voice Chat");
     }
 
     private void onMicrophone(MicrophonePacketEvent event) {
         VoicechatConnection sender = event.getSenderConnection();
         if (sender == null) return;
+        listen(event, sender);
         amplify(event, sender);
         UUID target = Comms.receiver(sender.getPlayer().getUuid());
         if (target == null) return;

@@ -4,6 +4,7 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.blocks.LanternBlock;
 import dev.amble.core.blocks.LanternCharging;
+import dev.amble.core.oath.OathCharge;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
@@ -11,6 +12,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -32,6 +34,7 @@ import java.util.WeakHashMap;
 public class LanternBlockItem extends BlockItem {
     public static final int CHARGE_TICKS = 90;
     public static final int INSERT_TICKS = 30;
+    private static final int OATH_USE_TICKS = 20 * 60 * 5;
     private static final double MAX_DRIFT = 0.2;
     private static final int PARTICLE_INTERVAL = 2;
     private static final int SOUND_INTERVAL = 10;
@@ -79,6 +82,7 @@ public class LanternBlockItem extends BlockItem {
         }
 
         ANCHORS.put(player, player.position());
+        if (player instanceof ServerPlayer server) OathCharge.begin(server, this.corps());
         player.startUsingItem(hand);
         return InteractionResult.CONSUME;
     }
@@ -94,6 +98,16 @@ public class LanternBlockItem extends BlockItem {
         return Mth.lengthSquared(position.x - anchor.x, position.z - anchor.z) <= MAX_DRIFT * MAX_DRIFT;
     }
 
+    private static boolean reciting(LivingEntity entity) {
+        return entity instanceof ServerPlayer player && OathCharge.active(player);
+    }
+
+    private static void cancel(Player player) {
+        ANCHORS.remove(player);
+        if (player instanceof ServerPlayer server) OathCharge.end(server);
+        player.stopUsingItem();
+    }
+
     @Override
     public void onUseTick(Level level, LivingEntity entity, ItemStack stack, int ticksRemaining) {
         if (!(entity instanceof Player player)) return;
@@ -101,20 +115,32 @@ public class LanternBlockItem extends BlockItem {
 
         if (!isGrounded(player) || !isStill(player) || !isChargingLantern(player)) {
             if (!level.isClientSide()) player.sendOverlayMessage(Component.translatable("message.brightestday.stand_still_to_charge"));
-            player.stopUsingItem();
+            cancel(player);
             return;
         }
-        if (!(level instanceof ServerLevel serverLevel)) return;
+        if (!(level instanceof ServerLevel serverLevel) || !(player instanceof ServerPlayer server)) return;
 
-        int elapsed = CHARGE_TICKS - ticksRemaining - INSERT_TICKS;
+        boolean oath = reciting(server);
+        if (oath && !OathCharge.tick(server, this.corps().color())) {
+            server.sendOverlayMessage(Component.translatable("message.brightestday.oath.silent").withColor(this.corps().color()));
+            cancel(player);
+            return;
+        }
+
+        int elapsed = (oath ? OATH_USE_TICKS : CHARGE_TICKS) - ticksRemaining - INSERT_TICKS;
         if (elapsed < 0) return;
         if (elapsed == 0) LanternCharging.inserted(serverLevel, player.blockPosition());
 
-        ItemStack ring = PowerRingItem.getWornRing(player);
-        PowerRingItem.chargeRing(ring, Mth.ceil((float) BrightestDayComponents.MAX_POWER / (CHARGE_TICKS - INSERT_TICKS)));
-        if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
+        float progress;
+        if (oath) {
+            progress = OathCharge.progress(server);
+        } else {
+            progress = (float) elapsed / (CHARGE_TICKS - INSERT_TICKS);
+            ItemStack ring = PowerRingItem.getWornRing(player);
+            PowerRingItem.chargeRing(ring, Mth.ceil((float) BrightestDayComponents.MAX_POWER / (CHARGE_TICKS - INSERT_TICKS)));
+            if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
+        }
 
-        float progress = (float) elapsed / (CHARGE_TICKS - INSERT_TICKS);
         if (elapsed % PARTICLE_INTERVAL == 0) {
             float angle = elapsed * 0.6F;
             double radius = 0.9 - progress * 0.5;
@@ -127,33 +153,49 @@ public class LanternBlockItem extends BlockItem {
             }
         }
         if (elapsed > 0 && elapsed % SOUND_INTERVAL == 0) LanternCharging.chime(serverLevel, player.blockPosition(), progress);
+
+        if (oath && OathCharge.complete(server)) {
+            OathCharge.learned(server);
+            this.complete(serverLevel, player, false);
+            cancel(player);
+        }
     }
 
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
-        ANCHORS.remove(entity);
-        if (level.isClientSide() || !(entity instanceof Player player)) return stack;
+        if (level.isClientSide() || !(entity instanceof Player player)) {
+            ANCHORS.remove(entity);
+            return stack;
+        }
+        this.complete(level, player, !reciting(player));
+        ANCHORS.remove(player);
+        if (player instanceof ServerPlayer server) OathCharge.end(server);
+        return stack;
+    }
 
+    private void complete(Level level, Player player, boolean announce) {
         ItemStack ring = PowerRingItem.getWornRing(player);
         PowerRingItem.setMaxPower(ring);
         if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
 
-        player.sendSystemMessage(Component.translatable(this.corps().oathKey())
-                .withStyle(ChatFormatting.BOLD)
-                .withColor(this.corps().color()));
+        if (announce) {
+            player.sendSystemMessage(Component.translatable(this.corps().oathKey())
+                    .withStyle(ChatFormatting.BOLD)
+                    .withColor(this.corps().color()));
+        }
         level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.0F, 1.0F);
-        return stack;
     }
 
     @Override
     public boolean releaseUsing(ItemStack stack, Level level, LivingEntity entity, int remainingTime) {
         ANCHORS.remove(entity);
+        if (entity instanceof ServerPlayer server) OathCharge.end(server);
         return false;
     }
 
     @Override
     public int getUseDuration(ItemStack stack, LivingEntity user) {
-        return CHARGE_TICKS;
+        return reciting(user) ? OATH_USE_TICKS : CHARGE_TICKS;
     }
 
     @Override

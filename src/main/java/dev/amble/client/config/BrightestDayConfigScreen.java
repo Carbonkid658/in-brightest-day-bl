@@ -96,6 +96,7 @@ public final class BrightestDayConfigScreen {
                                 .option(toggle("show_flight_trails", defaults.showFlightTrails, () -> config.showFlightTrails, v -> config.showFlightTrails = v))
                                 .option(toggle("aileron_rolls", defaults.aileronRolls, () -> config.aileronRolls, v -> config.aileronRolls = v))
                                 .option(doubleSlider("aileron_roll_dodge", defaults.aileronRollDodge, () -> config.aileronRollDodge, v -> config.aileronRollDodge = v, 0.0, 4.0, 0.1))
+                                .option(toggle("oath_recognition", defaults.oathRecognition, () -> config.oathRecognition, v -> config.oathRecognition = v))
                                 .build())
                         .group(OptionGroup.createBuilder()
                                 .name(Component.translatable(PREFIX + "group.synergy"))

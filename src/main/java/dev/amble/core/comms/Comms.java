@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 public final class Comms {
     public static final String VOICE_CHAT_MOD_ID = "voicechat";
@@ -41,6 +42,16 @@ public final class Comms {
         EntityTrackingEvents.START_TRACKING.register((entity, watcher) -> {
             if (entity instanceof ServerPlayer player) ServerPlayNetworking.send(watcher, new CommsTalkingS2CPayload(player.getId(), TRANSMITTING.containsKey(player.getUUID())));
         });
+    }
+
+    private static volatile Predicate<UUID> voiceReady = id -> false;
+
+    public static void setVoiceReady(Predicate<UUID> check) {
+        voiceReady = check;
+    }
+
+    public static boolean voiceReady(UUID player) {
+        return available() && voiceReady.test(player);
     }
 
     public static boolean available() {

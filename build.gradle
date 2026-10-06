@@ -46,6 +46,10 @@ dependencies {
 	implementation "dev.isxander:yet-another-config-lib:${project.yacl_version}"
 	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
 	compileOnly "de.maxhenkel.voicechat:voicechat-api:${project.voicechat_api_version}"
+	implementation("com.alphacephei:vosk:${project.vosk_version}") {
+		exclude group: "net.java.dev.jna"
+	}
+	include "com.alphacephei:vosk:${project.vosk_version}"
 }
 
 processResources {

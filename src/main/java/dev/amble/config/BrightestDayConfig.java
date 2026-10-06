@@ -307,6 +307,11 @@ public class BrightestDayConfig {
     public double aileronRollDodge = 2.0;
 
     @SerialEntry
+    public boolean oathRecognition = true;
+    @SerialEntry
+    public String oathModelUrl = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip";
+
+    @SerialEntry
     public double synergyLinkRadius = 96.0;
     @SerialEntry
     public double synergyDreadRadius = 16.0;

@@ -307,6 +307,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.hunt.ended", "The hunt is over.");
         builder.add("message.brightestday.megaphone.no_voice_chat", "The megaphone needs Simple Voice Chat installed on the server.");
         builder.add("hud.brightestday.blood_hunt", "%s Prey %sm");
+        builder.add("message.brightestday.oath.silent", "Your ring waits for your oath. Charge again when you are ready.");
         builder.add("hud.brightestday.comms.incoming", "%s is talking through your ring");
         builder.add("hud.brightestday.comms.none", "Comms: scroll to dial a teammate");
         builder.add("hud.brightestday.comms.dialed", "Comms: %s (hold use to talk)");
@@ -507,6 +508,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("config.brightestday.option.aileron_rolls.desc", "Double-tap a strafe key while flying at speed to barrel roll in that direction.");
         builder.add("config.brightestday.option.aileron_roll_dodge", "Aileron Roll Dodge");
         builder.add("config.brightestday.option.aileron_roll_dodge.desc", "How hard an aileron roll pushes you sideways.");
+        builder.add("config.brightestday.option.oath_recognition", "Spoken Oaths");
+        builder.add("config.brightestday.option.oath_recognition.desc", "With Simple Voice Chat installed, charging a ring by hand listens for you to speak your corps oath. The speech model (about 40 MB) downloads to the server the first time someone charges.");
         builder.add("config.brightestday.group.synergy", "Corps Synergy");
         builder.add("config.brightestday.option.synergy_link_radius", "Hope/Will Range");
         builder.add("config.brightestday.option.synergy_link_radius.desc", "How close Blue and Green Lanterns must be to empower each other.");

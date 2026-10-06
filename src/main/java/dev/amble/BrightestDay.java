@@ -11,6 +11,7 @@ import dev.amble.core.BrightestDaySounds;
 import dev.amble.core.networking.Networking;
 import dev.amble.core.comms.Comms;
 import dev.amble.core.comms.Megaphone;
+import dev.amble.core.oath.OathCharge;
 import dev.amble.core.ringpowers.BloodHunt;
 import dev.amble.core.ringpowers.CometRam;
 import dev.amble.core.ringpowers.RedRage;
@@ -126,6 +127,7 @@ public class BrightestDay implements ModInitializer {
 		BloodHunt.init();
 		Comms.init();
 		Megaphone.init();
+		OathCharge.init();
 		Pilgrimage.init();
 		ZamaronMeteor.init();
 		SpectrumCommands.init();
