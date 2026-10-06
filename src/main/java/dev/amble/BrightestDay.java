@@ -26,6 +26,7 @@ import dev.amble.core.attacks.projectile.CrystalManager;
 import dev.amble.core.attacks.projectile.DiscManager;
 import dev.amble.core.attacks.projectile.PlasmaManager;
 import dev.amble.core.heart.RedHeart;
+import dev.amble.core.blocks.LanternRitual;
 import dev.amble.core.progression.EmotionSources;
 import dev.amble.core.progression.RingOffers;
 import dev.amble.core.progression.IndigoOne;
@@ -105,6 +106,7 @@ public class BrightestDay implements ModInitializer {
 		DiscManager.init();
 		PlasmaManager.init();
 		RedHeart.init();
+		LanternRitual.init();
 		RingBenefits.init();
 		WorldProgress.init();
 		RingRanks.init();

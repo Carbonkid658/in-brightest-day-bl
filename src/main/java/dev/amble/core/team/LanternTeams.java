@@ -87,8 +87,6 @@ public final class LanternTeams {
 
         int now = inviter.level().getServer().getTickCount();
         INVITES.computeIfAbsent(invitee.getUUID(), id -> new HashMap<>()).put(inviter.getUUID(), now + INVITE_TICKS);
-        invitee.sendSystemMessage(Component.translatable("message.brightestday.team.invited", inviter.getDisplayName(), corpsName(inviter),
-                Component.keybind("key.brightestday.team")).withColor(corpsColor(inviter)));
         inviter.sendOverlayMessage(Component.translatable("message.brightestday.team.invite_sent", invitee.getDisplayName()));
         sync(inviter);
         sync(invitee);

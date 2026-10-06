@@ -42,6 +42,8 @@ public final class BrightestDayKeybinds {
     public static final KeyMapping FLIGHT_SPEED_DOWN = register("flight_speed_down", InputConstants.KEY_MINUS);
     public static final KeyMapping FLIGHT_BOOST = register("flight_boost", InputConstants.KEY_LALT);
 
+    private static boolean raiseHeld;
+
     private static KeyMapping register(String name, int key) {
         return KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.brightestday." + name,
@@ -62,6 +64,7 @@ public final class BrightestDayKeybinds {
         if (client.gui.screen() != null) {
             drain(FLIGHT, RAISE_RING, DISMISS_CONSTRUCT, CONCUSSIVE_BLAST, TEAM, TOGGLE_LIGHT, TOGGLE_SUIT, TOGGLE_MASK, SPECTRUM,
                     FLIGHT_SPEED_UP, FLIGHT_SPEED_DOWN);
+            raiseHeld = RAISE_RING.isDown();
             return;
         }
 
@@ -69,9 +72,12 @@ public final class BrightestDayKeybinds {
             ClientPlayNetworking.send(new UsePowerC2SPayload(RingPowerRegistry.FLIGHT.id()));
         }
 
+        boolean raisePressed = false;
         while (RAISE_RING.consumeClick()) {
-            ClientPlayNetworking.send(new UsePowerC2SPayload(RingPowerRegistry.ARMED.id()));
+            raisePressed = true;
         }
+        if (raisePressed && !raiseHeld) ClientPlayNetworking.send(new UsePowerC2SPayload(RingPowerRegistry.ARMED.id()));
+        raiseHeld = RAISE_RING.isDown();
 
         while (DISMISS_CONSTRUCT.consumeClick()) {
             ClientPlayNetworking.send(DismissConstructC2SPayload.INSTANCE);

@@ -39,6 +39,7 @@ public final class ArmedPose {
     public static final RenderStateDataKey<Boolean> CHARGED = RenderStateDataKey.create(() -> "brightestday:ring_charged");
     public static final RenderStateDataKey<Float> ACTIVITY = RenderStateDataKey.create(() -> "brightestday:ring_activity");
     public static final RenderStateDataKey<Boolean> CONSTRUCTING = RenderStateDataKey.create(() -> "brightestday:ring_constructing");
+    public static final RenderStateDataKey<Boolean> CHARGE_ANIMATING = RenderStateDataKey.create(() -> "brightestday:charge_animating");
 
     public static final float AIM_INWARD = 0.1F;
     private static final float RAISE_SPEED = 0.25F;
@@ -77,7 +78,7 @@ public final class ArmedPose {
                 AMOUNTS.put(player, amount);
             }
             amount[1] = amount[0];
-            amount[0] += ((armed ? 1.0F : 0.0F) - amount[0]) * RAISE_SPEED;
+            amount[0] += ((armed && !LanternChargeAnimations.playing(player) ? 1.0F : 0.0F) - amount[0]) * RAISE_SPEED;
             amount[3] = amount[2];
             amount[2] += ((active ? 1.0F : 0.0F) - amount[2]) * ACTIVITY_SPEED;
             if (!armed && amount[0] < 0.001F && amount[2] < 0.001F) AMOUNTS.remove(player);
@@ -113,6 +114,7 @@ public final class ArmedPose {
             data.setData(CHARGED, PowerRingItem.hasCharge(player));
             data.setData(ACTIVITY, activity(player, partialTicks));
             data.setData(CONSTRUCTING, ActiveConstructs.hasActive(player));
+            data.setData(CHARGE_ANIMATING, LanternChargeAnimations.handheld(player));
         } else {
             data.setData(AMOUNT, 0.0F);
         }

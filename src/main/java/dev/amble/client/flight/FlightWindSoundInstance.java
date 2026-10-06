@@ -12,6 +12,7 @@ public class FlightWindSoundInstance extends AbstractTickableSoundInstance {
     private static final int FADE_IN_TICKS = 20;
     private static final float SPEED_SQUARED_FOR_FULL_VOLUME = 4.0F;
     private static final float PITCH_THRESHOLD = 0.8F;
+    private static final float VERTICAL_RAMP = 0.4F;
 
     private final LocalPlayer player;
     private int time;
@@ -31,7 +32,8 @@ public class FlightWindSoundInstance extends AbstractTickableSoundInstance {
 
     @Override
     public void tick() {
-        float blend = FlightAnimator.flightBlend(this.player);
+        float vertical = Mth.clamp((FlightAnimator.verticalSpeed(this.player) - FlightAnimator.WIND_VERTICAL_SPEED) / VERTICAL_RAMP + 0.5F, 0.0F, 1.0F);
+        float blend = Math.max(FlightAnimator.flightBlend(this.player), vertical);
         if (this.player.isRemoved() || !FlightRingPower.isFlying(this.player) || (this.time++ > FADE_IN_TICKS && blend < 0.01F)) {
             this.stop();
             return;

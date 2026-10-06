@@ -61,6 +61,7 @@ public final class FlightAnimator {
     private static final float FLIGHT_CAPE_FLAP = 4.0F;
     private static final float CAPE_SIDE_SCALE = 0.5F;
     private static final float CAPE_FLUTTER = 3.0F;
+    public static final float WIND_VERTICAL_SPEED = 0.25F;
 
     public static final RenderStateDataKey<Vec3> DIVE_OFFSET = RenderStateDataKey.create(() -> "brightestday:dive_offset");
 
@@ -173,7 +174,7 @@ public final class FlightAnimator {
             if (speed > SONIC_BOOM_SPEED && motion.oSpeed <= SONIC_BOOM_SPEED) sonicBoom(client.level, player, velocity, color);
         }
 
-        if (player == client.player && flying && motion.phase == Phase.FLIGHT && (windSound == null || windSound.isStopped())) {
+        if (player == client.player && flying && (motion.phase == Phase.FLIGHT || Math.abs(velocity.y) > WIND_VERTICAL_SPEED) && (windSound == null || windSound.isStopped())) {
             windSound = new FlightWindSoundInstance(client.player);
             client.getSoundManager().play(windSound);
         }
@@ -355,6 +356,11 @@ public final class FlightAnimator {
     public static float flightBlend(Player player) {
         Motion motion = MOTIONS.get(player);
         return motion == null ? 0.0F : ease(motion.flightBlend);
+    }
+
+    public static float verticalSpeed(Player player) {
+        Motion motion = MOTIONS.get(player);
+        return motion == null ? 0.0F : (float) Math.abs(motion.velocity.y);
     }
 
     public static float speed(Player player) {

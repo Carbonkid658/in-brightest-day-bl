@@ -1,5 +1,8 @@
 package dev.amble.mixin.client;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import dev.amble.client.effects.LanternChargeAnimations;
+import net.minecraft.client.resources.model.cuboid.ItemTransform;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.amble.client.render.ConstructToolRendering;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -36,5 +39,10 @@ public abstract class ItemStackLayerRenderStateMixin {
         ConstructToolRendering.submit(poseStack, collector, overlayCoords, this.quads, this.tintLayers, this.foilType != ItemStackRenderState.FoilType.NONE);
         poseStack.popPose();
         ci.cancel();
+    }
+
+    @WrapWithCondition(method = "applyTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/model/cuboid/ItemTransform;apply(ZLcom/mojang/blaze3d/vertex/PoseStack$Pose;)V"))
+    private boolean brightestday$bareChargeLantern(ItemTransform transform, boolean leftHand, PoseStack.Pose pose) {
+        return !LanternChargeAnimations.bareTransform();
     }
 }

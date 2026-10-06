@@ -63,7 +63,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.team.affinity.aligned", "Aligned");
         builder.add("gui.brightestday.team.affinity.distant", "Distant");
         builder.add("gui.brightestday.team.affinity.opposed", "Opposed");
-        builder.add("message.brightestday.team.invited", "%s of the %s wants to team up. Press %s to respond.");
         builder.add("message.brightestday.team.invite_sent", "Team invite sent to %s.");
         builder.add("message.brightestday.team.joined", "%s of the %s joined your team.");
         builder.add("message.brightestday.team.declined", "%s declined your team invite.");
@@ -85,6 +84,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.red_heart.too_far", "You are too far away to help.");
         builder.add("message.brightestday.red_heart.second_chance", "Hope has granted you a second chance.");
         builder.add("message.brightestday.red_heart.no_answer", "Hope did not answer.");
+        builder.add("toast.brightestday.team_invite.title", "%s wants to team up");
+        builder.add("toast.brightestday.team_invite.hint", "Press [%s] to open Teams and accept");
+        builder.add("toast.brightestday.team_invite.someone", "A lantern");
+        builder.add("message.brightestday.ritual_broken", "The ritual is broken. Stand still before your lantern.");
         builder.add("block.brightestday.blue_lantern_shrine", "Blue Lantern Shrine");
         builder.add("hud.brightestday.pilgrimage", "Pilgrimage of Hope — %s / %s");
         builder.add("hud.brightestday.pilgrimage.next", "Next shrine: %sm");

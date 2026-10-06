@@ -30,7 +30,9 @@
 		"client.RenderTargetMixin",
 		"client.MouseHandlerMixin",
 		"client.FlashbackRecorderMixin",
-		"client.PlayerModelArmedMixin"
+		"client.PlayerModelArmedMixin",
+		"client.ItemInHandLayerMixin",
+		"client.EntityTurnMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
