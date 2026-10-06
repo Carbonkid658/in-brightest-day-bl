@@ -14,16 +14,23 @@ public final class OathMatcher {
             Map.entry("tor", Set.of("tore", "torr")),
             Map.entry("lorek", Set.of("lore")),
             Map.entry("san", Set.of("sun", "son", "sans")),
-            Map.entry("nok", Set.of("knock", "nock")),
-            Map.entry("var", Set.of("far")),
+            Map.entry("bor", Set.of("bore", "boar", "bar")),
+            Map.entry("nakka", Set.of("naka", "knack", "nacho")),
+            Map.entry("mur", Set.of("more", "murr", "myrrh", "mer")),
+            Map.entry("natromo", Set.of("nitro", "metro", "maestro", "astro", "petro", "promo", "nostrum", "tro")),
+            Map.entry("faan", Set.of("fan", "fawn", "fun")),
+            Map.entry("tornek", Set.of("torn", "tornado")),
+            Map.entry("wot", Set.of("what", "watt", "wat")),
+            Map.entry("ur", Set.of("or", "er", "her")),
             Map.entry("ter", Set.of("tear", "tur")),
             Map.entry("ker", Set.of("care", "cur", "core")),
-            Map.entry("lok", Set.of("lock", "look")),
-            Map.entry("tar", Set.of("tarr")),
-            Map.entry("formorra", Set.of("for", "more", "mora", "morra", "marra", "moore")),
             Map.entry("lo", Set.of("low", "lowe")),
-            Map.entry("sen", Set.of("send", "sin", "scene")),
-            Map.entry("gorro", Set.of("gore", "goro", "gora")),
+            Map.entry("abin", Set.of("bin", "robin")),
+            Map.entry("sur", Set.of("sir", "sure", "sewer")),
+            Map.entry("taan", Set.of("tan", "ton")),
+            Map.entry("lek", Set.of("lick", "lake")),
+            Map.entry("nok", Set.of("knock", "nock")),
+            Map.entry("formorrow", Set.of("for", "morrow", "tomorrow", "marrow", "more")),
             Map.entry("evil's", Set.of("evil", "evils")),
             Map.entry("sinestro's", Set.of("sinister")));
 
@@ -77,13 +84,13 @@ public final class OathMatcher {
     }
 
     private int advance(int from, String[] heard) {
-        int position = from;
+        int position = this.skipSilent(from);
         for (String word : heard) {
             if (word.isEmpty() || word.equals("[unk]")) continue;
             int limit = Math.min(this.words.size(), position + SKIP + 1);
             for (int j = position; j < limit; j++) {
-                if (matches(this.words.get(j), word)) {
-                    position = j + 1;
+                if (!this.words.get(j).isEmpty() && matches(this.words.get(j), word)) {
+                    position = this.skipSilent(j + 1);
                     break;
                 }
             }
@@ -91,8 +98,13 @@ public final class OathMatcher {
         return position;
     }
 
+    private int skipSilent(int position) {
+        while (position < this.words.size() && this.words.get(position).isEmpty()) position++;
+        return position;
+    }
+
     private static boolean matches(String expected, String heard) {
-        if (expected.isEmpty() || expected.equals(heard) || ALIASES.getOrDefault(expected, Set.of()).contains(heard)) return true;
+        if (expected.equals(heard) || ALIASES.getOrDefault(expected, Set.of()).contains(heard)) return true;
         return expected.length() >= FUZZY_MIN_LENGTH && distance(expected, heard) <= 1;
     }
 
