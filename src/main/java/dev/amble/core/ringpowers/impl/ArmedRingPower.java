@@ -15,6 +15,7 @@ import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerCategory;
 import dev.amble.core.ringpowers.RingPowerInstance;
+import dev.amble.core.comms.Megaphone;
 import dev.amble.core.ringpowers.RedRage;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
@@ -110,7 +111,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
 
         long now = player.level().getGameTime();
         boolean busy = BeamManager.isBeaming(player) || HealBeamManager.isHealing(player) || SculptManager.isSculpting(player)
-                || TractorManager.isHolding(player) || AcidManager.isSpewing(player) || LightRingPower.isEmitting(player) || BarrageManager.isFiring(player) || DrillManager.isDrilling(player);
+                || TractorManager.isHolding(player) || AcidManager.isSpewing(player) || LightRingPower.isEmitting(player) || BarrageManager.isFiring(player) || DrillManager.isDrilling(player) || Megaphone.isActive(player);
         Long last = LAST_USED.get(player);
         if (busy || last == null) {
             LAST_USED.put(player, now);

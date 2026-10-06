@@ -8,6 +8,7 @@ import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.team.LanternTeams;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -36,6 +37,9 @@ public final class Comms {
             UUID id = handler.player.getUUID();
             stop(server, id);
             DIALED.remove(id);
+        });
+        EntityTrackingEvents.START_TRACKING.register((entity, watcher) -> {
+            if (entity instanceof ServerPlayer player) ServerPlayNetworking.send(watcher, new CommsTalkingS2CPayload(player.getId(), TRANSMITTING.containsKey(player.getUUID())));
         });
     }
 

@@ -237,6 +237,7 @@ public final class RingRanks {
                 .map(ConstructRingPower.class::cast)
                 .filter(power -> !starter(corps, power))
                 .filter(power -> !RANK_GATED.containsKey(power))
+                .filter(power -> power != RingPowerRegistry.MEGAPHONE)
                 .sorted(Comparator.comparingInt((ConstructRingPower power) -> power.corps().size() <= 2 ? 0 : 1)
                         .thenComparingInt(power -> {
                             int index = PRIORITY.indexOf(power.id().getPath());

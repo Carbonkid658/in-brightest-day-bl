@@ -305,6 +305,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.hunt.hunted", "%s has marked you as prey.");
         builder.add("message.brightestday.hunt.no_target", "No prey in sight.");
         builder.add("message.brightestday.hunt.ended", "The hunt is over.");
+        builder.add("message.brightestday.megaphone.no_voice_chat", "The megaphone needs Simple Voice Chat installed on the server.");
         builder.add("hud.brightestday.blood_hunt", "%s Prey %sm");
         builder.add("hud.brightestday.comms.incoming", "%s is talking through your ring");
         builder.add("hud.brightestday.comms.none", "Comms: scroll to dial a teammate");
@@ -844,6 +845,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(RingPowerRegistry.BERSERK.getTranslationKey(), "Berserk");
         builder.add(RingPowerRegistry.BLOOD_HUNT.getTranslationKey(), "Blood Hunt");
         builder.add(RingPowerRegistry.COMMS.getTranslationKey(), "Comms");
+        builder.add(RingPowerRegistry.MEGAPHONE.getTranslationKey(), "Megaphone");
         builder.add(RingPowerRegistry.SCAN.getTranslationKey(), "Scan");
 
         builder.add("message.brightestday.nothing_to_scan", "Nothing to scan.");

@@ -18,6 +18,7 @@ import dev.amble.core.ringpowers.constructs.GroundSlamConstruct;
 import dev.amble.core.ringpowers.constructs.HealBeamConstruct;
 import dev.amble.core.ringpowers.constructs.LightOrbConstruct;
 import dev.amble.core.ringpowers.constructs.LumberjackConstruct;
+import dev.amble.core.ringpowers.constructs.MegaphoneConstruct;
 import dev.amble.core.ringpowers.constructs.NovaBurstConstruct;
 import dev.amble.core.ringpowers.constructs.OreProbeConstruct;
 import dev.amble.core.ringpowers.constructs.PiercingLanceConstruct;
@@ -83,6 +84,7 @@ public final class RingPowerRegistry {
     public static final PlasmaBurstConstruct PLASMA_BURST = register(new PlasmaBurstConstruct());
     public static final CrystalPrisonConstruct CRYSTAL_PRISON = register(new CrystalPrisonConstruct());
     public static final BloodHuntConstruct BLOOD_HUNT = register(new BloodHuntConstruct());
+    public static final MegaphoneConstruct MEGAPHONE = register(new MegaphoneConstruct());
     public static final TractorBeamRingPower TRACTOR_BEAM = register(new TractorBeamRingPower());
     public static final ScanRingPower SCAN = register(new ScanRingPower());
     public static final ConcussiveRingPower CONCUSSIVE = register(new ConcussiveRingPower());
