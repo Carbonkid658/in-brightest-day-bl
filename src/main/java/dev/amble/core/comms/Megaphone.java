@@ -21,7 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class Megaphone {
     public static final float RANGE_MULTIPLIER = 3.0F;
-    public static final float GAIN = 1.8F;
     private static final int DRAIN_PER_SECOND = 2;
 
     private static final Set<UUID> ACTIVE = ConcurrentHashMap.newKeySet();
