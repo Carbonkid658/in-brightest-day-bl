@@ -49,7 +49,7 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
 
     private @Nullable ColorTweakSlider brightness;
     private @Nullable ColorTweakSlider saturation;
-    private @Nullable LanternToggle aura;
+    private @Nullable AuraToggle aura;
     private @Nullable LanternToggle suit;
     private @Nullable LanternToggle mask;
     private @Nullable MaskHeightSlider maskHeight;
@@ -99,10 +99,9 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
                 this.leftPos + SLIDER_X, this.topPos + SATURATION_Y, SLIDER_WIDTH, SLIDER_HEIGHT,
                 "gui.brightestday.saturation", tweak.saturation(), ColorTweak.MIN_SATURATION, 1.0F, value -> this.updateTweak()));
 
-        Component auraLabel = Component.translatable("gui.brightestday.aura");
-        this.aura = this.addRenderableWidget(new LanternToggle(
-                this.leftPos + IMAGE_WIDTH - AURA_MARGIN - LanternToggle.width(this.font, auraLabel), this.topPos + AURA_Y,
-                auraLabel, this.font, tweak.aura(), value -> this.updateTweak()));
+        this.aura = this.addRenderableWidget(new AuraToggle(
+                this.leftPos + IMAGE_WIDTH - AURA_MARGIN - AuraToggle.width(this.font), this.topPos + AURA_Y,
+                this.font, AuraToggle.Mode.of(tweak.aura(), tweak.auraFlightOnly()), value -> this.updateTweak()));
 
         Component suitLabel = Component.translatable("gui.brightestday.suit");
         this.suit = this.addRenderableWidget(new LanternToggle(
@@ -124,7 +123,7 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
         if (this.brightness == null || this.saturation == null || this.aura == null || this.suit == null
                 || this.mask == null || this.maskHeight == null) return;
 
-        ColorTweak tweak = new ColorTweak(this.brightness.tweak(), this.saturation.tweak(), this.aura.selected(), this.suit.selected(),
+        ColorTweak tweak = new ColorTweak(this.brightness.tweak(), this.saturation.tweak(), this.aura.mode() != AuraToggle.Mode.OFF, this.aura.mode() != AuraToggle.Mode.ALWAYS, this.suit.selected(),
                 this.mask.selected(), this.maskHeight.offset());
         if (tweak.equals(BrightestDayAttachments.getColorTweak(this.minecraft.player))) return;
 

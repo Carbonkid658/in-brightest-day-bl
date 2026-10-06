@@ -338,6 +338,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.brightness", "Brightness: %s");
         builder.add("gui.brightestday.saturation", "Saturation: %s");
         builder.add("gui.brightestday.aura", "Aura");
+        builder.add("gui.brightestday.aura.flying", "Aura: Fly");
+        builder.add("gui.brightestday.aura.always", "Aura: On");
         builder.add("gui.brightestday.suit", "Suit");
         builder.add("gui.brightestday.mask", "Mask");
         builder.add("gui.brightestday.mask_height", "Mask Height: %s");

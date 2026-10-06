@@ -34,7 +34,7 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
     private static final double CRUISE_RESPONSE = 0.15;
     private static final double BOOST_RESPONSE = 0.06;
     private static final double BRAKE_RESPONSE = 0.12;
-    private static final double DRAIN_SPEED_WEIGHT = 0.5;
+    private static final double DRAIN_SPEED_WEIGHT = 0.25;
     public static final double DIVE_ENTER_SPEED = 0.8;
     public static final double DIVE_EXIT_SPEED = 0.7;
 

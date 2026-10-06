@@ -15,7 +15,7 @@ public class BrightestDayConfig {
                     .build())
             .build();
 
-    private static final int CONFIG_VERSION = 3;
+    private static final int CONFIG_VERSION = 4;
 
     @SerialEntry
     public int configVersion = 0;
@@ -294,9 +294,9 @@ public class BrightestDayConfig {
     @SerialEntry
     public double flightMaxBoostSpeed = 5.0;
     @SerialEntry
-    public int flightDrainPerSecond = 8;
+    public int flightDrainPerSecond = 2;
     @SerialEntry
-    public int flightBoostDrainPerSecond = 18;
+    public int flightBoostDrainPerSecond = 5;
     @SerialEntry
     public boolean showFlightSpeedometer = true;
     @SerialEntry
@@ -454,6 +454,10 @@ public class BrightestDayConfig {
         }
         if (config.configVersion < 3) {
             config.ringLoyaltyDeaths = defaults.ringLoyaltyDeaths;
+        }
+        if (config.configVersion < 4) {
+            config.flightDrainPerSecond = Math.min(config.flightDrainPerSecond, defaults.flightDrainPerSecond);
+            config.flightBoostDrainPerSecond = Math.min(config.flightBoostDrainPerSecond, defaults.flightBoostDrainPerSecond);
         }
         config.configVersion = CONFIG_VERSION;
         HANDLER.save();
