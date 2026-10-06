@@ -1,6 +1,7 @@
 package dev.amble.client.hud;
 
 import dev.amble.BrightestDay;
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.OathS2CPayload;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -31,7 +32,6 @@ public final class OathHud {
     private static float target;
     private static float fill;
     private static float oFill;
-    private static boolean guide;
     private static boolean active;
     private static float fade;
     private static float oFade;
@@ -45,7 +45,6 @@ public final class OathHud {
             color = ARGB.opaque(payload.color());
             reached = payload.reached();
             target = payload.progress();
-            guide = payload.guide();
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             active = false;
@@ -65,8 +64,8 @@ public final class OathHud {
         float alpha = Mth.lerp(partialTicks, oFade, fade);
         if (alpha <= 0.02F || lines.length == 0) return;
 
-        meter(graphics, Mth.lerp(partialTicks, oFill, fill), alpha);
-        if (guide) guide(graphics, alpha);
+        if (BrightestDayConfig.get().showOathText) guide(graphics, alpha);
+        else meter(graphics, Mth.lerp(partialTicks, oFill, fill), alpha);
     }
 
     private static void meter(GuiGraphicsExtractor graphics, float progress, float alpha) {

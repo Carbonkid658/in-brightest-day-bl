@@ -43,8 +43,12 @@ public final class LanternChargeAnimations {
     private static final Identifier START = BrightestDay.id("handheld_charge");
     private static final Identifier LOOP = BrightestDay.id("handheld_charge_loop");
     private static final Identifier DONE = BrightestDay.id("handheld_charge_done");
-    private static final Identifier RITUAL_FLOOR = BrightestDay.id("charge_ring_floor");
-    private static final Identifier RITUAL_TOP = BrightestDay.id("charge_ring_top");
+    private static final Identifier FLOOR_START = BrightestDay.id("charge_ring_floor_start");
+    private static final Identifier FLOOR_LOOP = BrightestDay.id("charge_ring_floor_loop");
+    private static final Identifier FLOOR_FINISH = BrightestDay.id("charge_ring_floor_finish");
+    private static final Identifier TOP_START = BrightestDay.id("charge_ring_top_start");
+    private static final Identifier TOP_LOOP = BrightestDay.id("charge_ring_top_loop");
+    private static final Identifier TOP_FINISH = BrightestDay.id("charge_ring_top_finish");
     private static final int PRIORITY = 1600;
     private static final int FADE_IN_TICKS = 4;
     private static final int FADE_OUT_TICKS = 6;
@@ -64,11 +68,14 @@ public final class LanternChargeAnimations {
         NONE,
         HANDHELD,
         FLOOR,
-        TOP
+        TOP,
+        FLOOR_FINISH,
+        TOP_FINISH
     }
 
     private static final Map<Player, Mode> MODES = new WeakHashMap<>();
     private static final Map<Player, Integer> LOOP_IN = new WeakHashMap<>();
+    private static final Map<Player, Identifier> LOOP_TARGET = new WeakHashMap<>();
     private record Ritual(int mode, float yaw, @Nullable Vec3 finishingAt) {}
 
     private static final Map<Integer, Ritual> RITUALS = new HashMap<>();
@@ -125,7 +132,9 @@ public final class LanternChargeAnimations {
         if (charging(player)) return Mode.HANDHELD;
         Ritual ritual = RITUALS.get(player.getId());
         if (ritual == null) return Mode.NONE;
-        return ritual.mode() == LanternRitualS2CPayload.TOP ? Mode.TOP : Mode.FLOOR;
+        boolean top = ritual.mode() == LanternRitualS2CPayload.TOP;
+        if (ritual.finishingAt() != null) return top ? Mode.TOP_FINISH : Mode.FLOOR_FINISH;
+        return top ? Mode.TOP : Mode.FLOOR;
     }
 
     private static @Nullable PlayerAnimationController controller(Player player) {
@@ -158,7 +167,7 @@ public final class LanternChargeAnimations {
             Mode next = desired(player);
             Mode previous = MODES.getOrDefault(player, Mode.NONE);
             if (next == previous) {
-                if (next == Mode.HANDHELD) advance(player);
+                advance(player);
                 continue;
             }
             MODES.put(player, next);
@@ -167,10 +176,13 @@ public final class LanternChargeAnimations {
             if (controller == null) continue;
             mirror(controller, player);
             LOOP_IN.remove(player);
+            LOOP_TARGET.remove(player);
             switch (next) {
-                case HANDHELD -> startHandheld(player, controller);
-                case FLOOR -> once(controller, animation(RITUAL_FLOOR), RITUAL_FADE_TICKS);
-                case TOP -> once(controller, animation(RITUAL_TOP), RITUAL_FADE_TICKS);
+                case HANDHELD -> startLooping(player, controller, START, LOOP, FADE_IN_TICKS);
+                case FLOOR -> startLooping(player, controller, FLOOR_START, FLOOR_LOOP, RITUAL_FADE_TICKS);
+                case TOP -> startLooping(player, controller, TOP_START, TOP_LOOP, RITUAL_FADE_TICKS);
+                case FLOOR_FINISH -> once(controller, animation(FLOOR_FINISH), LOOP_BLEND_TICKS);
+                case TOP_FINISH -> once(controller, animation(TOP_FINISH), LOOP_BLEND_TICKS);
                 case NONE -> finish(controller, previous);
             }
         }
@@ -202,11 +214,12 @@ public final class LanternChargeAnimations {
         return Optional.of(new AdjustmentModifier.PartModifier(new Vec3f(pitch, 0.0F, 0.0F), Vec3f.ZERO));
     }
 
-    private static void startHandheld(Player player, PlayerAnimationController controller) {
-        Animation start = animation(START);
+    private static void startLooping(Player player, PlayerAnimationController controller, Identifier startId, Identifier loopId, int fadeTicks) {
+        Animation start = animation(startId);
         if (start == null) return;
-        play(controller, RawAnimation.begin().thenPlayAndHold(start), FADE_IN_TICKS);
+        play(controller, RawAnimation.begin().thenPlayAndHold(start), fadeTicks);
         LOOP_IN.put(player, Math.max(1, Mth.ceil(start.length())));
+        LOOP_TARGET.put(player, loopId);
     }
 
     private static void finish(PlayerAnimationController controller, Mode previous) {
@@ -243,9 +256,10 @@ public final class LanternChargeAnimations {
             return;
         }
         LOOP_IN.remove(player);
+        Identifier target = LOOP_TARGET.remove(player);
 
         PlayerAnimationController controller = controller(player);
-        if (controller != null) loop(controller, animation(LOOP), LOOP_BLEND_TICKS);
+        if (controller != null && target != null) loop(controller, animation(target), LOOP_BLEND_TICKS);
     }
 
     private static void mirror(PlayerAnimationController controller, Player player) {

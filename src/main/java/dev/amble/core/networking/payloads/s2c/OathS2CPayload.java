@@ -6,8 +6,8 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public record OathS2CPayload(String oath, int color, int reached, float progress, boolean guide, boolean active) implements CustomPacketPayload {
-    public static final OathS2CPayload NONE = new OathS2CPayload("", 0, 0, 0.0F, false, false);
+public record OathS2CPayload(String oath, int color, int reached, float progress, boolean active) implements CustomPacketPayload {
+    public static final OathS2CPayload NONE = new OathS2CPayload("", 0, 0, 0.0F, false);
 
     public static final Type<OathS2CPayload> TYPE =
             new Type<>(BrightestDay.id("oath"));
@@ -18,7 +18,6 @@ public record OathS2CPayload(String oath, int color, int reached, float progress
                     ByteBufCodecs.INT, OathS2CPayload::color,
                     ByteBufCodecs.VAR_INT, OathS2CPayload::reached,
                     ByteBufCodecs.FLOAT, OathS2CPayload::progress,
-                    ByteBufCodecs.BOOL, OathS2CPayload::guide,
                     ByteBufCodecs.BOOL, OathS2CPayload::active,
                     OathS2CPayload::new
             );

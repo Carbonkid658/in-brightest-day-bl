@@ -510,6 +510,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("config.brightestday.option.aileron_roll_dodge.desc", "How hard an aileron roll pushes you sideways.");
         builder.add("config.brightestday.option.oath_recognition", "Spoken Oaths");
         builder.add("config.brightestday.option.oath_recognition.desc", "With Simple Voice Chat installed, charging a ring by hand listens for you to speak your corps oath. The speech model (about 40 MB) downloads to the server the first time someone charges.");
+        builder.add("config.brightestday.option.show_oath_text", "Show Oath Text");
+        builder.add("config.brightestday.option.show_oath_text.desc", "While speaking your oath to charge a ring, show the oath beneath the crosshair with spoken words lit up. Turn off to show a progress bar above the hotbar instead.");
         builder.add("config.brightestday.group.synergy", "Corps Synergy");
         builder.add("config.brightestday.option.synergy_link_radius", "Hope/Will Range");
         builder.add("config.brightestday.option.synergy_link_radius.desc", "How close Blue and Green Lanterns must be to empower each other.");

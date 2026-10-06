@@ -188,20 +188,22 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
         if (level.isClientSide()) return InteractionResult.SUCCESS;
 
         if (player instanceof ServerPlayer server && LanternRitual.begin(server, pos, state, this.corps)) return InteractionResult.SUCCESS_SERVER;
-        complete(level, pos, player, ring, slotted);
+        complete(level, pos, player, ring, slotted, true);
         return InteractionResult.SUCCESS_SERVER;
     }
 
-    public void complete(Level level, BlockPos pos, Player player, ItemStack ring, boolean slotted) {
+    public void complete(Level level, BlockPos pos, Player player, ItemStack ring, boolean slotted, boolean announce) {
         PowerRingItem.setMaxPower(ring);
         ring.remove(BrightestDayComponents.RING_DEATHS);
         if (player instanceof ServerPlayer server) RingRanks.fire(server, Trigger.RECHARGE, Milestone.Context.of("lantern"));
         if (level instanceof ServerLevel serverLevel) RingLoyalty.bind(ring, serverLevel, pos);
         if (slotted) BrightestDayAttachments.setRing(player, ring);
 
-        player.sendSystemMessage(Component.translatable(this.corps.oathKey())
-                .withStyle(ChatFormatting.BOLD)
-                .withColor(this.corps.color()));
+        if (announce) {
+            player.sendSystemMessage(Component.translatable(this.corps.oathKey())
+                    .withStyle(ChatFormatting.BOLD)
+                    .withColor(this.corps.color()));
+        }
         level.playSound(null, pos, SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.0F, 1.0F);
     }
 }

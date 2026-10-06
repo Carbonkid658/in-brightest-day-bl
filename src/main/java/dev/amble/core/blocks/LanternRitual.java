@@ -4,6 +4,7 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.LanternRitualS2CPayload;
+import dev.amble.core.oath.OathCharge;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -40,9 +41,11 @@ public final class LanternRitual {
         final Vec3 anchor;
         final int mode;
         final float yaw;
+        final boolean oath;
         int age;
 
-        Session(BlockPos pos, LanternCorps corps, Vec3 anchor, int mode, float yaw) {
+        Session(BlockPos pos, LanternCorps corps, Vec3 anchor, int mode, float yaw, boolean oath) {
+            this.oath = oath;
             this.pos = pos;
             this.corps = corps;
             this.anchor = anchor;
@@ -66,7 +69,8 @@ public final class LanternRitual {
 
         float yaw = LanternBlock.facingYaw(state);
         Vec3 anchor = snap(player, pos, mode, yaw);
-        SESSIONS.put(player.getUUID(), new Session(pos.immutable(), corps, anchor, mode, yaw));
+        boolean oath = OathCharge.begin(player, corps, true);
+        SESSIONS.put(player.getUUID(), new Session(pos.immutable(), corps, anchor, mode, yaw, oath));
         broadcast(player, mode, yaw);
         return true;
     }
@@ -87,10 +91,12 @@ public final class LanternRitual {
             }
 
             ItemStack ring = PowerRingItem.getWornRing(player);
-            if (interrupted(player, session, ring)) {
+            boolean silent = session.oath && !OathCharge.tick(player, session.corps.color());
+            if (silent || interrupted(player, session, ring)) {
                 iterator.remove();
+                if (session.oath) OathCharge.end(player);
                 broadcast(player, LanternRitualS2CPayload.NONE, session.yaw);
-                player.sendOverlayMessage(Component.translatable("message.brightestday.ritual_broken").withColor(session.corps.color()));
+                player.sendOverlayMessage(Component.translatable(silent ? "message.brightestday.oath.silent" : "message.brightestday.ritual_broken").withColor(session.corps.color()));
                 continue;
             }
 
@@ -99,16 +105,21 @@ public final class LanternRitual {
             int insert = insertTick(session.mode);
             if (session.age == insert) LanternCharging.inserted(player.level(), session.pos);
             if (session.age >= insert) {
-                PowerRingItem.chargeRing(ring, Mth.ceil((float) BrightestDayComponents.MAX_POWER / (DURATION_TICKS - insert)));
-                if (slotted) BrightestDayAttachments.setRing(player, ring);
-                effects(player.level(), session, insert);
+                float progress = session.oath ? OathCharge.progress(player) : (session.age - insert) / (float) (DURATION_TICKS - insert);
+                if (!session.oath) {
+                    PowerRingItem.chargeRing(ring, Mth.ceil((float) BrightestDayComponents.MAX_POWER / (DURATION_TICKS - insert)));
+                    if (slotted) BrightestDayAttachments.setRing(player, ring);
+                }
+                effects(player.level(), session, insert, progress);
             }
 
-            if (session.age < DURATION_TICKS) continue;
+            boolean done = session.oath ? session.age >= insert && OathCharge.complete(player) : session.age >= DURATION_TICKS;
+            if (!done) continue;
             iterator.remove();
+            if (session.oath) OathCharge.end(player);
             broadcast(player, LanternRitualS2CPayload.COMPLETE, session.yaw);
             if (player.level().getBlockState(session.pos).getBlock() instanceof LanternBlock lantern) {
-                lantern.complete(player.level(), session.pos, player, ring, slotted);
+                lantern.complete(player.level(), session.pos, player, ring, slotted, !session.oath);
             }
         }
     }
@@ -126,9 +137,8 @@ public final class LanternRitual {
         return mode == LanternRitualS2CPayload.TOP ? TOP_INSERT_TICKS : FLOOR_INSERT_TICKS;
     }
 
-    private static void effects(ServerLevel level, Session session, int insert) {
+    private static void effects(ServerLevel level, Session session, int insert, float progress) {
         int charged = session.age - insert;
-        float progress = charged / (float) (DURATION_TICKS - insert);
         if (charged % PARTICLE_INTERVAL == 0) {
             DustParticleOptions dust = new DustParticleOptions(session.corps.color(), 1.0F);
             float angle = session.age * 0.4F;

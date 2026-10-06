@@ -4,9 +4,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
-import com.mojang.serialization.Codec;
-import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
-import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import dev.amble.core.comms.Comms;
 import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.networking.payloads.s2c.OathS2CPayload;
@@ -40,26 +37,22 @@ public final class OathCharge {
         return thread;
     });
     private static final Map<UUID, Session> SESSIONS = new ConcurrentHashMap<>();
-    private static final AttachmentType<Boolean> LEARNED = AttachmentRegistry.<Boolean>builder()
-            .persistent(Codec.BOOL)
-            .copyOnDeath()
-            .buildAndRegister(BrightestDay.id("oath_learned"));
     private static @Nullable JsonObject ENGLISH;
 
     private static final class Session {
         final OathMatcher matcher;
         final OathRecognizer.Listener listener;
         final String oath;
-        final boolean guide;
+        final boolean ritual;
         volatile int sentReached = -1;
         volatile int quietTicks;
         boolean closed;
 
-        Session(OathMatcher matcher, OathRecognizer.Listener listener, String oath, boolean guide) {
+        Session(OathMatcher matcher, OathRecognizer.Listener listener, String oath, boolean ritual) {
+            this.ritual = ritual;
             this.matcher = matcher;
             this.listener = listener;
             this.oath = oath;
-            this.guide = guide;
         }
     }
 
@@ -71,6 +64,8 @@ public final class OathCharge {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (SESSIONS.isEmpty() || server.getTickCount() % SWEEP_INTERVAL != 0) return;
             for (UUID id : List.copyOf(SESSIONS.keySet())) {
+                Session session = SESSIONS.get(id);
+                if (session == null || session.ritual) continue;
                 ServerPlayer player = server.getPlayerList().getPlayer(id);
                 if (player == null || !player.isUsingItem() || !(player.getUseItem().getItem() instanceof LanternBlockItem)) {
                     if (player != null) end(player);
@@ -80,7 +75,7 @@ public final class OathCharge {
         });
     }
 
-    public static boolean begin(ServerPlayer player, LanternCorps corps) {
+    public static boolean begin(ServerPlayer player, LanternCorps corps, boolean ritual) {
         if (!BrightestDayConfig.get().oathRecognition || !Comms.available()) return false;
         if (!Comms.voiceReady(player.getUUID())) {
             BrightestDay.LOGGER.info("Timed charge for {}: voice chat not connected", player.getScoreboardName());
@@ -101,10 +96,9 @@ public final class OathCharge {
         }
 
         end(player.getUUID());
-        boolean guide = !player.getAttachedOrElse(LEARNED, false);
-        SESSIONS.put(player.getUUID(), new Session(new OathMatcher(words), listener, oath, guide));
+        SESSIONS.put(player.getUUID(), new Session(new OathMatcher(words), listener, oath, ritual));
         BrightestDay.LOGGER.info("Oath charge started for {}", player.getScoreboardName());
-        ServerPlayNetworking.send(player, new OathS2CPayload(oath, corps.color(), 0, 0.0F, guide, true));
+        ServerPlayNetworking.send(player, new OathS2CPayload(oath, corps.color(), 0, 0.0F, true));
         return true;
     }
 
@@ -155,15 +149,11 @@ public final class OathCharge {
         if (reached != session.sentReached) {
             session.sentReached = reached;
             session.quietTicks = 0;
-            ServerPlayNetworking.send(player, new OathS2CPayload(session.oath, color, reached, session.matcher.progress(), session.guide, true));
+            ServerPlayNetworking.send(player, new OathS2CPayload(session.oath, color, reached, session.matcher.progress(), true));
         } else {
             session.quietTicks++;
         }
         return session.quietTicks < SILENCE_TIMEOUT_TICKS;
-    }
-
-    public static void learned(ServerPlayer player) {
-        player.setAttached(LEARNED, true);
     }
 
     public static void end(UUID player) {

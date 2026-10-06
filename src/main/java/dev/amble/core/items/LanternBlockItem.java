@@ -82,7 +82,7 @@ public class LanternBlockItem extends BlockItem {
         }
 
         ANCHORS.put(player, player.position());
-        if (player instanceof ServerPlayer server) OathCharge.begin(server, this.corps());
+        if (player instanceof ServerPlayer server) OathCharge.begin(server, this.corps(), false);
         player.startUsingItem(hand);
         return InteractionResult.CONSUME;
     }
@@ -155,7 +155,6 @@ public class LanternBlockItem extends BlockItem {
         if (elapsed > 0 && elapsed % SOUND_INTERVAL == 0) LanternCharging.chime(serverLevel, player.blockPosition(), progress);
 
         if (oath && OathCharge.complete(server)) {
-            OathCharge.learned(server);
             this.complete(serverLevel, player, false);
             cancel(player);
         }

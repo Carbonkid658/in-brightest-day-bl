@@ -309,6 +309,8 @@ public class BrightestDayConfig {
     @SerialEntry
     public boolean oathRecognition = true;
     @SerialEntry
+    public boolean showOathText = true;
+    @SerialEntry
     public String oathModelUrl = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip";
 
     @SerialEntry
