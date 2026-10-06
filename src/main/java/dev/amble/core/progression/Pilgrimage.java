@@ -98,6 +98,13 @@ public final class Pilgrimage {
         TRACES.remove(player.getUUID());
     }
 
+    public static void abandon(ServerPlayer player) {
+        if (!get(player).active()) return;
+        reset(player);
+        player.sendSystemMessage(Component.translatable("message.brightestday.pilgrimage.abandoned").withStyle(ChatFormatting.ITALIC).withColor(BLUE));
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.8F, 0.8F);
+    }
+
     private static Optional<BlockPos> target(MinecraftServer server, int next, int total) {
         WorldProgress world = WorldProgress.get(server);
         return next >= total ? world.sanctuary() : world.shrine(next);

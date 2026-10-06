@@ -2,12 +2,15 @@ package dev.amble.client.screens;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.networking.payloads.c2s.AbandonPilgrimageC2SPayload;
 import dev.amble.core.progression.Emotion;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Milestones;
+import dev.amble.core.progression.Pilgrimage;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.core.progression.SpectrumMeters;
 import dev.amble.core.ringpowers.LanternCorps;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -16,6 +19,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Util;
 import net.minecraft.world.entity.player.Player;
 import org.jspecify.annotations.Nullable;
 
@@ -33,12 +37,18 @@ public class SpectrumScreen extends Screen {
     private static final int TASK_BAR_HEIGHT = 3;
     private static final int DONE = 0xFF7DFF9A;
     private static final int LOCKED = 0xFF5E5A50;
+    private static final int ABANDON_HEIGHT = 14;
+    private static final int ABANDON_PADDING = 6;
+    private static final int ABANDON_Y = 5;
+    private static final long CONFIRM_MILLIS = 4000L;
+    private static final int HOPE = ARGB.opaque(LanternCorps.BLUE.color());
 
     private final @Nullable Screen parent;
     private Emotion selected;
     private boolean chosen;
     private int left;
     private int top;
+    private long confirmUntil;
 
     public SpectrumScreen(@Nullable Screen parent) {
         super(Component.translatable("gui.brightestday.spectrum.title"));
@@ -74,6 +84,7 @@ public class SpectrumScreen extends Screen {
 
         this.list(graphics, player, mouseX, mouseY);
         this.detail(graphics, player, corps, accent);
+        this.abandonButton(graphics, player, mouseX, mouseY);
     }
 
     private void list(GuiGraphicsExtractor graphics, Player player, int mouseX, int mouseY) {
@@ -174,9 +185,55 @@ public class SpectrumScreen extends Screen {
         return y + 8;
     }
 
+    private boolean pilgrimaging(Player player) {
+        return player.getAttachedOrElse(Pilgrimage.STATE, Pilgrimage.State.NONE).active();
+    }
+
+    private boolean confirming() {
+        return Util.getMillis() < this.confirmUntil;
+    }
+
+    private Component abandonLabel() {
+        return Component.translatable(this.confirming() ? "gui.brightestday.spectrum.abandon.confirm" : "gui.brightestday.spectrum.abandon");
+    }
+
+    private int abandonWidth() {
+        return this.font.width(this.abandonLabel()) + ABANDON_PADDING * 2;
+    }
+
+    private int abandonX() {
+        return this.left + WIDTH - MARGIN - this.abandonWidth();
+    }
+
+    private boolean overAbandon(double mouseX, double mouseY) {
+        int x = this.abandonX();
+        int y = this.top + ABANDON_Y;
+        return mouseX >= x && mouseX < x + this.abandonWidth() && mouseY >= y && mouseY < y + ABANDON_HEIGHT;
+    }
+
+    private void abandonButton(GuiGraphicsExtractor graphics, Player player, int mouseX, int mouseY) {
+        if (!this.pilgrimaging(player)) return;
+        int x = this.abandonX();
+        int y = this.top + ABANDON_Y;
+        boolean hovered = this.overAbandon(mouseX, mouseY);
+        LanternWidgets.button(graphics, x, y, this.abandonWidth(), ABANDON_HEIGHT, HOPE, true, hovered || this.confirming(), 1.0F);
+        Component label = this.abandonLabel();
+        graphics.text(this.font, label, x + ABANDON_PADDING, y + (ABANDON_HEIGHT - this.font.lineHeight) / 2 + 1, hovered ? 0xFFFFFFFF : LanternWidgets.TEXT, true);
+    }
+
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
+            if (this.minecraft.player != null && this.pilgrimaging(this.minecraft.player) && this.overAbandon(event.x(), event.y())) {
+                if (this.confirming()) {
+                    this.confirmUntil = 0L;
+                    ClientPlayNetworking.send(AbandonPilgrimageC2SPayload.INSTANCE);
+                } else {
+                    this.confirmUntil = Util.getMillis() + CONFIRM_MILLIS;
+                }
+                this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                return true;
+            }
             int x = this.left + MARGIN;
             Emotion[] emotions = Emotion.values();
             for (int i = 0; i < emotions.length; i++) {

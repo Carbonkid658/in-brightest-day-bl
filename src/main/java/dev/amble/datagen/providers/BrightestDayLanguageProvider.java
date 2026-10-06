@@ -104,6 +104,9 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.sanctuary.unwalked", "The dome only opens for those who walked the shrines.");
         builder.add("key.brightestday.spectrum", "Emotional Spectrum");
         builder.add("gui.brightestday.spectrum.title", "Emotional Spectrum");
+        builder.add("gui.brightestday.spectrum.abandon", "Abandon Pilgrimage");
+        builder.add("gui.brightestday.spectrum.abandon.confirm", "Click again to abandon");
+        builder.add("message.brightestday.pilgrimage.abandoned", "You set down the path. Hope will wait for you.");
         builder.add("gui.brightestday.spectrum.rank", "Rank %s / %s");
         builder.add("gui.brightestday.spectrum.rank_short", "R%s:");
         builder.add("gui.brightestday.spectrum.meter", "%s: %s / %s");
