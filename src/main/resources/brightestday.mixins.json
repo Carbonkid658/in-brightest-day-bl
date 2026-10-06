@@ -23,6 +23,7 @@
 		"client.AvatarRendererMixin",
 		"client.CameraMixin",
 		"client.EntityGlowColorMixin",
+		"client.HudOverlayMixin",
 		"client.FirstPersonHandsAndItemsRendererMixin",
 		"client.ItemModelResolverMixin",
 		"client.ItemStackLayerRenderStateMixin",

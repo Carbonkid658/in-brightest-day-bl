@@ -68,7 +68,8 @@ public final class PowerWheel {
     private static final int POINTER_DOTS = 7;
     private static final double POINTER_SPREAD = 7.0;
     private static final int TRAIL_SPACING = 5;
-    private static final int HUD_MARGIN = 4;
+    public static final int HUD_MARGIN = 4;
+    private static int indicatorTop = -1;
     private static final int HUD_PADDING = 4;
 
     private static final Map<RingPower<?>, Item> ICONS = Map.ofEntries(
@@ -699,7 +700,12 @@ public final class PowerWheel {
         }
     }
 
+    public static int indicatorTop() {
+        return indicatorTop;
+    }
+
     private static void extractIndicator(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+        indicatorTop = -1;
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
         if (player == null || PowerRingItem.getWornCorps(player).isEmpty()) return;
@@ -735,6 +741,7 @@ public final class PowerWheel {
         int height = HUD_PADDING * 2 + 16;
         int left = HUD_MARGIN;
         int top = graphics.guiHeight() - HUD_MARGIN - height;
+        indicatorTop = top;
 
         graphics.fill(left, top, left + width, top + height, ARGB.color(0x90, darken(color, 0.25F)));
         graphics.fill(left, top, left + 1, top + height, ARGB.color(0xFF, color));
