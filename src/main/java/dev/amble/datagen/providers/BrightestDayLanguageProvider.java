@@ -394,15 +394,15 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
                 Look to the stars,
                 For hope burns bright!""");
         builder.add(LanternCorps.INDIGO.oathKey(), """
-                Tor lorek san, nok var.
-                Ter lantern ker, lok tar.
-                Nok formorra, sorrow lo.
-                Sen ker, sen lo, sen gorro.""");
+                Tor lorek san, bor nakka mur,
+                Natromo faan tornek wot ur.
+                Ter Lantern ker lo Abin Sur,
+                Taan lek lek nok -- Formorrow Sur!""");
         builder.add(LanternCorps.STAR_SAPPHIRE.oathKey(), """
-                For hearts that feel an empty place,
-                And lonely souls adrift in space,
-                Take the love I have to give,
-                Star Sapphire, through you we live!""");
+                For hearts long lost and full of fright,
+                For those alone in blackest night,
+                Accept our ring and join our fight --
+                Love conquers all -- with violet light!""");
         builder.add(LanternCorps.WHITE.oathKey(), """
                 From the dark of death,
                 To the light of birth,
