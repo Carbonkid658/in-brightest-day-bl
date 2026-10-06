@@ -2,6 +2,7 @@ package dev.amble.core.walls;
 
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayBlocks;
+import dev.amble.core.blocks.HardLightBlock;
 import dev.amble.core.networking.payloads.s2c.WallRemoveS2CPayload;
 import dev.amble.core.networking.payloads.s2c.WallSpawnS2CPayload;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -14,6 +15,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -76,8 +78,9 @@ public final class WallManager {
     private static @Nullable Wall place(ServerLevel level, List<BlockPos> candidates, int color, ServerPlayer caster, boolean sustained) {
         List<BlockPos> placed = new ArrayList<>();
         for (BlockPos pos : candidates) {
-            if (!level.getBlockState(pos).isAir() || !level.mayInteract(caster, pos)) continue;
-            level.setBlock(pos, BrightestDayBlocks.HARD_LIGHT.defaultBlockState(), 3);
+            BlockState replaced = level.getBlockState(pos);
+            if (!HardLightBlock.canReplace(replaced) || !level.mayInteract(caster, pos)) continue;
+            level.setBlock(pos, HardLightBlock.stateFor(BrightestDayBlocks.HARD_LIGHT, replaced), 3);
             placed.add(pos.immutable());
         }
         if (placed.isEmpty()) return null;

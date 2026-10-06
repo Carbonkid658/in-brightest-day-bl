@@ -40,6 +40,7 @@ import dev.amble.client.effects.TractorEffects;
 import dev.amble.client.effects.WallEffects;
 import dev.amble.client.effects.BatteryEffects;
 import dev.amble.client.effects.LanternChargeAnimations;
+import dev.amble.client.effects.BloodHuntClient;
 import dev.amble.client.effects.SanctuaryEffects;
 import dev.amble.client.forge.ForgeClient;
 import dev.amble.client.flight.FlightAnimations;
@@ -81,6 +82,7 @@ public class BrightestDayClient implements ClientModInitializer {
         WallEffects.init();
         BatteryEffects.init();
         SanctuaryEffects.init();
+        BloodHuntClient.init();
         BeamEffects.init();
         RemoteAim.init();
         HealBeamEffects.init();

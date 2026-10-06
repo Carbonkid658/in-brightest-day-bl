@@ -15,6 +15,7 @@ import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerCategory;
 import dev.amble.core.ringpowers.RingPowerInstance;
+import dev.amble.core.ringpowers.RedRage;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.beams.BeamManager;
@@ -223,13 +224,17 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
     }
 
     public static List<RingPower<?>> abilities(Player player) {
-        return List.<RingPower<?>>of(RingPowerRegistry.TRACTOR_BEAM, RingPowerRegistry.SCAN, RingPowerRegistry.CONCUSSIVE, RingPowerRegistry.ACID, RingPowerRegistry.CONVERSION).stream()
+        return List.<RingPower<?>>of(RingPowerRegistry.TRACTOR_BEAM, RingPowerRegistry.SCAN, RingPowerRegistry.CONCUSSIVE, RingPowerRegistry.ACID, RingPowerRegistry.CONVERSION, RingPowerRegistry.BERSERK).stream()
                 .filter(power -> BrightestDayAttachments.get(player, power).isPresent())
                 .toList();
     }
 
     public static void fire(ServerPlayer player, int radius) {
         if (player.isSpectator() || isAbilityMode(player) || CrystalManager.isEncased(player)) return;
+        if (RedRage.isBerserk(player)) {
+            player.sendOverlayMessage(Component.translatable("message.brightestday.berserk.no_constructs").withColor(LanternCorps.RED.color()));
+            return;
+        }
 
         ServerLevel level = player.level();
         Optional<ConstructRingPower> construct = selectedConstruct(player);

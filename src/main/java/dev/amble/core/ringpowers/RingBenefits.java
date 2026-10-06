@@ -67,7 +67,7 @@ public final class RingBenefits {
         }
 
         if (serverTick % 20 == 0 && !player.hasInfiniteMaterials()) {
-            if (player.isInLava()) PowerRingItem.drainWorn(player, LAVA_DRAIN_PER_SECOND);
+            if (player.isInLava() && !RedRage.wearsRed(player)) PowerRingItem.drainWorn(player, LAVA_DRAIN_PER_SECOND);
             else if (player.isUnderWater()) PowerRingItem.drainWorn(player, WATER_DRAIN_PER_SECOND);
         }
     }

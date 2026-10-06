@@ -2,6 +2,7 @@ package dev.amble.mixin.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import dev.amble.client.effects.BloodHuntClient;
 import dev.amble.client.effects.RingInput;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import net.minecraft.client.Minecraft;
@@ -19,11 +20,17 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin {
 
     @Shadow public @Nullable LocalPlayer player;
+
+    @Inject(method = "shouldEntityAppearGlowing", at = @At("HEAD"), cancellable = true)
+    private void brightestday$glowBloodHuntPrey(Entity entity, CallbackInfoReturnable<Boolean> cir) {
+        if (BloodHuntClient.isPrey(entity)) cir.setReturnValue(true);
+    }
 
     @Inject(method = "startUseItem", at = @At("HEAD"), cancellable = true)
     private void brightestday$ringOwnsRightClick(CallbackInfo ci) {

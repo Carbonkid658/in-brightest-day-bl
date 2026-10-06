@@ -5,6 +5,7 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.AcidC2SPayload;
+import dev.amble.core.networking.payloads.c2s.BerserkC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ConcussiveC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ConversionC2SPayload;
 import dev.amble.core.ringpowers.RingPower;
@@ -47,6 +48,7 @@ public final class AbilityClient {
         if (held != null && held != pressed) {
             if (held == RingPowerRegistry.CONCUSSIVE) ClientPlayNetworking.send(ConcussiveC2SPayload.INSTANCE);
             if (held == RingPowerRegistry.CONVERSION) ClientPlayNetworking.send(ConversionC2SPayload.INSTANCE);
+            if (held == RingPowerRegistry.BERSERK) ClientPlayNetworking.send(BerserkC2SPayload.INSTANCE);
         }
         pressed = held;
 

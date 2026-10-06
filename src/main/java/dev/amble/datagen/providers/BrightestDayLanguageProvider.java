@@ -295,6 +295,15 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.indigo.embracing", "%s embraces you. Do not struggle...");
         builder.add("message.brightestday.indigo.forcing", "%s seizes your will. Break free or be embraced...");
         builder.add("message.brightestday.indigo.no_target", "Look at a ring-bearer within reach to embrace them.");
+        builder.add("message.brightestday.berserk.not_ready", "Your rage has not yet peaked.");
+        builder.add("message.brightestday.berserk.start", "RAGE CONSUMES YOU");
+        builder.add("message.brightestday.berserk.end", "The red haze fades.");
+        builder.add("message.brightestday.berserk.no_constructs", "Berserkers do not build. They destroy.");
+        builder.add("message.brightestday.hunt.marked", "%s is your prey.");
+        builder.add("message.brightestday.hunt.hunted", "%s has marked you as prey.");
+        builder.add("message.brightestday.hunt.no_target", "No prey in sight.");
+        builder.add("message.brightestday.hunt.ended", "The hunt is over.");
+        builder.add("hud.brightestday.blood_hunt", "%s Prey %sm");
         builder.add("message.brightestday.indigo.broken", "The embrace is broken.");
         builder.add("message.brightestday.indigo.chosen", "You have been chosen. You are Indigo-1.");
         builder.add("message.brightestday.indigo.converted", "%s has joined the Indigo Tribe.");
@@ -823,6 +832,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
 
         builder.add(RingPowerRegistry.TRACTOR_BEAM.getTranslationKey(), "Tractor Beam");
         builder.add(RingPowerRegistry.CONVERSION.getTranslationKey(), "Conversion");
+        builder.add(RingPowerRegistry.BERSERK.getTranslationKey(), "Berserk");
+        builder.add(RingPowerRegistry.BLOOD_HUNT.getTranslationKey(), "Blood Hunt");
         builder.add(RingPowerRegistry.SCAN.getTranslationKey(), "Scan");
 
         builder.add("message.brightestday.nothing_to_scan", "Nothing to scan.");

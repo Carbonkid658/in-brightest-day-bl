@@ -3,6 +3,7 @@ package dev.amble.core.ringpowers;
 import dev.amble.core.ringpowers.constructs.AreaShieldConstruct;
 import dev.amble.core.ringpowers.constructs.BeamConstruct;
 import dev.amble.core.ringpowers.constructs.BlastConstruct;
+import dev.amble.core.ringpowers.constructs.BloodHuntConstruct;
 import dev.amble.core.ringpowers.constructs.BoomerangDiscConstruct;
 import dev.amble.core.ringpowers.constructs.ChainBoltConstruct;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
@@ -29,6 +30,7 @@ import dev.amble.core.ringpowers.constructs.ToolForgeConstruct;
 import dev.amble.core.ringpowers.constructs.WallConstruct;
 import dev.amble.core.ringpowers.impl.AcidRingPower;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
+import dev.amble.core.ringpowers.impl.BerserkRingPower;
 import dev.amble.core.ringpowers.impl.ConcussiveRingPower;
 import dev.amble.core.ringpowers.impl.ConversionRingPower;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
@@ -79,12 +81,14 @@ public final class RingPowerRegistry {
     public static final ToolForgeConstruct TOOL_FORGE = register(new ToolForgeConstruct());
     public static final PlasmaBurstConstruct PLASMA_BURST = register(new PlasmaBurstConstruct());
     public static final CrystalPrisonConstruct CRYSTAL_PRISON = register(new CrystalPrisonConstruct());
+    public static final BloodHuntConstruct BLOOD_HUNT = register(new BloodHuntConstruct());
     public static final TractorBeamRingPower TRACTOR_BEAM = register(new TractorBeamRingPower());
     public static final ScanRingPower SCAN = register(new ScanRingPower());
     public static final ConcussiveRingPower CONCUSSIVE = register(new ConcussiveRingPower());
     public static final AcidRingPower ACID = register(new AcidRingPower());
     public static final SelfHealRingPower SELF_HEAL = register(new SelfHealRingPower());
     public static final ConversionRingPower CONVERSION = register(new ConversionRingPower());
+    public static final BerserkRingPower BERSERK = register(new BerserkRingPower());
 
     public static <T extends RingPower<?>> T register(T power) {
         if (REGISTRY.putIfAbsent(power.id(), power) != null) {

@@ -84,6 +84,7 @@ public final class PowerWheel {
             Map.entry(RingPowerRegistry.GLIDER, Items.ELYTRA),
             Map.entry(RingPowerRegistry.GRAPPLING_HOOK, Items.TRIPWIRE_HOOK),
             Map.entry(RingPowerRegistry.LUMBERJACK, Items.IRON_AXE),
+            Map.entry(RingPowerRegistry.BLOOD_HUNT, Items.REDSTONE),
             Map.entry(RingPowerRegistry.ORE_PROBE, Items.SPYGLASS),
             Map.entry(RingPowerRegistry.SWARM_MISSILES, Items.FIREWORK_ROCKET),
             Map.entry(RingPowerRegistry.PIERCING_LANCE, Items.SPECTRAL_ARROW),
@@ -101,6 +102,7 @@ public final class PowerWheel {
             Map.entry(RingPowerRegistry.TRACTOR_BEAM, Items.LEAD),
             Map.entry(RingPowerRegistry.SCAN, Items.SPYGLASS),
             Map.entry(RingPowerRegistry.CONVERSION, Items.ECHO_SHARD),
+            Map.entry(RingPowerRegistry.BERSERK, Items.BLAZE_POWDER),
             Map.entry(RingPowerRegistry.CONCUSSIVE, Items.WIND_CHARGE),
             Map.entry(RingPowerRegistry.ACID, Items.MAGMA_CREAM)
     );

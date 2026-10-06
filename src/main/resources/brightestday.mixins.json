@@ -22,6 +22,7 @@
 		"client.AttachmentChangeMixin",
 		"client.AvatarRendererMixin",
 		"client.CameraMixin",
+		"client.EntityGlowColorMixin",
 		"client.FirstPersonHandsAndItemsRendererMixin",
 		"client.ItemModelResolverMixin",
 		"client.ItemStackLayerRenderStateMixin",

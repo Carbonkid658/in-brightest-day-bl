@@ -1,6 +1,7 @@
 package dev.amble.core.sculpt;
 
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.blocks.HardLightBlock;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
@@ -208,7 +209,7 @@ public final class SculptManager {
     private static void place(ServerPlayer player, Session session, Set<BlockPos> cells) {
         ServerLevel level = player.level();
         cells.removeIf(pos -> session.interior.contains(pos)
-                || !level.getBlockState(pos).isAir()
+                || !HardLightBlock.canReplace(level.getBlockState(pos))
                 || !level.mayInteract(player, pos)
                 || !level.getEntities((Entity) null, new AABB(pos), entity -> !entity.isSpectator()).isEmpty());
         if (cells.isEmpty()) return;
