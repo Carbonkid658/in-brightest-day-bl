@@ -518,8 +518,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("config.brightestday.option.drill_placed_lifetime.desc", "Ticks a placed drill runs before dissolving.");
         builder.add("config.brightestday.option.drill_placed_travel", "Placed Drill Travel Time");
         builder.add("config.brightestday.option.drill_placed_travel.desc", "Minimum ticks a placed drill takes to advance one block.");
-        builder.add("key.brightestday.flight_speed_up", "Flight Speed Up");
-        builder.add("key.brightestday.flight_speed_down", "Flight Speed Down");
         builder.add("key.brightestday.flight_boost", "Flight Boost");
         builder.add("message.brightestday.flight_speed", "Flight Speed %s/%s · %s b/s");
         builder.add("hud.brightestday.flight_speed", "%s b/s");

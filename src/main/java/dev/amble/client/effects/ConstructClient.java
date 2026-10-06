@@ -1,5 +1,6 @@
 package dev.amble.client.effects;
 
+import dev.amble.client.flight.FlightControls;
 import dev.amble.core.blocks.LanternBlock;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.CycleConstructC2SPayload;
@@ -61,6 +62,7 @@ public final class ConstructClient {
     }
 
     public static boolean onScroll(int wheel) {
+        if (FlightControls.onScroll(wheel)) return true;
         if (TractorEffects.onScroll(wheel)) return true;
         if (SculptClient.onScroll(wheel)) return true;
 

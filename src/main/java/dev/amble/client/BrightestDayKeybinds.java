@@ -38,8 +38,6 @@ public final class BrightestDayKeybinds {
     public static final KeyMapping TOGGLE_SUIT = register("toggle_suit", InputConstants.KEY_PERIOD);
     public static final KeyMapping TOGGLE_MASK = register("toggle_mask", InputConstants.KEY_H);
 
-    public static final KeyMapping FLIGHT_SPEED_UP = register("flight_speed_up", InputConstants.KEY_EQUALS);
-    public static final KeyMapping FLIGHT_SPEED_DOWN = register("flight_speed_down", InputConstants.KEY_MINUS);
     public static final KeyMapping FLIGHT_BOOST = register("flight_boost", InputConstants.KEY_LALT);
 
     private static boolean raiseHeld;
@@ -62,8 +60,7 @@ public final class BrightestDayKeybinds {
 
         FlightControls.syncBoost(client.player, FLIGHT_BOOST.isDown());
         if (client.gui.screen() != null) {
-            drain(FLIGHT, RAISE_RING, DISMISS_CONSTRUCT, CONCUSSIVE_BLAST, TEAM, TOGGLE_LIGHT, TOGGLE_SUIT, TOGGLE_MASK, SPECTRUM,
-                    FLIGHT_SPEED_UP, FLIGHT_SPEED_DOWN);
+            drain(FLIGHT, RAISE_RING, DISMISS_CONSTRUCT, CONCUSSIVE_BLAST, TEAM, TOGGLE_LIGHT, TOGGLE_SUIT, TOGGLE_MASK, SPECTRUM);
             raiseHeld = RAISE_RING.isDown();
             return;
         }
@@ -109,13 +106,6 @@ public final class BrightestDayKeybinds {
             setTweak(client, tweak.withMask(!tweak.mask()));
         }
 
-        while (FLIGHT_SPEED_UP.consumeClick()) {
-            FlightControls.stepSpeed(client, client.player, 1);
-        }
-
-        while (FLIGHT_SPEED_DOWN.consumeClick()) {
-            FlightControls.stepSpeed(client, client.player, -1);
-        }
     }
 
     private static void drain(KeyMapping... keys) {
