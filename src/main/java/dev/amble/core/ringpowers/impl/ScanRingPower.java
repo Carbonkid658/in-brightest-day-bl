@@ -1,5 +1,8 @@
 package dev.amble.core.ringpowers.impl;
 
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
+import dev.amble.core.progression.RingRanks;
 import dev.amble.core.ringpowers.CorpsCombat;
 import com.mojang.serialization.MapCodec;
 import dev.amble.BrightestDay;
@@ -116,6 +119,7 @@ public class ScanRingPower extends RingPower<Unit> {
             return;
         }
         READY_AT.put(player, now + COOLDOWN_TICKS);
+        RingRanks.fire(player, Trigger.SCAN, Milestone.Context.NONE);
 
         ScanReport report = entity != null ? ScanReport.of(player, entity) : ScanReport.of(player, level, pending.pos());
         int entityId = entity != null ? entity.getId() : ScanS2CPayload.NO_ENTITY;

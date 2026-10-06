@@ -1,6 +1,7 @@
 package dev.amble.core.heart;
 
-import dev.amble.core.progression.RankTask;
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.BrightestDay;
 import dev.amble.core.BrightestDayAttachments;
@@ -151,7 +152,7 @@ public final class RedHeart {
         Component message = Component.translatable("message.brightestday.red_heart.second_chance").withStyle(ChatFormatting.BOLD).withColor(BLUE);
         red.sendSystemMessage(message);
         blue.sendSystemMessage(message);
-        RingRanks.progress(blue, RankTask.BLUE_HOPE, RankTask.BLUE_HOPE.goal());
+        RingRanks.fire(blue, Trigger.HOPE_GRANT, Milestone.Context.of(red));
         red.level().playSound(null, red.getX(), red.getY(), red.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.5F, 1.4F);
     }
 

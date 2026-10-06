@@ -30,7 +30,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,8 +47,10 @@ public final class SpectrumCommands {
                                 .then(Commands.literal("get").then(player().executes(SpectrumCommands::rankGet)))
                                 .then(Commands.literal("set").then(player().then(corps().then(Commands.argument("rank", IntegerArgumentType.integer(1, RingRanks.MAX_RANK))
                                         .executes(SpectrumCommands::rankSet))))))
-                        .then(admin("task")
-                                .then(Commands.literal("complete").then(player().then(task().executes(SpectrumCommands::taskComplete)))))
+                        .then(admin("milestone")
+                                .then(Commands.literal("complete").then(player().then(corps().executes(SpectrumCommands::milestoneComplete))))
+                                .then(Commands.literal("reroll").then(player().then(corps().executes(SpectrumCommands::milestoneReroll))))
+                                .then(Commands.literal("list").then(player().executes(SpectrumCommands::milestoneList))))
                         .then(admin("progress")
                                 .then(Commands.literal("reset").then(player().executes(SpectrumCommands::progressReset))))
                         .then(admin("ring")
@@ -106,10 +107,6 @@ public final class SpectrumCommands {
         return word("corps", Arrays.stream(LanternCorps.values()).map(LanternCorps::getSerializedName).toArray(String[]::new));
     }
 
-    private static RequiredArgumentBuilder<CommandSourceStack, String> task() {
-        return word("task", Arrays.stream(RankTask.values()).map(RankTask::key).toArray(String[]::new));
-    }
-
     private static ServerPlayer target(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         return EntityArgument.getPlayer(context, "player");
     }
@@ -124,15 +121,6 @@ public final class SpectrumCommands {
         String value = StringArgumentType.getString(context, "corps");
         for (LanternCorps corps : LanternCorps.values()) if (corps.getSerializedName().equals(value)) return corps;
         throw UNKNOWN.create(value);
-    }
-
-    private static RankTask task(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        String value = StringArgumentType.getString(context, "task");
-        try {
-            return RankTask.valueOf(value.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException exception) {
-            throw UNKNOWN.create(value);
-        }
     }
 
     private static int reply(CommandContext<CommandSourceStack> context, Component message) {
@@ -176,11 +164,36 @@ public final class SpectrumCommands {
         return reply(context, Component.literal("Set " + player.getScoreboardName() + "'s " + corps.getSerializedName() + " rank to " + rank));
     }
 
-    private static int taskComplete(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+    private static int milestoneComplete(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         ServerPlayer player = target(context);
-        RankTask task = task(context);
-        RingRanks.force(player, task);
-        return reply(context, Component.literal("Completed " + task.key() + " for " + player.getScoreboardName()));
+        LanternCorps corps = corps(context);
+        if (!RingRanks.force(player, corps)) {
+            context.getSource().sendFailure(Component.literal(player.getScoreboardName() + " has no milestone left for " + corps.getSerializedName()));
+            return 0;
+        }
+        return reply(context, Component.literal("Completed the current " + corps.getSerializedName() + " milestone for " + player.getScoreboardName()));
+    }
+
+    private static int milestoneReroll(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        ServerPlayer player = target(context);
+        LanternCorps corps = corps(context);
+        RingRanks.reroll(player, corps);
+        return reply(context, Component.literal("Rerolled " + player.getScoreboardName() + "'s " + corps.getSerializedName() + " milestones"));
+    }
+
+    private static int milestoneList(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        ServerPlayer player = target(context);
+        RingRanks.assign(player);
+        RingRanks.Ranks ranks = RingRanks.get(player);
+        for (LanternCorps corps : LanternCorps.values()) {
+            if (!Milestones.has(corps)) continue;
+            MutableComponent line = Component.literal(corps.getSerializedName() + " (rank " + ranks.rank(corps) + "):").withColor(corps.color());
+            for (int tier = Milestones.FIRST_TIER; tier <= Milestones.LAST_TIER; tier++) {
+                ranks.milestone(corps, tier).ifPresent(milestone -> line.append(Component.literal(" " + milestone.key() + " " + ranks.counter(milestone.key()) + "/" + milestone.goal())));
+            }
+            context.getSource().sendSuccess(() -> line, false);
+        }
+        return 1;
     }
 
     private static int progressReset(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
@@ -333,7 +346,7 @@ public final class SpectrumCommands {
         }
         source.sendSuccess(() -> meters, false);
         source.sendSuccess(() -> Component.literal("Indigo-1: " + IndigoOne.isIndigoOne(player) + "  Blessed by hope: "
-                + WorldProgress.get(source.getServer()).blessed().contains(player.getUUID())).withStyle(ChatFormatting.GRAY), false);
+                + WorldProgress.get(source.getServer()).blessedAt(player.getUUID()).isPresent()).withStyle(ChatFormatting.GRAY), false);
         return 1;
     }
 

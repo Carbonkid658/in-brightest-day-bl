@@ -11,16 +11,21 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Optional<BlockPos> sanctuary, boolean sanctuaryBuilt,
-                            List<Shrine> shrines, Set<UUID> blessed, List<Battery> batteries) {
-    public static final WorldProgress EMPTY = new WorldProgress(Optional.empty(), false, Optional.empty(), false, List.of(), Set.of(), List.of());
+                            List<Shrine> shrines, List<Blessing> blessed, List<Battery> batteries) {
+    public static final WorldProgress EMPTY = new WorldProgress(Optional.empty(), false, Optional.empty(), false, List.of(), List.of(), List.of());
+
+    public record Blessing(UUID player, long time) {
+        public static final Codec<Blessing> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                UUIDUtil.CODEC.fieldOf("player").forGetter(Blessing::player),
+                Codec.LONG.fieldOf("time").forGetter(Blessing::time)
+        ).apply(instance, Blessing::new));
+    }
 
     public record Shrine(int index, BlockPos pos) {
         public static final Codec<Shrine> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -47,7 +52,7 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
             BlockPos.CODEC.optionalFieldOf("sanctuary").forGetter(WorldProgress::sanctuary),
             Codec.BOOL.optionalFieldOf("sanctuary_built", false).forGetter(WorldProgress::sanctuaryBuilt),
             Shrine.CODEC.listOf().optionalFieldOf("shrines", List.of()).forGetter(WorldProgress::shrines),
-            UUIDUtil.CODEC.listOf().xmap(list -> (Set<UUID>) new HashSet<>(list), List::copyOf).optionalFieldOf("blessed", Set.of()).forGetter(WorldProgress::blessed),
+            Blessing.CODEC.listOf().optionalFieldOf("blessings", List.of()).forGetter(WorldProgress::blessed),
             Battery.CODEC.listOf().optionalFieldOf("batteries", List.of()).forGetter(WorldProgress::batteries)
     ).apply(instance, WorldProgress::new));
 
@@ -94,10 +99,19 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
         return this.shrines.stream().filter(shrine -> shrine.index() == index).map(Shrine::pos).findFirst();
     }
 
-    public WorldProgress withBlessed(UUID uuid) {
-        Set<UUID> blessed = new HashSet<>(this.blessed);
-        blessed.add(uuid);
-        return new WorldProgress(this.indigoOne, this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, this.shrines, Set.copyOf(blessed), this.batteries);
+    public WorldProgress withBlessed(UUID uuid, long time) {
+        List<Blessing> blessed = new ArrayList<>(this.blessed);
+        blessed.removeIf(blessing -> blessing.player().equals(uuid));
+        blessed.add(new Blessing(uuid, time));
+        return new WorldProgress(this.indigoOne, this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, this.shrines, List.copyOf(blessed), this.batteries);
+    }
+
+    public Optional<Long> blessedAt(UUID uuid) {
+        return this.blessed.stream().filter(blessing -> blessing.player().equals(uuid)).map(Blessing::time).findFirst();
+    }
+
+    public boolean mayBeBlessed(UUID uuid, long now, long cooldown) {
+        return this.blessedAt(uuid).map(time -> now - time >= cooldown).orElse(true);
     }
 
     public WorldProgress withBatteries(List<Battery> batteries) {

@@ -79,7 +79,7 @@ public final class ConstructClient {
     }
 
     private static Optional<ConstructRingPower> sizingConstruct(LocalPlayer player) {
-        if (!player.getMainHandItem().isEmpty() || !ArmedRingPower.isArmed(player) || ArmedRingPower.isAbilityMode(player) || !PowerRingItem.hasCharge(player)) return Optional.empty();
+        if (!ArmedRingPower.handFree(player) || !ArmedRingPower.isArmed(player) || ArmedRingPower.isAbilityMode(player) || !PowerRingItem.hasCharge(player)) return Optional.empty();
         return ArmedRingPower.selectedConstruct(player).filter(ConstructRingPower::usesSize);
     }
 

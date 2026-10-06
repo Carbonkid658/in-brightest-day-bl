@@ -36,6 +36,7 @@ import dev.amble.core.progression.SpectrumCommands;
 import dev.amble.core.forge.CentralPowerBattery;
 import dev.amble.core.progression.SpectrumMeters;
 import dev.amble.core.progression.WorldProgress;
+import dev.amble.core.ringpowers.RingBenefits;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.core.attacks.projectile.SwarmManager;
 import dev.amble.core.attacks.utility.GrappleManager;
@@ -104,6 +105,7 @@ public class BrightestDay implements ModInitializer {
 		DiscManager.init();
 		PlasmaManager.init();
 		RedHeart.init();
+		RingBenefits.init();
 		WorldProgress.init();
 		RingRanks.init();
 		SpectrumMeters.init();

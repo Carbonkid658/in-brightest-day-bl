@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public final class RingRanks {
@@ -41,12 +42,13 @@ public final class RingRanks {
             "rapid_barrage", "area_shield", "beam", "giant_fist", "nova_burst", "ground_slam", "sentry_turret", "glider",
             "grappling_hook", "light_orb", "drill", "tool_forge");
 
-    public record Ranks(Map<LanternCorps, Integer> ranks, Map<String, Integer> counters) {
-        public static final Ranks EMPTY = new Ranks(Map.of(), Map.of());
+    public record Ranks(Map<LanternCorps, Integer> ranks, Map<String, Integer> counters, Map<LanternCorps, List<String>> assigned) {
+        public static final Ranks EMPTY = new Ranks(Map.of(), Map.of(), Map.of());
 
         public static final Codec<Ranks> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.unboundedMap(LanternCorps.CODEC, Codec.INT).optionalFieldOf("ranks", Map.of()).forGetter(Ranks::ranks),
-                Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("counters", Map.of()).forGetter(Ranks::counters)
+                Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("counters", Map.of()).forGetter(Ranks::counters),
+                Codec.unboundedMap(LanternCorps.CODEC, Codec.STRING.listOf()).optionalFieldOf("milestones", Map.of()).forGetter(Ranks::assigned)
         ).apply(instance, Ranks::new));
 
         public int rank(LanternCorps corps) {
@@ -57,17 +59,31 @@ public final class RingRanks {
             return this.counters.getOrDefault(key, 0);
         }
 
+        public Optional<Milestone> milestone(LanternCorps corps, int tier) {
+            List<String> keys = this.assigned.getOrDefault(corps, List.of());
+            int index = tier - Milestones.FIRST_TIER;
+            if (index < 0 || index >= keys.size()) return Optional.empty();
+            return Milestones.get(keys.get(index));
+        }
+
         Ranks withRank(LanternCorps corps, int rank) {
             Map<LanternCorps, Integer> ranks = new EnumMap<>(LanternCorps.class);
             ranks.putAll(this.ranks);
             ranks.put(corps, rank);
-            return new Ranks(Map.copyOf(ranks), this.counters);
+            return new Ranks(Map.copyOf(ranks), this.counters, this.assigned);
         }
 
         Ranks withCounter(String key, int value) {
             Map<String, Integer> counters = new HashMap<>(this.counters);
             counters.put(key, value);
-            return new Ranks(this.ranks, Map.copyOf(counters));
+            return new Ranks(this.ranks, Map.copyOf(counters), this.assigned);
+        }
+
+        Ranks withAssigned(LanternCorps corps, List<String> keys) {
+            Map<LanternCorps, List<String>> assigned = new EnumMap<>(LanternCorps.class);
+            assigned.putAll(this.assigned);
+            assigned.put(corps, List.copyOf(keys));
+            return new Ranks(this.ranks, this.counters, Map.copyOf(assigned));
         }
     }
 
@@ -93,31 +109,60 @@ public final class RingRanks {
         return ranked(corps) ? get(player).rank(corps) : MAX_RANK;
     }
 
-    public static void progress(ServerPlayer player, RankTask task, int amount) {
+    public static void assign(ServerPlayer player) {
+        Ranks ranks = get(player);
+        Ranks updated = ranks;
+        boolean multiplayer = IndigoOne.multiplayer(player.level().getServer());
+        for (LanternCorps corps : LanternCorps.values()) {
+            if (!Milestones.has(corps)) continue;
+            List<String> keys = updated.assigned().getOrDefault(corps, List.of());
+            if (keys.size() == Milestones.LAST_TIER - Milestones.FIRST_TIER + 1 && keys.stream().allMatch(key -> Milestones.get(key).isPresent())) continue;
+            updated = updated.withAssigned(corps, Milestones.roll(corps, player.getRandom(), multiplayer));
+        }
+        if (updated != ranks) player.setAttached(RANKS, updated);
+    }
+
+    public static void fire(ServerPlayer player, Trigger trigger, Milestone.Context context, int amount) {
         if (amount <= 0) return;
         LanternCorps corps = PowerRingItem.getWornCorps(player).orElse(null);
-        if (corps != task.corps()) return;
+        if (corps == null || !Milestones.has(corps)) return;
+        assign(player);
 
         Ranks ranks = get(player);
-        if (ranks.rank(corps) != task.rank() - 1) return;
+        int tier = ranks.rank(corps) + 1;
+        if (tier > MAX_RANK) return;
+        Milestone milestone = ranks.milestone(corps, tier).orElse(null);
+        if (milestone == null || milestone.trigger() != trigger || !milestone.condition().test(player, context)) return;
 
-        int value = Math.min(task.goal(), ranks.counter(task.key()) + amount);
-        ranks = ranks.withCounter(task.key(), value);
-        if (value >= task.goal()) {
-            ranks = ranks.withRank(corps, task.rank());
-            player.setAttached(RANKS, ranks);
-            promoted(player, corps, task.rank());
+        int current = ranks.counter(milestone.key());
+        int value = switch (milestone.mode()) {
+            case ACCUMULATE -> current + amount;
+            case REACH -> Math.max(current, amount);
+            case DISTINCT -> {
+                String maskKey = milestone.key() + "_mask";
+                int mask = ranks.counter(maskKey);
+                if ((mask & (1 << amount)) != 0) yield current;
+                ranks = ranks.withCounter(maskKey, mask | (1 << amount));
+                yield current + 1;
+            }
+        };
+        value = Math.min(milestone.goal(), value);
+        if (value == current) {
+            if (ranks != get(player)) player.setAttached(RANKS, ranks);
+            return;
+        }
+
+        ranks = ranks.withCounter(milestone.key(), value);
+        if (value >= milestone.goal()) {
+            player.setAttached(RANKS, ranks.withRank(corps, tier));
+            promoted(player, corps, tier);
             return;
         }
         player.setAttached(RANKS, ranks);
     }
 
-    public static void progressDistinct(ServerPlayer player, RankTask task, int bit) {
-        String key = task.key() + "_mask";
-        int mask = get(player).counter(key);
-        if ((mask & (1 << bit)) != 0) return;
-        player.setAttached(RANKS, get(player).withCounter(key, mask | (1 << bit)));
-        progress(player, task, 1);
+    public static void fire(ServerPlayer player, Trigger trigger, Milestone.Context context) {
+        fire(player, trigger, context, 1);
     }
 
     public static void setRank(ServerPlayer player, LanternCorps corps, int rank) {
@@ -126,17 +171,22 @@ public final class RingRanks {
 
     public static void reset(ServerPlayer player) {
         player.setAttached(RANKS, Ranks.EMPTY);
+        assign(player);
     }
 
-    public static void force(ServerPlayer player, RankTask task) {
-        Ranks ranks = get(player).withCounter(task.key(), task.goal());
-        if (ranks.rank(task.corps()) < task.rank()) ranks = ranks.withRank(task.corps(), task.rank());
-        player.setAttached(RANKS, ranks);
-        promoted(player, task.corps(), ranks.rank(task.corps()));
+    public static void reroll(ServerPlayer player, LanternCorps corps) {
+        player.setAttached(RANKS, get(player).withAssigned(corps, Milestones.roll(corps, player.getRandom(), IndigoOne.multiplayer(player.level().getServer()))));
     }
 
-    public static void complete(ServerPlayer player, RankTask task) {
-        progress(player, task, task.goal());
+    public static boolean force(ServerPlayer player, LanternCorps corps) {
+        assign(player);
+        Ranks ranks = get(player);
+        int tier = ranks.rank(corps) + 1;
+        Milestone milestone = ranks.milestone(corps, tier).orElse(null);
+        if (milestone == null) return false;
+        player.setAttached(RANKS, ranks.withCounter(milestone.key(), milestone.goal()).withRank(corps, tier));
+        promoted(player, corps, tier);
+        return true;
     }
 
     private static void promoted(ServerPlayer player, LanternCorps corps, int rank) {

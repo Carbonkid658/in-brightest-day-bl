@@ -1,6 +1,7 @@
 package dev.amble.core.attacks.projectile;
 
-import dev.amble.core.progression.RankTask;
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.config.BrightestDayConfig;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -127,7 +128,7 @@ public final class CrystalManager {
             if (target != null) {
                 iterator.remove();
                 encase(target, shard.color);
-                RingRanks.progress(shard.owner, RankTask.SAPPHIRE_ENCASE, 1);
+                RingRanks.fire(shard.owner, Trigger.ENCASE, Milestone.Context.of(target));
             } else if (block.getType() != HitResult.Type.MISS || end.distanceTo(shard.origin) > range) {
                 iterator.remove();
                 shard.level.sendParticles(ParticleTypes.END_ROD, end.x, end.y, end.z, 6, 0.1, 0.1, 0.1, 0.05);

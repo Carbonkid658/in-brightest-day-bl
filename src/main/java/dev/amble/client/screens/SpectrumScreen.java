@@ -3,7 +3,8 @@ package dev.amble.client.screens;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.progression.Emotion;
-import dev.amble.core.progression.RankTask;
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Milestones;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.core.progression.SpectrumMeters;
 import dev.amble.core.ringpowers.LanternCorps;
@@ -18,8 +19,6 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Player;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.List;
 
 public class SpectrumScreen extends Screen {
     private static final int WIDTH = 304;
@@ -139,22 +138,28 @@ public class SpectrumScreen extends Screen {
 
         graphics.text(this.font, Component.translatable("gui.brightestday.spectrum.milestones"), x, y, LanternWidgets.TEXT, true);
         y += 11;
-        List<RankTask> tasks = Arrays.stream(RankTask.values()).filter(task -> task.corps() == corps).toList();
-        for (RankTask task : tasks) {
-            y = this.task(graphics, player, task, rank, accent, x, y);
+        RingRanks.Ranks ranks = RingRanks.get(player);
+        for (int tier = Milestones.FIRST_TIER; tier <= Milestones.LAST_TIER; tier++) {
+            Milestone milestone = ranks.milestone(corps, tier).orElse(null);
+            if (milestone == null) {
+                graphics.text(this.font, Component.translatable("gui.brightestday.spectrum.unrevealed", tier), x + 9, y, LOCKED, false);
+                y += 17;
+                continue;
+            }
+            y = this.task(graphics, ranks, milestone, rank, accent, x, y);
         }
     }
 
-    private int task(GuiGraphicsExtractor graphics, Player player, RankTask task, int rank, int accent, int x, int y) {
-        boolean done = rank >= task.rank();
-        boolean active = rank == task.rank() - 1;
-        int progress = done ? task.goal() : active ? RingRanks.get(player).counter(task.key()) : 0;
+    private int task(GuiGraphicsExtractor graphics, RingRanks.Ranks ranks, Milestone task, int rank, int accent, int x, int y) {
+        boolean done = rank >= task.tier();
+        boolean active = rank == task.tier() - 1;
+        int progress = done ? task.goal() : active ? ranks.counter(task.key()) : 0;
         int color = done ? DONE : active ? LanternWidgets.TEXT : LOCKED;
         String glyph = done ? "✔" : active ? "▶" : "·";
 
         graphics.text(this.font, glyph, x, y, color, false);
-        Component label = Component.translatable("gui.brightestday.spectrum.rank_short", task.rank()).append(" ")
-                .append(Component.translatable("task.brightestday." + task.key(), task.goal()));
+        Component label = Component.translatable("gui.brightestday.spectrum.rank_short", task.tier()).append(" ")
+                .append(Component.translatable(task.translationKey(), task.goal()));
         for (FormattedCharSequence line : this.font.split(label, DETAIL_WIDTH - 10)) {
             graphics.text(this.font, line, x + 9, y, color, false);
             y += 9;

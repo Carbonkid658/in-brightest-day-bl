@@ -1,6 +1,7 @@
 package dev.amble.core.shields;
 
-import dev.amble.core.progression.RankTask;
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.networking.payloads.s2c.ShieldRemoveS2CPayload;
@@ -179,7 +180,7 @@ public final class ShieldManager {
             shield.strength -= amount;
             if (!entity.getUUID().equals(shield.caster) && entity.level().getServer() != null) {
                 ServerPlayer caster = entity.level().getServer().getPlayerList().getPlayer(shield.caster);
-                if (caster != null) RingRanks.progress(caster, RankTask.BLUE_SHIELD, Math.round(amount));
+                if (caster != null) RingRanks.fire(caster, Trigger.SHIELD, Milestone.Context.of(entity), Math.round(amount));
             }
             entity.level().playSound(null, entity.getX(), entity.getY(), entity.getZ(),
                     SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 1.0F, 1.2F);

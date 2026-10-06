@@ -15,7 +15,7 @@ public class BrightestDayConfig {
                     .build())
             .build();
 
-    private static final int CONFIG_VERSION = 2;
+    private static final int CONFIG_VERSION = 3;
 
     @SerialEntry
     public int configVersion = 0;
@@ -312,7 +312,7 @@ public class BrightestDayConfig {
     public double synergyDreadRadius = 16.0;
 
     @SerialEntry
-    public int ringLoyaltyDeaths = 3;
+    public int ringLoyaltyDeaths = 0;
     @SerialEntry
     public double ringLoyaltySearchRadius = 512.0;
 
@@ -451,6 +451,9 @@ public class BrightestDayConfig {
             config.fistDamage = defaults.fistDamage;
             config.whipCost = defaults.whipCost;
             config.whipDamage = defaults.whipDamage;
+        }
+        if (config.configVersion < 3) {
+            config.ringLoyaltyDeaths = defaults.ringLoyaltyDeaths;
         }
         config.configVersion = CONFIG_VERSION;
         HANDLER.save();

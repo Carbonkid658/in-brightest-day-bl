@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.glide.GlideManager;
+import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
@@ -106,7 +107,8 @@ public final class Pilgrimage {
         boolean check = server.getTickCount() % CHECK_INTERVAL == 0;
         WorldProgress world = WorldProgress.get(server);
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (world.blessed().contains(player.getUUID())) continue;
+            if (!world.mayBeBlessed(player.getUUID(), server.overworld().getGameTime(), BlueSanctuary.BLESSING_COOLDOWN)
+                    || PowerRingItem.getWornCorps(player).orElse(null) == LanternCorps.BLUE) continue;
             State state = get(player);
             if (state.active() && !player.isSpectator() && !player.isCreative()) {
                 String reason = violation(player);

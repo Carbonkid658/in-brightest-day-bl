@@ -87,7 +87,7 @@ public final class ForgeClient {
     }
 
     public static boolean wantsToDraw(LocalPlayer player) {
-        return player.getMainHandItem().isEmpty()
+        return ArmedRingPower.handFree(player)
                 && !ArmedRingPower.isAbilityMode(player)
                 && PowerRingItem.hasCharge(player)
                 && ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::usesGesture).orElse(false)

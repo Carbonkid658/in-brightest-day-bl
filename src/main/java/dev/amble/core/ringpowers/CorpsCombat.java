@@ -1,9 +1,10 @@
 package dev.amble.core.ringpowers;
 
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.progression.EmotionSources;
-import dev.amble.core.progression.RankTask;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.core.team.LanternTeams;
 import dev.amble.core.team.RingDamage;
@@ -97,8 +98,13 @@ public final class CorpsCombat {
 
         ItemStack ring = PowerRingItem.getWornRing(thief);
         PowerRingItem.chargeRing(ring, amount);
-        if (lantern) RingRanks.progress(thief, RankTask.ORANGE_STEAL, amount);
+        RingRanks.fire(thief, Trigger.STEAL, new Milestone.Context(victim, lantern ? "lantern" : "", true, false), amount);
         if (ring == BrightestDayAttachments.getRing(thief)) BrightestDayAttachments.setRing(thief, ring);
+    }
+
+    public static boolean recentlyFought(Player player) {
+        Long last = LAST_RING_HIT.get(player.getUUID());
+        return last != null && player.level().getGameTime() - last <= COMBAT_TICKS;
     }
 
     public static boolean inBondedCombat(Player player) {

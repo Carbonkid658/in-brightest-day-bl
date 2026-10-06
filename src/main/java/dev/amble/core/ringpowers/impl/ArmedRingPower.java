@@ -1,6 +1,7 @@
 package dev.amble.core.ringpowers.impl;
 
-import dev.amble.core.progression.RankTask;
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.core.ringpowers.CorpsMimicry;
 import dev.amble.core.attacks.projectile.CrystalManager;
@@ -104,11 +105,6 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
     public void tick(ServerPlayer player, Data data) {
         if (!data.active()) return;
 
-        ItemStack held = player.getMainHandItem();
-        if (!held.isEmpty() && !(held.getItem() instanceof PowerRingItem) && !(held.getItem() instanceof LanternBlockItem)) {
-            lower(player);
-            return;
-        }
         if (data.manual()) return;
 
         long now = player.level().getGameTime();
@@ -147,6 +143,10 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         data(player).ifPresent(data -> BrightestDayAttachments.setData(player, RingPowerRegistry.ARMED, data.withActive(false, false)));
         AcidManager.stop(player);
         TractorManager.release(player);
+    }
+
+    public static boolean handFree(Player player) {
+        return player.getMainHandItem().isEmpty() || isArmed(player);
     }
 
     public static boolean isArmed(Player player) {
@@ -252,10 +252,11 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         int color = CorpsColors.of(player);
         construct.get().fire(player, radius, color);
         CHARGE_STARTED.remove(player);
+        RingRanks.fire(player, Trigger.CONSTRUCT, Milestone.Context.of(construct.get().id().getPath()));
         if (PowerRingItem.getWornCorps(player).orElse(null) == LanternCorps.INDIGO && !construct.get().isAvailableTo(LanternCorps.INDIGO)) {
             for (LanternCorps source : CorpsMimicry.mimicked(player, LanternCorps.INDIGO)) {
                 if (!construct.get().isAvailableTo(source)) continue;
-                RingRanks.progressDistinct(player, RankTask.INDIGO_MIMIC, source.ordinal());
+                RingRanks.fire(player, Trigger.MIMIC, Milestone.Context.NONE, source.ordinal() + 1);
                 break;
             }
         }

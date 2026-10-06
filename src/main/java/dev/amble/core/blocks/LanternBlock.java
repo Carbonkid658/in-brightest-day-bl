@@ -1,5 +1,9 @@
 package dev.amble.core.blocks;
 
+import net.minecraft.server.level.ServerPlayer;
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
+import dev.amble.core.progression.RingRanks;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.blockentities.LanternBlockEntity;
@@ -180,6 +184,8 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
         if (level.isClientSide()) return InteractionResult.SUCCESS;
 
         PowerRingItem.setMaxPower(ring);
+        ring.remove(BrightestDayComponents.RING_DEATHS);
+        if (player instanceof ServerPlayer server) RingRanks.fire(server, Trigger.RECHARGE, Milestone.Context.of("lantern"));
         if (level instanceof ServerLevel serverLevel) RingLoyalty.bind(ring, serverLevel, pos);
         if (slotted) BrightestDayAttachments.setRing(player, ring);
 

@@ -1,6 +1,7 @@
 package dev.amble.core.beams;
 
-import dev.amble.core.progression.RankTask;
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
@@ -84,7 +85,7 @@ public final class HealBeamManager {
             if (beam.age % HEAL_INTERVAL == 0) {
                 float before = target.getHealth();
                 target.heal(BrightestDayConfig.get().healBeamAmount);
-                if (target instanceof Player) RingRanks.progress(player, RankTask.BLUE_HEAL, Math.round(target.getHealth() - before));
+                RingRanks.fire(player, Trigger.HEAL, Milestone.Context.of(target), Math.round(target.getHealth() - before));
                 if (target.isOnFire()) target.clearFire();
             }
         }

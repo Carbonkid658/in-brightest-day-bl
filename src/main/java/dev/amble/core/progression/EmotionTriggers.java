@@ -10,7 +10,6 @@ public final class EmotionTriggers {
                 if (after >= BrightestDayConfig.get().greenRingWill) RingOffers.considerGreen(player);
             }
             case COMPASSION -> {
-                if (after >= Emotion.MAX) RingRanks.complete(player, RankTask.INDIGO_CONVERT);
             }
             default -> {}
         }

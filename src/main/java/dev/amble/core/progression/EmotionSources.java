@@ -3,7 +3,8 @@ package dev.amble.core.progression;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
-import dev.amble.core.ringpowers.CorpsCombat;
+import dev.amble.core.ringpowers.impl.FlightRingPower;
+import dev.amble.core.team.RingDamage;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.team.LanternTeams;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -31,6 +32,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -46,15 +48,14 @@ public final class EmotionSources {
     private static final long LOW_WIN_WINDOW = 600;
     private static final long FEAR_WINDOW = 200;
     private static final long BURST_WINDOW = 1200;
-    private static final int BURST_KILLS = 10;
-    private static final int HOARD_DIAMONDS = 32;
+    private static final long PEACE_TICKS = 1200;
+    private static final int MAX_FLIGHT_STEP = 200;
     private static final float GUARD_HEALTH = 4.0F;
     private static final long GUARD_TICKS = 200;
     private static final double GUARD_RANGE = 16.0;
     private static final int WEAK_ARMOR = 10;
     private static final Set<EntityType<?>> OUTCLASSING = Set.of(EntityTypes.WARDEN, EntityTypes.WITHER, EntityTypes.ELDER_GUARDIAN,
             EntityTypes.RAVAGER, EntityTypes.EVOKER);
-    private static final Set<EntityType<?>> BOSSES = Set.of(EntityTypes.WARDEN, EntityTypes.WITHER);
 
     private record Fear(UUID yellow, long until) {}
 
@@ -65,6 +66,8 @@ public final class EmotionSources {
     private static final Map<UUID, Fear> FEARED = new HashMap<>();
     private static final Map<UUID, Deque<Long>> KILLS = new HashMap<>();
     private static final Map<UUID, Guard> GUARDS = new HashMap<>();
+    private static final Map<UUID, Long> LAST_KILL = new HashMap<>();
+    private static final Map<UUID, Vec3> LAST_POSITION = new HashMap<>();
 
     public static void init() {
         ServerLivingEntityEvents.AFTER_DEATH.register(EmotionSources::onDeath);
@@ -79,6 +82,8 @@ public final class EmotionSources {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             UUID uuid = handler.player.getUUID();
             LAST_LOW.remove(uuid);
+            LAST_KILL.remove(uuid);
+            LAST_POSITION.remove(uuid);
             KILLS.remove(uuid);
             COOLDOWNS.keySet().removeIf(key -> key.startsWith(uuid.toString()));
         });
@@ -99,7 +104,17 @@ public final class EmotionSources {
 
     public static void feared(LivingEntity victim, ServerPlayer yellow) {
         FEARED.put(victim.getUUID(), new Fear(yellow.getUUID(), yellow.level().getGameTime() + FEAR_WINDOW));
-        RingRanks.progress(yellow, RankTask.YELLOW_FEAR, 1);
+        RingRanks.fire(yellow, Trigger.FEAR, Milestone.Context.of(victim));
+    }
+
+    public static boolean recentlyLow(ServerPlayer player) {
+        Long low = LAST_LOW.get(player.getUUID());
+        return low != null && player.level().getGameTime() - low <= LOW_WIN_WINDOW;
+    }
+
+    public static boolean peaceful(ServerPlayer player) {
+        Long kill = LAST_KILL.get(player.getUUID());
+        return kill == null || player.level().getGameTime() - kill > PEACE_TICKS;
     }
 
     public static void onHurt(LivingEntity victim, DamageSource source, float amount) {
@@ -114,6 +129,7 @@ public final class EmotionSources {
             if (victim instanceof ServerPlayer hurt && ready(hurt, "rage_hurt", 20)) {
                 SpectrumMeters.add(hurt, Emotion.RAGE, config().rageHurtByPlayer);
             }
+            if (source.is(RingDamage.RING_CONSTRUCT)) RingRanks.fire(attacker, Trigger.RING_DAMAGE, Milestone.Context.of(victim), Math.round(amount));
         }
 
         if (!(victim instanceof ServerPlayer ward) || !ward.isAlive()) return;
@@ -132,48 +148,39 @@ public final class EmotionSources {
         Fear fear = FEARED.remove(victim.getUUID());
         long now = victim.level().getGameTime();
         MinecraftServer server = victim.level().getServer();
-        if (fear != null && now <= fear.until() && victim instanceof Player && server != null) {
+        boolean feared = fear != null && now <= fear.until();
+        if (feared && victim instanceof Player && server != null) {
             ServerPlayer yellow = server.getPlayerList().getPlayer(fear.yellow());
-            if (yellow != null) RingRanks.progress(yellow, RankTask.YELLOW_FEARED_DEATHS, 1);
+            if (yellow != null) RingRanks.fire(yellow, Trigger.FEARED_DEATH, Milestone.Context.of(victim));
         }
 
         if (!(source.getEntity() instanceof ServerPlayer killer) || killer == victim) return;
         BrightestDayConfig config = config();
+        LAST_KILL.put(killer.getUUID(), now);
 
         if (victim instanceof Player) {
             SpectrumMeters.add(killer, Emotion.RAGE, config.rageKillPlayer);
-            if (!BrightestDayAttachments.getRing((Player) victim).isEmpty()) {
-                RingRanks.progress(killer, RankTask.RED_DUELS, 1);
-                RingRanks.progress(killer, RankTask.ORANGE_RING_KILL, 1);
-            }
         } else if (victim instanceof Animal || victim instanceof NeutralMob) {
             SpectrumMeters.add(killer, Emotion.RAGE, config.rageKillAnimal);
         }
 
         if (killer.isShiftKeyDown() || killer.isInvisible()) SpectrumMeters.add(killer, Emotion.FEAR, config.fearStealthKill);
         if (victim.hasEffect(MobEffects.SLOWNESS) || victim.hasEffect(MobEffects.WEAKNESS)) SpectrumMeters.add(killer, Emotion.FEAR, config.fearFeebleKill);
-        if (fear != null && now <= fear.until() && fear.yellow().equals(killer.getUUID())) RingRanks.progress(killer, RankTask.YELLOW_FEARED_KILLS, 1);
+        if (OUTCLASSING.contains(victim.getType())) SpectrumMeters.add(killer, Emotion.WILL, config.willOutclassKill);
 
-        if (OUTCLASSING.contains(victim.getType())) {
-            SpectrumMeters.add(killer, Emotion.WILL, config.willOutclassKill);
-            RingRanks.progress(killer, RankTask.GREEN_OUTCLASS, 1);
-        }
-        if (BOSSES.contains(victim.getType())) RingRanks.progress(killer, RankTask.GREEN_BOSS, 1);
+        boolean byYellow = feared && fear.yellow().equals(killer.getUUID());
+        RingRanks.fire(killer, Trigger.KILL, new Milestone.Context(victim, "", source.is(RingDamage.RING_CONSTRUCT), byYellow));
 
-        boolean fight = victim instanceof Enemy || victim instanceof Player;
-        Long low = LAST_LOW.get(killer.getUUID());
-        if (fight && low != null && now - low <= LOW_WIN_WINDOW) RingRanks.progress(killer, RankTask.GREEN_LOW_WIN, 1);
-
-        if (victim instanceof Mob mob && mob.getTarget() instanceof Player target && target != killer) {
-            SpectrumMeters.add(killer, Emotion.COMPASSION, config.compassionRescue);
-            if (target.getHealth() < target.getMaxHealth() * LOW_HEALTH) RingRanks.progress(killer, RankTask.INDIGO_SAVE, 1);
+        if (victim instanceof Mob mob && mob.getTarget() instanceof LivingEntity hunted && hunted != killer) {
+            if (hunted instanceof Player) SpectrumMeters.add(killer, Emotion.COMPASSION, config.compassionRescue);
+            RingRanks.fire(killer, Trigger.RESCUE, Milestone.Context.of(hunted));
         }
 
-        if (fight) {
+        if (victim instanceof Enemy || victim instanceof Player) {
             Deque<Long> kills = KILLS.computeIfAbsent(killer.getUUID(), uuid -> new ArrayDeque<>());
             kills.addLast(now);
             while (!kills.isEmpty() && now - kills.peekFirst() > BURST_WINDOW) kills.removeFirst();
-            if (kills.size() >= BURST_KILLS) RingRanks.progress(killer, RankTask.RED_BURST, 1);
+            RingRanks.fire(killer, Trigger.STREAK, Milestone.Context.NONE, kills.size());
         }
     }
 
@@ -181,39 +188,51 @@ public final class EmotionSources {
         BrightestDayConfig config = config();
         if (state.is(Blocks.ANCIENT_DEBRIS)) {
             SpectrumMeters.add(player, Emotion.AVARICE, config.avariceDebris);
+            RingRanks.fire(player, Trigger.MINE, Milestone.Context.of("debris"));
             RingOffers.considerOrange(player);
         } else if (state.is(BlockItemTags.DIAMOND_ORES.block())) {
             SpectrumMeters.add(player, Emotion.AVARICE, config.avariceDiamond);
+            RingRanks.fire(player, Trigger.MINE, Milestone.Context.of("diamond"));
             RingOffers.considerOrange(player);
         } else if (state.is(BlockItemTags.EMERALD_ORES.block())) {
             SpectrumMeters.add(player, Emotion.AVARICE, config.avariceEmerald);
+            RingRanks.fire(player, Trigger.MINE, Milestone.Context.of("emerald"));
         }
     }
 
     private static void onUseBlock(ServerPlayer player, ItemStack held) {
         boolean planting = held.is(Items.BONE_MEAL) || held.is(ItemTags.SAPLINGS) || held.is(ItemTags.VILLAGER_PLANTABLE_SEEDS);
-        if (planting && ready(player, "hope_plant", 20)) SpectrumMeters.add(player, Emotion.HOPE, config().hopePlant);
+        if (planting && ready(player, "hope_plant", 20)) {
+            SpectrumMeters.add(player, Emotion.HOPE, config().hopePlant);
+            RingRanks.fire(player, Trigger.PLANT, Milestone.Context.NONE);
+        }
     }
 
     public static void onTrade(ServerPlayer player) {
         SpectrumMeters.add(player, Emotion.HOPE, config().hopeTrade);
+        RingRanks.fire(player, Trigger.TRADE, Milestone.Context.NONE);
     }
 
     public static void onCure(ServerPlayer player) {
         SpectrumMeters.add(player, Emotion.HOPE, config().hopeCure);
-        RingRanks.progress(player, RankTask.BLUE_HOPE, 1);
+        RingRanks.fire(player, Trigger.CURE, Milestone.Context.NONE);
     }
 
     public static void onBreed(ServerPlayer player) {
         SpectrumMeters.add(player, Emotion.LOVE, config().loveBreed);
+        RingRanks.fire(player, Trigger.BREED, Milestone.Context.NONE);
     }
 
     public static void onTame(ServerPlayer player) {
         SpectrumMeters.add(player, Emotion.LOVE, config().loveTame);
+        RingRanks.fire(player, Trigger.TAME, Milestone.Context.NONE);
     }
 
     public static void onGift(ServerPlayer giver, Player receiver) {
-        if (ready(giver, "love_gift", 40)) SpectrumMeters.add(giver, Emotion.LOVE, config().loveGift);
+        if (ready(giver, "love_gift", 40)) {
+            SpectrumMeters.add(giver, Emotion.LOVE, config().loveGift);
+            RingRanks.fire(giver, Trigger.GIFT, Milestone.Context.of(receiver));
+        }
         if (receiver.getHealth() < receiver.getMaxHealth() * LOW_HEALTH && ready(giver, "compassion_gift", 40)) {
             SpectrumMeters.add(giver, Emotion.COMPASSION, config().compassionGift);
         }
@@ -230,20 +249,23 @@ public final class EmotionSources {
             guards.remove();
             ServerPlayer ward = server.getPlayerList().getPlayer(guard.ward());
             ServerPlayer guardian = server.getPlayerList().getPlayer(guard.guardian());
-            if (ward != null && ward.isAlive() && guardian != null) RingRanks.progress(guardian, RankTask.SAPPHIRE_GUARD, 1);
+            if (ward != null && ward.isAlive() && guardian != null) RingRanks.fire(guardian, Trigger.GUARD, Milestone.Context.of(ward));
         }
 
         if (server.getTickCount() % 20 != 0) return;
         boolean minute = server.getTickCount() % 1200 == 0;
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            LanternCorps corps = PowerRingItem.getWornCorps(player).orElse(null);
-            if (corps == LanternCorps.ORANGE && player.getInventory().countItem(Items.DIAMOND) >= HOARD_DIAMONDS) {
-                RingRanks.complete(player, RankTask.ORANGE_HOARD);
+            if (player.isSpectator()) continue;
+            RingRanks.assign(player);
+            RingRanks.fire(player, Trigger.SECOND, Milestone.Context.NONE);
+
+            Vec3 previous = LAST_POSITION.put(player.getUUID(), player.position());
+            if (previous != null && FlightRingPower.isFlying(player)) {
+                int distance = (int) Math.round(previous.distanceTo(player.position()));
+                if (distance > 0 && distance < MAX_FLIGHT_STEP) RingRanks.fire(player, Trigger.FLY, Milestone.Context.NONE, distance);
             }
-            if (corps == LanternCorps.STAR_SAPPHIRE && CorpsCombat.inBondedCombat(player)) {
-                RingRanks.progress(player, RankTask.SAPPHIRE_BOND, 1);
-            }
-            if (minute && player.level().dimension() != Level.OVERWORLD && player.getArmorValue() < WEAK_ARMOR && !player.isSpectator()) {
+
+            if (minute && player.level().dimension() != Level.OVERWORLD && player.getArmorValue() < WEAK_ARMOR) {
                 SpectrumMeters.add(player, Emotion.WILL, config().willHostileMinute);
             }
         }

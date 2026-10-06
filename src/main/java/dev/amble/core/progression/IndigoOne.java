@@ -6,6 +6,7 @@ import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.BrightestDayItems;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.loyalty.RingLoyalty;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
@@ -26,6 +27,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class IndigoOne {
@@ -36,6 +38,8 @@ public final class IndigoOne {
     private record Channel(UUID target, long ends, float indigoHealth, float targetHealth) {}
 
     private static final Map<UUID, Channel> CHANNELS = new HashMap<>();
+    private static final Map<UUID, Long> LAST_GIFT = new HashMap<>();
+    private static final long REGIFT_COOLDOWN = 24000L;
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(IndigoOne::tick);
@@ -100,13 +104,26 @@ public final class IndigoOne {
             return true;
         });
 
-        if (server.getTickCount() % 100 != 0 || !multiplayer(server) || WorldProgress.get(server).indigoOne().isPresent()) return;
+        if (server.getTickCount() % 100 != 0 || !multiplayer(server)) return;
+        Optional<UUID> current = WorldProgress.get(server).indigoOne();
+        if (current.isPresent()) {
+            ServerPlayer bearer = server.getPlayerList().getPlayer(current.get());
+            if (bearer != null && !bearer.isSpectator() && BrightestDayAttachments.getRing(bearer).isEmpty() && !RingLoyalty.inFlight(LanternCorps.INDIGO)) {
+                Long gifted = LAST_GIFT.get(bearer.getUUID());
+                if (gifted == null || now - gifted >= REGIFT_COOLDOWN) {
+                    LAST_GIFT.put(bearer.getUUID(), now);
+                    if (gifted != null) RingOffers.bestow(bearer, LanternCorps.INDIGO);
+                }
+            }
+            return;
+        }
         List<ServerPlayer> online = server.getPlayerList().getPlayers();
         if (online.size() < BrightestDayConfig.get().indigoMinPlayers) return;
         List<ServerPlayer> ringless = online.stream().filter(player -> BrightestDayAttachments.getRing(player).isEmpty() && !player.isSpectator()).toList();
         if (ringless.isEmpty()) return;
 
         ServerPlayer chosen = ringless.get(server.overworld().getRandom().nextInt(ringless.size()));
+        LAST_GIFT.put(chosen.getUUID(), now);
         WorldProgress.update(server, state -> state.withIndigoOne(chosen.getUUID()));
         chosen.sendSystemMessage(Component.translatable("message.brightestday.indigo.chosen").withStyle(ChatFormatting.BOLD).withColor(INDIGO));
         RingOffers.bestow(chosen, LanternCorps.INDIGO);
@@ -127,7 +144,7 @@ public final class IndigoOne {
         indigo.sendSystemMessage(message);
         target.sendSystemMessage(message);
         target.level().playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.5F, 0.6F);
-        RingRanks.complete(indigo, RankTask.INDIGO_CONVERT);
+        RingRanks.fire(indigo, Trigger.CONVERT, Milestone.Context.of(target));
     }
 
     private IndigoOne() {}

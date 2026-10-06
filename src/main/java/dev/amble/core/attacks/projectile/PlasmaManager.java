@@ -1,6 +1,7 @@
 package dev.amble.core.attacks.projectile;
 
-import dev.amble.core.progression.RankTask;
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.RingDamage;
@@ -133,7 +134,7 @@ public final class PlasmaManager {
             double falloff = Math.max(MIN_FALLOFF, 1.0 - distance / radius);
             if (entity instanceof LivingEntity living) {
                 living.hurtServer(level, source, (float) (damage * falloff));
-                if (orb.power >= FULL_POWER && living instanceof Player && !living.isAlive()) RingRanks.complete(orb.owner, RankTask.RED_PLASMA);
+                if (orb.power >= FULL_POWER && !living.isAlive()) RingRanks.fire(orb.owner, Trigger.PLASMA_KILL, Milestone.Context.of(living));
                 living.setRemainingFireTicks(Math.max(living.getRemainingFireTicks(), BURN_TICKS));
             }
             Vec3 away = center.subtract(impact);

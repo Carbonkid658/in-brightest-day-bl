@@ -45,6 +45,7 @@ public final class BlueSanctuary {
     private static final int PILLAR_HEIGHT = 5;
     private static final int SANCTUARY_SCAN = 12;
     private static final int PLACE_INTERVAL = 40;
+    public static final long BLESSING_COOLDOWN = 24000L;
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(BlueSanctuary::tick);
@@ -134,7 +135,7 @@ public final class BlueSanctuary {
                 player.setDeltaMovement(out.scale(BARRIER_PUSH).add(0.0, 0.3, 0.0));
                 player.needsSync = true;
                 player.sendOverlayMessage(Component.translatable(walked ? "message.brightestday.sanctuary.barred" : "message.brightestday.sanctuary.unwalked").withColor(BLUE));
-            } else if (hopeful && walked && distance < PEDESTAL_REACH && !state.blessed().contains(player.getUUID())) {
+            } else if (hopeful && walked && distance < PEDESTAL_REACH && state.mayBeBlessed(player.getUUID(), server.overworld().getGameTime(), BLESSING_COOLDOWN)) {
                 bless(player);
             }
         }
@@ -152,7 +153,7 @@ public final class BlueSanctuary {
     }
 
     private static void bless(ServerPlayer player) {
-        WorldProgress.update(player.level().getServer(), state -> state.withBlessed(player.getUUID()));
+        WorldProgress.update(player.level().getServer(), state -> state.withBlessed(player.getUUID(), player.level().getGameTime()));
         Pilgrimage.reset(player);
         player.sendSystemMessage(Component.translatable("message.brightestday.sanctuary.blessed").withStyle(ChatFormatting.BOLD).withColor(BLUE));
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.5F, 1.2F);

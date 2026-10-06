@@ -24,7 +24,7 @@ public final class AbilityClient {
     }
 
     public static boolean wantsUse(LocalPlayer player) {
-        return player.getMainHandItem().isEmpty()
+        return ArmedRingPower.handFree(player)
                 && PowerRingItem.hasCharge(player)
                 && ArmedRingPower.isAbilityMode(player)
                 && !ConstructClient.isLookingAtLantern()

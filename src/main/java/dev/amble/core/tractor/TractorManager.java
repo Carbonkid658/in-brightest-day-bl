@@ -1,5 +1,8 @@
 package dev.amble.core.tractor;
 
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
+import dev.amble.core.progression.RingRanks;
 import dev.amble.core.ringpowers.CorpsCombat;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.TractorS2CPayload;
@@ -136,6 +139,7 @@ public final class TractorManager {
                 release(player);
                 continue;
             }
+            if (drainTick) RingRanks.fire(player, Trigger.TRACTOR, Milestone.Context.NONE);
 
             Vec3 goal = eye.add(player.getLookAngle().scale(grip.distance));
             Vec3 velocity = goal.subtract(center).scale(FOLLOW);

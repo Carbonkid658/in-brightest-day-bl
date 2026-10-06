@@ -1,5 +1,8 @@
 package dev.amble.core.ringpowers.impl;
 
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
+import dev.amble.core.progression.RingRanks;
 import com.mojang.serialization.MapCodec;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
@@ -35,7 +38,9 @@ public class SelfHealRingPower extends RingPower<Unit> {
         BrightestDayConfig config = BrightestDayConfig.get();
         if (!this.isHealing(player, config) || player.tickCount % Math.max(1, config.selfHealIntervalTicks) != 0) return;
 
+        float before = player.getHealth();
         player.heal(config.selfHealAmount);
+        RingRanks.fire(player, Trigger.SELF_HEAL, Milestone.Context.NONE, Math.round(player.getHealth() - before));
         player.level().sendParticles(new DustParticleOptions(CorpsColors.of(player), 0.8F),
                 player.getX(), player.getY() + player.getBbHeight() * 0.5, player.getZ(),
                 3, player.getBbWidth() * 0.4, player.getBbHeight() * 0.3, player.getBbWidth() * 0.4, 0.0);

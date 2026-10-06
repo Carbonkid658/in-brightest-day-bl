@@ -1,5 +1,8 @@
 package dev.amble.core.forge;
 
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
+import dev.amble.core.progression.RingRanks;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.networking.payloads.s2c.BatteriesS2CPayload;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
@@ -90,6 +93,8 @@ public final class CentralPowerBattery {
         if (PowerRingItem.getRingPower(ring) >= BrightestDayComponents.MAX_POWER) return InteractionResult.PASS;
 
         PowerRingItem.setMaxPower(ring);
+        ring.remove(BrightestDayComponents.RING_DEATHS);
+        if (player instanceof ServerPlayer server) RingRanks.fire(server, Trigger.RECHARGE, Milestone.Context.of("battery"));
         if (slotted) BrightestDayAttachments.setRing(player, ring);
         player.sendSystemMessage(Component.translatable(corps.oathKey()).withStyle(ChatFormatting.BOLD).withColor(corps.color()));
         level.playSound(null, battery.pos(), SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.4F, 0.8F);
@@ -185,6 +190,7 @@ public final class CentralPowerBattery {
         sent.set(BrightestDayComponents.POWER_TYPE, Math.max(PowerRingItem.getRingPower(sent), 1));
         item.discard();
         RingLoyalty.deliver(target, sent);
+        if (item.getOwner() instanceof ServerPlayer sender) RingRanks.fire(sender, Trigger.SEEK, Milestone.Context.of(target));
         announce(level, battery.pos(), Component.translatable("message.brightestday.battery.sent", name), battery.corps());
     }
 

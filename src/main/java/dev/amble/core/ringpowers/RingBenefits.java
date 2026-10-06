@@ -1,5 +1,7 @@
 package dev.amble.core.ringpowers;
 
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.minecraft.tags.DamageTypeTags;
 import dev.amble.BrightestDay;
 import dev.amble.core.items.PowerRingItem;
 import net.minecraft.core.Holder;
@@ -32,6 +34,11 @@ public final class RingBenefits {
             new Bonus(Attributes.BLOCK_BREAK_SPEED, 0.25, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
             new Bonus(Attributes.SUBMERGED_MINING_SPEED, 0.8, AttributeModifier.Operation.ADD_VALUE)
     );
+
+    public static void init() {
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) ->
+                !(entity instanceof Player player && source.is(DamageTypeTags.IS_FALL) && isActive(player)));
+    }
 
     public static boolean isActive(Player player) {
         return !PowerRingItem.getWornRing(player).isEmpty() && PowerRingItem.hasCharge(player);
