@@ -1,5 +1,10 @@
 package dev.amble.core;
 
+import dev.amble.core.blocks.BlueShrineBlock;
+import dev.amble.core.forge.BatteryCoreBlock;
+import dev.amble.core.forge.ForgeRecipes;
+import dev.amble.core.forge.SpectrumForgeBlock;
+import dev.amble.core.progression.Emotion;
 import dev.amble.BrightestDay;
 import dev.amble.core.blocks.ConstructLightBlock;
 import dev.amble.core.blocks.HardLightBlock;
@@ -15,6 +20,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -47,6 +53,32 @@ public class BrightestDayBlocks {
             properties -> new ConstructLightBlock(properties.strength(-1.0F, 3600000.0F).noLootTable().noOcclusion().noCollision().replaceable()
                     .lightLevel(_ -> 15).pushReaction(PushReaction.POPPED).isValidSpawn((state, level, pos, type) -> false)
                     .isSuffocating((state, level, pos) -> false).isViewBlocking((state, level, pos, box) -> false)));
+
+    public static final Block BLUE_LANTERN_SHRINE = registerBlockWithItem("blue_lantern_shrine",
+            properties -> new BlueShrineBlock(properties.strength(-1.0F, 3600000.0F).noLootTable().noOcclusion()
+                    .lightLevel(_ -> 13).sound(SoundType.LANTERN).pushReaction(PushReaction.IMMOVEABLE).mapColor(MapColor.COLOR_LIGHT_BLUE)
+                    .isValidSpawn((state, level, pos, type) -> false)),
+            new Item.Properties());
+
+    public static final Block SPECTRUM_FORGE = registerBlockWithItem("spectrum_forge",
+            properties -> new SpectrumForgeBlock(Emotion.FEAR, true, ForgeRecipes::yellow, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+                    .sound(SoundType.NETHERITE_BLOCK).lightLevel(state -> state.getValue(SpectrumForgeBlock.LAVA) * 3)),
+            new Item.Properties());
+
+    public static final Block ZAMARONIAN_CRYSTAL = registerBlockWithItem("zamaronian_crystal",
+            properties -> new SpectrumForgeBlock(Emotion.LOVE, false, ForgeRecipes::sapphire, properties.strength(30.0F, 1200.0F).requiresCorrectToolForDrops()
+                    .sound(SoundType.AMETHYST).lightLevel(_ -> 10).mapColor(MapColor.COLOR_PINK)),
+            new Item.Properties().fireResistant());
+
+    public static final Block YELLOW_BATTERY_CORE = registerBlockWithItem("yellow_battery_core",
+            properties -> new BatteryCoreBlock(LanternCorps.YELLOW, () -> Blocks.GOLD_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+                    .sound(SoundType.METAL).lightLevel(_ -> 15)),
+            new Item.Properties());
+
+    public static final Block SAPPHIRE_BATTERY_CORE = registerBlockWithItem("sapphire_battery_core",
+            properties -> new BatteryCoreBlock(LanternCorps.STAR_SAPPHIRE, () -> Blocks.AMETHYST_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+                    .sound(SoundType.AMETHYST).lightLevel(_ -> 15)),
+            new Item.Properties());
 
     public static Optional<Block> lantern(LanternCorps corps) {
         return Optional.ofNullable(LANTERNS.get(corps));

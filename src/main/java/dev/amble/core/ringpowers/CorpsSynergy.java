@@ -71,6 +71,7 @@ public final class CorpsSynergy {
 
     public static int scaleCost(Player player, int amount) {
         if (amount <= 0) return amount;
+        amount = CorpsCombat.scaleCost(player, amount);
         if (empoweredByHope(player)) return Math.max(1, Math.round(amount * HOPE_COST_MULTIPLIER));
         if (weakenedByHope(player)) return Math.round(amount * DREAD_COST_MULTIPLIER);
         return amount;

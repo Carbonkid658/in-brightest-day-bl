@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.impl;
 
+import dev.amble.core.ringpowers.CorpsArsenal;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.amble.BrightestDay;
@@ -24,7 +25,7 @@ public class TractorBeamRingPower extends RingPower<TractorBeamRingPower.Data> {
     }
 
     public TractorBeamRingPower() {
-        super(BrightestDay.id("tractor_beam"), EnumSet.allOf(LanternCorps.class), Data.CODEC);
+        super(BrightestDay.id("tractor_beam"), CorpsArsenal.exclusive(LanternCorps.INDIGO), Data.CODEC);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers;
 
+import dev.amble.core.progression.RingRanks;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDaySounds;
 import dev.amble.core.items.PowerRingItem;
@@ -40,6 +41,7 @@ public final class RingPowerTicker {
             ConstructTools.tick(player, server.getTickCount());
             depleteOnEmpty(player, server.getTickCount());
             warnOnLowCharge(player);
+            if (drainTick) RingRanks.clampCharge(player);
 
             for (RingPowerInstance<?> instance : BrightestDayAttachments.get(player)) {
                 instance.tick(player);
@@ -83,7 +85,7 @@ public final class RingPowerTicker {
     private static void drain(ServerPlayer player, RingPowerInstance<?> instance) {
         if (player.hasInfiniteMaterials()) return;
 
-        int drain = instance.drainPerSecond(player);
+        int drain = CorpsCombat.utilityCost(player, instance.drainPerSecond(player));
         if (drain > 0 && !PowerRingItem.drainWorn(player, drain)) {
             instance.onDepleted(player);
         }

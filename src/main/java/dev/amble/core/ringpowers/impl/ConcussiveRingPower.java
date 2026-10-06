@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.impl;
 
+import dev.amble.core.ringpowers.CorpsCombat;
 import com.mojang.serialization.MapCodec;
 import dev.amble.BrightestDay;
 import dev.amble.core.team.RingDamage;
@@ -60,7 +61,7 @@ public class ConcussiveRingPower extends RingPower<Unit> {
         Long last = LAST_FIRED.get(player);
         if (last != null && now - last < config.concussiveCooldownTicks) return;
 
-        if (!player.hasInfiniteMaterials() && !PowerRingItem.consumeCharge(player, config.concussiveCost)) {
+        if (!player.hasInfiniteMaterials() && !PowerRingItem.consumeCharge(player, CorpsCombat.utilityCost(player, config.concussiveCost))) {
             player.sendOverlayMessage(Component.translatable("message.brightestday.ring_depleted"));
             return;
         }

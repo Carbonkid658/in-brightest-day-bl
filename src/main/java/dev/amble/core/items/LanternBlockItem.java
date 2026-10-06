@@ -3,6 +3,7 @@ package dev.amble.core.items;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.blocks.LanternBlock;
+import dev.amble.core.blocks.LanternCharging;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
@@ -29,7 +30,8 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 public class LanternBlockItem extends BlockItem {
-    public static final int CHARGE_TICKS = 60;
+    public static final int CHARGE_TICKS = 90;
+    public static final int INSERT_TICKS = 30;
     private static final double MAX_DRIFT = 0.2;
     private static final int PARTICLE_INTERVAL = 2;
     private static final int SOUND_INTERVAL = 10;
@@ -103,12 +105,15 @@ public class LanternBlockItem extends BlockItem {
         }
         if (!(level instanceof ServerLevel serverLevel)) return;
 
+        int elapsed = CHARGE_TICKS - ticksRemaining - INSERT_TICKS;
+        if (elapsed < 0) return;
+        if (elapsed == 0) LanternCharging.inserted(serverLevel, player.blockPosition());
+
         ItemStack ring = PowerRingItem.getWornRing(player);
-        PowerRingItem.chargeRing(ring, Mth.ceil((float) BrightestDayComponents.MAX_POWER / CHARGE_TICKS));
+        PowerRingItem.chargeRing(ring, Mth.ceil((float) BrightestDayComponents.MAX_POWER / (CHARGE_TICKS - INSERT_TICKS)));
         if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
 
-        int elapsed = CHARGE_TICKS - ticksRemaining;
-        float progress = (float) elapsed / CHARGE_TICKS;
+        float progress = (float) elapsed / (CHARGE_TICKS - INSERT_TICKS);
         if (elapsed % PARTICLE_INTERVAL == 0) {
             float angle = elapsed * 0.6F;
             double radius = 0.9 - progress * 0.5;
@@ -120,9 +125,7 @@ public class LanternBlockItem extends BlockItem {
                         1, 0.0, 0.0, 0.0, 0.0);
             }
         }
-        if (elapsed % SOUND_INTERVAL == 0) {
-            level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 0.6F, 0.8F + progress);
-        }
+        if (elapsed > 0 && elapsed % SOUND_INTERVAL == 0) LanternCharging.chime(serverLevel, player.blockPosition(), progress);
     }
 
     @Override

@@ -124,7 +124,7 @@ public final class BlastEffects {
     }
 
     public static boolean wantsToCharge(LocalPlayer player) {
-        return player.getMainHandItem().isEmpty()
+        return ArmedRingPower.handFree(player)
                 && !ArmedRingPower.isAbilityMode(player)
                 && PowerRingItem.hasCharge(player)
                 && ArmedRingPower.selectedConstruct(player).map(construct -> !construct.usesGesture()).orElse(false)
@@ -159,6 +159,11 @@ public final class BlastEffects {
         }
 
         boolean holding = keyDown && !RingInput.blocked() && wantsToCharge(player);
+        if (!holding && cooldown == 0 && player != null && releasable(player)) {
+            if (chargeSound != null) client.getSoundManager().stop(chargeSound);
+            release(player);
+            return;
+        }
         if (!holding || cooldown > 0) {
             cancelCharge(client);
             return;
@@ -174,19 +179,29 @@ public final class BlastEffects {
 
         if (++charge >= chargeGoal) {
             if (chargeSound != null && chargeGoal < LONG_CHARGE_TICKS) client.getSoundManager().stop(chargeSound);
-            retractCharge();
-            boolean sustained = ArmedRingPower.selectedConstruct(player).map(construct -> construct.sustained(player)).orElse(false);
-            ClientPlayNetworking.send(new FireConstructC2SPayload(ConstructClient.selectedSize(player)));
-            if (sustained) {
-                sustaining = true;
-                sustainTicks = 0;
-            }
-            charge = 0;
-            oCharge = 0;
-            chargeSound = null;
-            cooldown = ArmedRingPower.COOLDOWN_TICKS;
-            kick = chargeGoal > 0 ? 1.0F : 0.0F;
+            release(player);
         }
+    }
+
+    private static boolean releasable(LocalPlayer player) {
+        if (charge <= 0) return false;
+        int release = ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::releaseTicks).orElse(-1);
+        return release > 0 && charge >= release;
+    }
+
+    private static void release(LocalPlayer player) {
+        retractCharge();
+        boolean sustained = ArmedRingPower.selectedConstruct(player).map(construct -> construct.sustained(player)).orElse(false);
+        ClientPlayNetworking.send(new FireConstructC2SPayload(ConstructClient.selectedSize(player)));
+        if (sustained) {
+            sustaining = true;
+            sustainTicks = 0;
+        }
+        charge = 0;
+        oCharge = 0;
+        chargeSound = null;
+        cooldown = ArmedRingPower.COOLDOWN_TICKS;
+        kick = chargeGoal > 0 ? 1.0F : 0.0F;
     }
 
     private static void cancelCharge(Minecraft client) {

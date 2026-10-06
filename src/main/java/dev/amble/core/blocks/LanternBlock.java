@@ -1,5 +1,9 @@
 package dev.amble.core.blocks;
 
+import net.minecraft.server.level.ServerPlayer;
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
+import dev.amble.core.progression.RingRanks;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.blockentities.LanternBlockEntity;
@@ -150,6 +154,10 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
         return InteractionResult.SUCCESS;
     }
 
+    public static float facingYaw(BlockState state) {
+        return RotationSegment.convertToDegrees(state.getValue(ROTATION));
+    }
+
     public static boolean isInFront(BlockState state, BlockPos pos, Player player) {
         float yaw = RotationSegment.convertToDegrees(state.getValue(ROTATION)) * Mth.DEG_TO_RAD;
         Vec3 toPlayer = player.position().subtract(Vec3.atBottomCenterOf(pos)).multiply(1.0, 0.0, 1.0);
@@ -179,7 +187,15 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
         if (PowerRingItem.getRingPower(ring) >= BrightestDayComponents.MAX_POWER) return InteractionResult.PASS;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
 
+        if (player instanceof ServerPlayer server && LanternRitual.begin(server, pos, state, this.corps)) return InteractionResult.SUCCESS_SERVER;
+        complete(level, pos, player, ring, slotted);
+        return InteractionResult.SUCCESS_SERVER;
+    }
+
+    public void complete(Level level, BlockPos pos, Player player, ItemStack ring, boolean slotted) {
         PowerRingItem.setMaxPower(ring);
+        ring.remove(BrightestDayComponents.RING_DEATHS);
+        if (player instanceof ServerPlayer server) RingRanks.fire(server, Trigger.RECHARGE, Milestone.Context.of("lantern"));
         if (level instanceof ServerLevel serverLevel) RingLoyalty.bind(ring, serverLevel, pos);
         if (slotted) BrightestDayAttachments.setRing(player, ring);
 
@@ -187,6 +203,5 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
                 .withStyle(ChatFormatting.BOLD)
                 .withColor(this.corps.color()));
         level.playSound(null, pos, SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.0F, 1.0F);
-        return InteractionResult.SUCCESS_SERVER;
     }
 }

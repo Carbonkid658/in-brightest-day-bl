@@ -1,5 +1,6 @@
 package dev.amble.core.menus;
 
+import dev.amble.core.heart.RedHeart;
 import dev.amble.core.BrightestDayMenus;
 import dev.amble.core.items.PowerRingItem;
 import net.minecraft.world.Container;
@@ -34,6 +35,11 @@ public class LanternMenu extends AbstractContainerMenu {
             @Override
             public int getMaxStackSize() {
                 return 1;
+            }
+
+            @Override
+            public boolean mayPickup(Player player) {
+                return RedHeart.mayRemove(player, this.getItem());
             }
         });
 

@@ -5,7 +5,7 @@
   "textures": {
     "0": "brightestday:block/sapphire_lantern",
     "1": "brightestday:block/sapphire_lantern_emission",
-    "particle": "brightestday:block/star_sapphire_lantern"
+    "particle": "brightestday:block/sapphire_lantern"
   },
   "elements": [
     {

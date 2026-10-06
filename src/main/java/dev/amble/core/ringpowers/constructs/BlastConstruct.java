@@ -1,5 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.ringpowers.CorpsArsenal;
+import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.BrightestDay;
 import dev.amble.core.team.RingDamage;
 import dev.amble.config.BrightestDayConfig;
@@ -37,7 +39,7 @@ public class BlastConstruct extends ConstructRingPower {
     };
 
     public BlastConstruct() {
-        super(BrightestDay.id("blast"));
+        super(BrightestDay.id("blast"), CorpsArsenal.shared(LanternCorps.RED));
     }
 
     @Override

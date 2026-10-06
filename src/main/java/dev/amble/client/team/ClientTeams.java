@@ -4,6 +4,11 @@ import dev.amble.core.networking.payloads.c2s.TeamActionC2SPayload;
 import dev.amble.core.networking.payloads.s2c.TeamInvitesS2CPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.ringpowers.LanternCorps;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,6 +20,9 @@ public final class ClientTeams {
 
     public static void init() {
         ClientPlayNetworking.registerGlobalReceiver(TeamInvitesS2CPayload.TYPE, (payload, context) -> {
+            for (UUID inviter : payload.incoming()) {
+                if (!INCOMING.contains(inviter)) announce(context.client(), inviter);
+            }
             INCOMING.clear();
             INCOMING.addAll(payload.incoming());
             OUTGOING.clear();
@@ -24,6 +32,13 @@ public final class ClientTeams {
             INCOMING.clear();
             OUTGOING.clear();
         });
+    }
+
+    private static void announce(Minecraft client, UUID inviter) {
+        Player player = client.level != null ? client.level.getPlayerByUUID(inviter) : null;
+        Component name = player != null ? player.getDisplayName() : Component.translatable("toast.brightestday.team_invite.someone");
+        LanternCorps corps = player != null ? PowerRingItem.getWornCorps(player).orElse(null) : null;
+        client.gui.toastManager().addToast(new TeamInviteToast(inviter, name, corps));
     }
 
     public static boolean invitedBy(UUID player) {

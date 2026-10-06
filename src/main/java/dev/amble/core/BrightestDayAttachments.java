@@ -2,7 +2,10 @@ package dev.amble.core;
 
 import com.mojang.serialization.Codec;
 import dev.amble.BrightestDay;
+import dev.amble.core.forge.CentralPowerBattery;
+import dev.amble.core.progression.RingRanks;
 import dev.amble.core.ringpowers.ColorTweak;
+import dev.amble.core.ringpowers.CorpsMimicry;
 import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.ringpowers.EyePaint;
 import dev.amble.core.ringpowers.LanternCorps;
@@ -13,6 +16,7 @@ import dev.amble.core.ringpowers.RingPowerRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -21,6 +25,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class BrightestDayAttachments {
     public static final AttachmentType<List<RingPowerInstance<?>>> POWERS =
@@ -126,7 +131,15 @@ public class BrightestDayAttachments {
         List<RingPowerInstance<?>> current = get(player);
         List<RingPower<?>> available = corps == null
                 ? List.of()
-                : RingPowerRegistry.forCorps(corps, CorpsSynergy.borrowsWill(player) ? LanternCorps.GREEN : null);
+                : RingPowerRegistry.forCorps(corps, CorpsSynergy.borrowsWill(player) ? LanternCorps.GREEN : null, CorpsMimicry.mimicked(player, corps));
+        if (corps != null && CentralPowerBattery.required(corps) && !CentralPowerBattery.active(player.level().getServer(), corps)) {
+            available = List.of();
+            if (player.tickCount % 200 == 0) player.sendOverlayMessage(Component.translatable("message.brightestday.battery.dormant").withColor(corps.color()));
+        }
+        if (corps != null) {
+            Set<RingPower<?>> locked = RingRanks.locked(player, corps);
+            if (!locked.isEmpty()) available = available.stream().filter(power -> !locked.contains(power)).toList();
+        }
 
         if (current.size() == available.size()) {
             boolean unchanged = true;

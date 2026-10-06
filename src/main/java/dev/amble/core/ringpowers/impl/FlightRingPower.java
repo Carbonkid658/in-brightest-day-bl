@@ -67,7 +67,7 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
 
     @Override
     public void tick(ServerPlayer player, Data data) {
-        player.resetFallDistance();
+        if (isFlying(player)) player.resetFallDistance();
     }
 
     @Override

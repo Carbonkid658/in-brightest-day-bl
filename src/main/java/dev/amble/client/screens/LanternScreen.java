@@ -12,7 +12,6 @@ import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.ARGB;
 import net.minecraft.world.entity.player.Inventory;
@@ -45,6 +44,8 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
 
     private static final int RING_SLOT_INSET = 5;
     private static final int RING_SLOT_SIZE = 26;
+    private static final int DIVIDER_MARGIN = 7;
+    private static final int DIVIDER_GAP = 5;
 
     private @Nullable ColorTweakSlider brightness;
     private @Nullable ColorTweakSlider saturation;
@@ -66,21 +67,28 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
                 new ItemStack(Items.CRAFTING_TABLE),
                 Component.translatable("gui.brightestday.inventory"),
                 this::returnToInventory,
-                LanternWidgets.BUTTON
+                true
         ));
         this.addRenderableWidget(new IconButton(
                 this.leftPos - IconButton.SIZE - 2, this.topPos + 6 + IconButton.SIZE,
                 new ItemStack(Items.ENDER_EYE),
                 Component.translatable("gui.brightestday.eyes"),
                 () -> this.minecraft.gui.setScreen(new EyesScreen(this)),
-                LanternWidgets.BUTTON
+                true
         ));
         this.addRenderableWidget(new IconButton(
                 this.leftPos - IconButton.SIZE - 2, this.topPos + 8 + IconButton.SIZE * 2,
                 new ItemStack(Items.LEAD),
                 Component.translatable("gui.brightestday.team.title"),
                 () -> this.minecraft.gui.setScreen(new TeamScreen(this)),
-                LanternWidgets.BUTTON
+                true
+        ));
+        this.addRenderableWidget(new IconButton(
+                this.leftPos - IconButton.SIZE - 2, this.topPos + 10 + IconButton.SIZE * 3,
+                new ItemStack(Items.AMETHYST_CLUSTER),
+                Component.translatable("gui.brightestday.spectrum.title"),
+                () -> this.minecraft.gui.setScreen(new SpectrumScreen(this)),
+                true
         ));
 
         ColorTweak tweak = BrightestDayAttachments.getColorTweak(this.minecraft.player);
@@ -136,14 +144,16 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         super.extractBackground(graphics, mouseX, mouseY, a);
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, LanternWidgets.BACKGROUND, this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
+        int accent = LanternWidgets.accent();
+        LanternWidgets.panel(graphics, this.leftPos, this.topPos, this.imageWidth, this.imageHeight, accent);
+        LanternWidgets.divider(graphics, this.leftPos + DIVIDER_MARGIN, this.leftPos + this.imageWidth - DIVIDER_MARGIN,
+                this.topPos + this.inventoryLabelY - DIVIDER_GAP, accent);
 
         for (Slot slot : this.menu.slots) {
             if (slot == this.menu.getSlot(0)) {
-                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, LanternWidgets.RING_SLOT,
-                        this.leftPos + slot.x - RING_SLOT_INSET, this.topPos + slot.y - RING_SLOT_INSET, RING_SLOT_SIZE, RING_SLOT_SIZE);
+                LanternWidgets.ringSlot(graphics, this.leftPos + slot.x - RING_SLOT_INSET, this.topPos + slot.y - RING_SLOT_INSET, RING_SLOT_SIZE, accent);
             } else {
-                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, LanternWidgets.SLOT, this.leftPos + slot.x - 1, this.topPos + slot.y - 1, 18, 18);
+                LanternWidgets.slot(graphics, this.leftPos + slot.x - 1, this.topPos + slot.y - 1, 18, accent);
             }
         }
 

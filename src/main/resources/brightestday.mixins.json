@@ -9,7 +9,12 @@
 		"PlayerMixin",
 		"AvatarMixin",
 		"GlideLivingEntityMixin",
-		"ServerGamePacketListenerImplMixin"
+		"ServerGamePacketListenerImplMixin",
+		"AbstractVillagerMixin",
+		"AnimalMixin",
+		"TamableAnimalMixin",
+		"ItemEntityMixin",
+		"ZombieVillagerMixin"
 	],
 	"client": [
 		"client.AbstractClientPlayerMixin",
@@ -25,7 +30,9 @@
 		"client.RenderTargetMixin",
 		"client.MouseHandlerMixin",
 		"client.FlashbackRecorderMixin",
-		"client.PlayerModelArmedMixin"
+		"client.PlayerModelArmedMixin",
+		"client.ItemInHandLayerMixin",
+		"client.EntityTurnMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

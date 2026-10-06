@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": "minecraft:blast_furnace",
+    "G": "minecraft:gold_block",
+    "L": "minecraft:lava_bucket",
+    "N": "minecraft:netherite_block"
+  },
+  "pattern": [
+    "G G",
+    "LNL",
+    "GFG"
+  ],
+  "result": {
+    "count": 1,
+    "id": "brightestday:spectrum_forge"
+  }
+}

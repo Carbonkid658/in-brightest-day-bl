@@ -96,6 +96,8 @@ public final class PowerWheel {
             Map.entry(RingPowerRegistry.ENERGY_WHIP, Items.BREEZE_ROD),
             Map.entry(RingPowerRegistry.SENTRY_TURRET, Items.DISPENSER),
             Map.entry(RingPowerRegistry.TOOL_FORGE, Items.ANVIL),
+            Map.entry(RingPowerRegistry.PLASMA_BURST, Items.MAGMA_CREAM),
+            Map.entry(RingPowerRegistry.CRYSTAL_PRISON, Items.AMETHYST_CLUSTER),
             Map.entry(RingPowerRegistry.TRACTOR_BEAM, Items.LEAD),
             Map.entry(RingPowerRegistry.SCAN, Items.SPYGLASS),
             Map.entry(RingPowerRegistry.CONCUSSIVE, Items.WIND_CHARGE),
@@ -108,7 +110,7 @@ public final class PowerWheel {
             SculptShape.CAGE, Items.IRON_BARS
     );
     private static final List<Group> GROUPS = List.of(
-            new Group("construct_group.brightestday.attacks", Items.BLAZE_ROD, List.of("blast", "swarm_missiles", "piercing_lance", "chain_bolt", "boomerang_disc", "rapid_barrage", "nova_burst", "ground_slam")),
+            new Group("construct_group.brightestday.attacks", Items.BLAZE_ROD, List.of("blast", "swarm_missiles", "piercing_lance", "chain_bolt", "boomerang_disc", "rapid_barrage", "nova_burst", "ground_slam", "plasma_burst", "crystal_prison")),
             new Group("construct_group.brightestday.weapons", Items.IRON_SWORD, List.of("giant_fist", "energy_whip", "sentry_turret")),
             new Group("construct_group.brightestday.utility", Items.COMPASS, List.of("glider", "grappling_hook", "light_orb", "lumberjack", "ore_probe")),
             new Group("construct_group.brightestday.shield", Items.SHIELD, List.of("entity_shield", "area_shield"))
@@ -218,6 +220,7 @@ public final class PowerWheel {
 
         boolean pressed = false;
         while (this.key.consumeClick()) pressed = true;
+        if (client.gui.screen() != null) pressed = false;
         boolean down = player != null && client.gui.screen() == null && this.key.isDown();
 
         if (!this.open) {

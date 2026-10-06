@@ -1,5 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.ringpowers.CorpsArsenal;
+import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.BrightestDay;
 import dev.amble.core.attacks.utility.LumberjackManager;
 import dev.amble.core.items.PowerRingItem;
@@ -11,7 +13,7 @@ public class LumberjackConstruct extends ConstructRingPower {
     private static final int CHARGE_TICKS = 15;
 
     public LumberjackConstruct() {
-        super(BrightestDay.id("lumberjack"));
+        super(BrightestDay.id("lumberjack"), CorpsArsenal.exclusive(LanternCorps.ORANGE));
     }
 
     @Override

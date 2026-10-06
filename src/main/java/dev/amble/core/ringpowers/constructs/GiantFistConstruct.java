@@ -1,5 +1,7 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.ringpowers.CorpsArsenal;
+import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.attacks.weapon.FistManager;
@@ -7,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 public class GiantFistConstruct extends ConstructRingPower {
     public GiantFistConstruct() {
-        super(BrightestDay.id("giant_fist"));
+        super(BrightestDay.id("giant_fist"), CorpsArsenal.exclusive(LanternCorps.GREEN));
     }
 
     @Override

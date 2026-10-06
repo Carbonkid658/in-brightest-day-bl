@@ -52,6 +52,10 @@ import dev.amble.core.networking.payloads.s2c.PlayerStateS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ScanS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ScanStartS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ShieldRemoveS2CPayload;
+import dev.amble.core.networking.payloads.s2c.TintFlashS2CPayload;
+import dev.amble.core.networking.payloads.s2c.BatteriesS2CPayload;
+import dev.amble.core.networking.payloads.s2c.SanctuaryS2CPayload;
+import dev.amble.core.networking.payloads.s2c.LanternRitualS2CPayload;
 import dev.amble.core.networking.payloads.s2c.SlamS2CPayload;
 import dev.amble.core.networking.payloads.s2c.SwarmS2CPayload;
 import dev.amble.core.networking.payloads.s2c.AileronRollS2CPayload;
@@ -131,6 +135,10 @@ public class Networking {
         PayloadTypeRegistry.clientboundPlay().register(BlastS2CPayload.TYPE, BlastS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ShieldSpawnS2CPayload.TYPE, ShieldSpawnS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ShieldRemoveS2CPayload.TYPE, ShieldRemoveS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(TintFlashS2CPayload.TYPE, TintFlashS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(BatteriesS2CPayload.TYPE, BatteriesS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(SanctuaryS2CPayload.TYPE, SanctuaryS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(LanternRitualS2CPayload.TYPE, LanternRitualS2CPayload.CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(UsePowerC2SPayload.TYPE, UsePowerC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(SetFlightC2SPayload.TYPE, SetFlightC2SPayload::handle);

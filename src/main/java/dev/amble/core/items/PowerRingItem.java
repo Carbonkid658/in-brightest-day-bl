@@ -1,5 +1,6 @@
 package dev.amble.core.items;
 
+import dev.amble.core.heart.RedHeart;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.ringpowers.CorpsSynergy;
@@ -36,6 +37,7 @@ public class PowerRingItem extends Item {
 
         ItemStack ring = player.getItemInHand(hand);
         ItemStack previous = BrightestDayAttachments.getRing(player);
+        if (!RedHeart.mayRemove(player, previous)) return InteractionResult.FAIL;
         BrightestDayAttachments.setRing(player, ring);
         player.setItemInHand(hand, previous.copy());
         level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ARMOR_EQUIP_GOLD.value(), SoundSource.PLAYERS, 1.0F, 1.2F);

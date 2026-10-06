@@ -1,5 +1,10 @@
 package dev.amble.core.ringpowers.impl;
 
+import dev.amble.core.progression.Milestone;
+import dev.amble.core.progression.Trigger;
+import dev.amble.core.progression.RingRanks;
+import dev.amble.core.ringpowers.CorpsMimicry;
+import dev.amble.core.attacks.projectile.CrystalManager;
 import dev.amble.core.ringpowers.CorpsColors;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -20,6 +25,7 @@ import dev.amble.core.attacks.area.BarrageManager;
 import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.tractor.TractorManager;
+import net.minecraft.util.Mth;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
@@ -41,6 +47,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
     private static final int AUTO_LOWER_TICKS = 100;
 
     private static final Map<ServerPlayer, Long> LAST_FIRED = new WeakHashMap<>();
+    private static final Map<ServerPlayer, Long> CHARGE_STARTED = new WeakHashMap<>();
     private static final Map<ServerPlayer, Long> LAST_USED = new WeakHashMap<>();
 
     public record Data(boolean active, boolean manual, Optional<Identifier> construct, Optional<Identifier> ability, boolean abilityMode) {
@@ -98,11 +105,6 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
     public void tick(ServerPlayer player, Data data) {
         if (!data.active()) return;
 
-        ItemStack held = player.getMainHandItem();
-        if (!held.isEmpty() && !(held.getItem() instanceof PowerRingItem) && !(held.getItem() instanceof LanternBlockItem)) {
-            lower(player);
-            return;
-        }
         if (data.manual()) return;
 
         long now = player.level().getGameTime();
@@ -114,6 +116,17 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         } else if (now - last > AUTO_LOWER_TICKS) {
             lower(player);
         }
+    }
+
+    public static void startCharge(ServerPlayer player) {
+        CHARGE_STARTED.put(player, player.level().getGameTime());
+        raise(player);
+    }
+
+    public static float chargeFraction(ServerPlayer player, int fullTicks) {
+        Long started = CHARGE_STARTED.get(player);
+        if (started == null || fullTicks <= 0) return 1.0F;
+        return Mth.clamp((player.level().getGameTime() - started) / (float) fullTicks, 0.0F, 1.0F);
     }
 
     public static void raise(ServerPlayer player) {
@@ -130,6 +143,10 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         data(player).ifPresent(data -> BrightestDayAttachments.setData(player, RingPowerRegistry.ARMED, data.withActive(false, false)));
         AcidManager.stop(player);
         TractorManager.release(player);
+    }
+
+    public static boolean handFree(Player player) {
+        return player.getMainHandItem().isEmpty() || isArmed(player);
     }
 
     public static boolean isArmed(Player player) {
@@ -212,7 +229,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
     }
 
     public static void fire(ServerPlayer player, int radius) {
-        if (player.isSpectator() || isAbilityMode(player)) return;
+        if (player.isSpectator() || isAbilityMode(player) || CrystalManager.isEncased(player)) return;
 
         ServerLevel level = player.level();
         Optional<ConstructRingPower> construct = selectedConstruct(player);
@@ -234,6 +251,15 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
 
         int color = CorpsColors.of(player);
         construct.get().fire(player, radius, color);
+        CHARGE_STARTED.remove(player);
+        RingRanks.fire(player, Trigger.CONSTRUCT, Milestone.Context.of(construct.get().id().getPath()));
+        if (PowerRingItem.getWornCorps(player).orElse(null) == LanternCorps.INDIGO && !construct.get().isAvailableTo(LanternCorps.INDIGO)) {
+            for (LanternCorps source : CorpsMimicry.mimicked(player, LanternCorps.INDIGO)) {
+                if (!construct.get().isAvailableTo(source)) continue;
+                RingRanks.fire(player, Trigger.MIMIC, Milestone.Context.NONE, source.ordinal() + 1);
+                break;
+            }
+        }
     }
 
     private static Optional<Data> data(Player player) {
