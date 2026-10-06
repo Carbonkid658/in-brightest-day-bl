@@ -304,7 +304,7 @@ public class BrightestDayConfig {
     @SerialEntry
     public boolean aileronRolls = true;
     @SerialEntry
-    public double aileronRollDodge = 1.4;
+    public double aileronRollDodge = 2.0;
 
     @SerialEntry
     public double synergyLinkRadius = 96.0;

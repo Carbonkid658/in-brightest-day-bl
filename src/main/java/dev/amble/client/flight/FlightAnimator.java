@@ -53,8 +53,9 @@ public final class FlightAnimator {
     private static final double REMOTE_VELOCITY_SMOOTHING = 0.35;
     private static final int LANDING_GRACE_TICKS = 4;
     private static final int MIN_PHASE_TICKS = 8;
-    public static final int ROLL_TICKS = 10;
-    private static final float ROLL_CAMERA_TILT = 25.0F;
+    public static final int ROLL_TICKS = 12;
+    private static final double LOCAL_VELOCITY_SMOOTHING = 0.6;
+    private static final float TURN_SMOOTHING = 0.3F;
     private static final float HOVER_CAPE_LEAN = 70.0F;
     private static final float FLIGHT_CAPE_LEAN = 22.0F;
     private static final float HOVER_CAPE_FLAP = 20.0F;
@@ -74,6 +75,7 @@ public final class FlightAnimator {
         float flight, oFlight;
         float pitch, oPitch;
         float roll, oRoll;
+        float turn;
         float speed, oSpeed;
         double forward;
         float bodyPitch, oBodyPitch;
@@ -114,7 +116,7 @@ public final class FlightAnimator {
         boolean flying = airborne || FlightRingPower.canFly(player) && motion.phase != Phase.NONE && motion.landingTicks < LANDING_GRACE_TICKS;
 
         Vec3 rawVelocity = player.position().subtract(player.xo, player.yo, player.zo);
-        motion.velocity = player == client.player ? rawVelocity : motion.velocity.lerp(rawVelocity, REMOTE_VELOCITY_SMOOTHING);
+        motion.velocity = motion.velocity.lerp(rawVelocity, player == client.player ? LOCAL_VELOCITY_SMOOTHING : REMOTE_VELOCITY_SMOOTHING);
         Vec3 velocity = motion.velocity;
         double speed = velocity.length();
         float bodyYaw = player.yBodyRot * Mth.DEG_TO_RAD;
@@ -122,7 +124,8 @@ public final class FlightAnimator {
         Vec3 right = new Vec3(-Mth.cos(bodyYaw), 0.0, -Mth.sin(bodyYaw));
         double forward = velocity.dot(facing);
         double side = velocity.dot(right);
-        float turn = Mth.wrapDegrees(player.yBodyRot - player.yBodyRotO);
+        motion.turn += (Mth.wrapDegrees(player.yBodyRot - player.yBodyRotO) - motion.turn) * TURN_SMOOTHING;
+        float turn = motion.turn;
 
         motion.oFlight = motion.flight;
         motion.oPitch = motion.pitch;
@@ -272,7 +275,7 @@ public final class FlightAnimator {
             case "body" -> rotation(
                     Mth.lerp(partialTicks, motion.oBodyPitch, motion.bodyPitch) * flight,
                     0.0F,
-                    (Mth.lerp(partialTicks, motion.oRoll, motion.roll) + Mth.lerp(partialTicks, motion.oSpin, motion.spin)) * flight);
+                    -(Mth.lerp(partialTicks, motion.oRoll, motion.roll) + Mth.lerp(partialTicks, motion.oSpin, motion.spin)) * flight);
             case "head" -> {
                 float bodyPitch = Mth.lerp(partialTicks, motion.oBodyPitch, motion.bodyPitch);
                 float bodyYaw = Mth.rotLerp(partialTicks, player.yBodyRotO, player.yBodyRot);
@@ -378,10 +381,8 @@ public final class FlightAnimator {
     public static float cameraRoll(Player player, float partialTicks) {
         Motion motion = MOTIONS.get(player);
         if (motion == null) return 0.0F;
-        float spin = Mth.lerp(partialTicks, motion.oSpin, motion.spin) / 360.0F;
-        float tilt = Mth.sin(Math.abs(spin) * Mth.PI) * ROLL_CAMERA_TILT * Math.signum(spin);
-        return (Mth.lerp(partialTicks, motion.oRoll, motion.roll) * CAMERA_ROLL_SCALE + tilt)
-                * Mth.lerp(partialTicks, motion.oFlight, motion.flight);
+        float bank = Mth.lerp(partialTicks, motion.oRoll, motion.roll) * CAMERA_ROLL_SCALE * Mth.lerp(partialTicks, motion.oFlight, motion.flight);
+        return bank + Mth.lerp(partialTicks, motion.oSpin, motion.spin);
     }
 
     private FlightAnimator() {}
