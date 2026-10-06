@@ -306,6 +306,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.hunt.no_target", "No prey in sight.");
         builder.add("message.brightestday.hunt.ended", "The hunt is over.");
         builder.add("hud.brightestday.blood_hunt", "%s Prey %sm");
+        builder.add("hud.brightestday.comms.incoming", "%s is talking through your ring");
+        builder.add("hud.brightestday.comms.none", "Comms: scroll to dial a teammate");
+        builder.add("hud.brightestday.comms.dialed", "Comms: %s (hold use to talk)");
+        builder.add("hud.brightestday.comms.transmitting", "Transmitting to %s...");
         builder.add("message.brightestday.indigo.broken", "The embrace is broken.");
         builder.add("message.brightestday.indigo.chosen", "You have been chosen. You are Indigo-1.");
         builder.add("message.brightestday.indigo.converted", "%s has joined the Indigo Tribe.");
@@ -839,6 +843,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(RingPowerRegistry.CONVERSION.getTranslationKey(), "Conversion");
         builder.add(RingPowerRegistry.BERSERK.getTranslationKey(), "Berserk");
         builder.add(RingPowerRegistry.BLOOD_HUNT.getTranslationKey(), "Blood Hunt");
+        builder.add(RingPowerRegistry.COMMS.getTranslationKey(), "Comms");
         builder.add(RingPowerRegistry.SCAN.getTranslationKey(), "Scan");
 
         builder.add("message.brightestday.nothing_to_scan", "Nothing to scan.");

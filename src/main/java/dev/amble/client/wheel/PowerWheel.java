@@ -103,6 +103,7 @@ public final class PowerWheel {
             Map.entry(RingPowerRegistry.SCAN, Items.SPYGLASS),
             Map.entry(RingPowerRegistry.CONVERSION, Items.ECHO_SHARD),
             Map.entry(RingPowerRegistry.BERSERK, Items.BLAZE_POWDER),
+            Map.entry(RingPowerRegistry.COMMS, Items.BELL),
             Map.entry(RingPowerRegistry.CONCUSSIVE, Items.WIND_CHARGE),
             Map.entry(RingPowerRegistry.ACID, Items.MAGMA_CREAM)
     );

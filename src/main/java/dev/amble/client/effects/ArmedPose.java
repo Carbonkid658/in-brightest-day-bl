@@ -40,6 +40,7 @@ public final class ArmedPose {
     public static final RenderStateDataKey<Float> ACTIVITY = RenderStateDataKey.create(() -> "brightestday:ring_activity");
     public static final RenderStateDataKey<Boolean> CONSTRUCTING = RenderStateDataKey.create(() -> "brightestday:ring_constructing");
     public static final RenderStateDataKey<Boolean> CHARGE_ANIMATING = RenderStateDataKey.create(() -> "brightestday:charge_animating");
+    public static final RenderStateDataKey<Float> COMMS = RenderStateDataKey.create(() -> "brightestday:comms_talking");
 
     public static final float AIM_INWARD = 0.1F;
     private static final float RAISE_SPEED = 0.25F;
@@ -47,6 +48,10 @@ public final class ArmedPose {
 
     private static final float FIRST_PERSON_RAISE = 0.12F;
     private static final float FIRST_PERSON_FORWARD = 0.1F;
+    private static final float MOUTH_PITCH = -1.95F;
+    private static final float MOUTH_INWARD = 0.65F;
+    private static final float FIRST_PERSON_MOUTH_INWARD = 0.3F;
+    private static final float FIRST_PERSON_MOUTH_TURN = 25.0F;
     private static final float FIRING_INWARD = 0.22F;
     private static final float FIRING_TURN = 18.0F;
     private static final float GLOW_SIZE = 0.75F * VoxelRenderer.PIXEL;
@@ -115,6 +120,7 @@ public final class ArmedPose {
             data.setData(ACTIVITY, activity(player, partialTicks));
             data.setData(CONSTRUCTING, ActiveConstructs.hasActive(player));
             data.setData(CHARGE_ANIMATING, LanternChargeAnimations.handheld(player));
+            data.setData(COMMS, CommsClient.talking(player, partialTicks));
         } else {
             data.setData(AMOUNT, 0.0F);
         }
@@ -129,6 +135,12 @@ public final class ArmedPose {
         arm.xRot = Mth.lerp(amount, arm.xRot, model.head.xRot - Mth.HALF_PI);
         arm.yRot = Mth.lerp(amount, arm.yRot, model.head.yRot + (right ? -AIM_INWARD : AIM_INWARD));
         arm.zRot = Mth.lerp(amount, arm.zRot, 0.0F);
+
+        float talk = ((FabricRenderState) state).getDataOrDefault(COMMS, 0.0F);
+        if (talk <= 0.001F) return;
+        arm.xRot = Mth.lerp(talk, arm.xRot, MOUTH_PITCH + model.head.xRot * 0.5F);
+        arm.yRot = Mth.lerp(talk, arm.yRot, model.head.yRot + (right ? -MOUTH_INWARD : MOUTH_INWARD));
+        arm.zRot = Mth.lerp(talk, arm.zRot, 0.0F);
     }
 
     public static void raiseFirstPersonArm(PoseStack poseStack, HumanoidArm arm, AvatarRenderState state) {
@@ -136,6 +148,13 @@ public final class ArmedPose {
         if (amount <= 0.001F || arm != state.mainArm) return;
 
         poseStack.translate(0.0F, FIRST_PERSON_RAISE * amount, -FIRST_PERSON_FORWARD * amount);
+
+        float talk = state.getDataOrDefault(COMMS, 0.0F);
+        if (talk > 0.001F) {
+            float side = arm == HumanoidArm.RIGHT ? 1.0F : -1.0F;
+            poseStack.translate(-side * FIRST_PERSON_MOUTH_INWARD * talk, 0.0F, 0.0F);
+            poseStack.rotateDegrees(Axis.YP, side * FIRST_PERSON_MOUTH_TURN * talk);
+        }
 
         float firing = BlastEffects.firingAmount(Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false)) * amount;
         if (firing > 0.001F) {

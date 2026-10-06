@@ -33,6 +33,9 @@
 		],
 		"modmenu": [
 			"dev.amble.client.compat.ModMenuCompat"
+		],
+		"voicechat": [
+			"dev.amble.core.comms.CommsVoicePlugin"
 		]
 	},
 	"mixins": [
@@ -40,7 +43,8 @@
 	],
 	"suggests": {
 		"lambdynlights": "*",
-		"modmenu": "*"
+		"modmenu": "*",
+		"voicechat": "*"
 	},
 	"depends": {
 		"fabricloader": ">=0.19.5",

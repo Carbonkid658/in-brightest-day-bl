@@ -63,6 +63,7 @@ public final class ConstructClient {
 
     public static boolean onScroll(int wheel) {
         if (FlightControls.onScroll(wheel)) return true;
+        if (CommsClient.onScroll(wheel)) return true;
         if (TractorEffects.onScroll(wheel)) return true;
         if (SculptClient.onScroll(wheel)) return true;
 
