@@ -32,11 +32,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 public final class RingRanks {
     public static final int MAX_RANK = 4;
     private static final float[] ARSENAL = {0.0F, 1.0F / 3.0F, 0.55F, 0.78F, 1.0F};
     private static final float[] CAPACITY = {0.0F, 0.6F, 0.73F, 0.86F, 1.0F};
+    private static final Map<RingPower<?>, Integer> RANK_GATED = Map.of(
+            RingPowerRegistry.TRACTOR_BEAM, 3,
+            RingPowerRegistry.LUMBERJACK, 3);
     private static final List<String> PRIORITY = List.of(
             "blast", "entity_shield", "boomerang_disc", "energy_whip", "chain_bolt", "wall", "piercing_lance", "swarm_missiles",
             "rapid_barrage", "area_shield", "beam", "giant_fist", "nova_burst", "ground_slam", "sentry_turret", "glider",
@@ -116,7 +120,7 @@ public final class RingRanks {
         for (LanternCorps corps : LanternCorps.values()) {
             if (!Milestones.has(corps)) continue;
             List<String> keys = updated.assigned().getOrDefault(corps, List.of());
-            if (keys.size() == Milestones.LAST_TIER - Milestones.FIRST_TIER + 1 && keys.stream().allMatch(key -> Milestones.get(key).isPresent())) continue;
+            if (keys.size() == Milestones.LAST_TIER - Milestones.FIRST_TIER + 1 && IntStream.range(0, keys.size()).allMatch(i -> Milestones.get(keys.get(i)).filter(milestone -> milestone.tier() == Milestones.FIRST_TIER + i).isPresent())) continue;
             updated = updated.withAssigned(corps, Milestones.roll(corps, player.getRandom(), multiplayer));
         }
         if (updated != ranks) player.setAttached(RANKS, updated);
@@ -233,6 +237,7 @@ public final class RingRanks {
                 .filter(ConstructRingPower.class::isInstance)
                 .map(ConstructRingPower.class::cast)
                 .filter(power -> !starter(corps, power))
+                .filter(power -> !RANK_GATED.containsKey(power))
                 .sorted(Comparator.comparingInt((ConstructRingPower power) -> power.corps().size() <= 2 ? 0 : 1)
                         .thenComparingInt(power -> {
                             int index = PRIORITY.indexOf(power.id().getPath());
@@ -242,6 +247,10 @@ public final class RingRanks {
         int unlocked = (int) Math.ceil(arsenal.size() * ARSENAL[Mth.clamp(rank(player, corps), 1, MAX_RANK)]);
         Set<RingPower<?>> locked = new HashSet<>();
         for (int i = unlocked; i < arsenal.size(); i++) locked.add(arsenal.get(i));
+        int rank = rank(player, corps);
+        RANK_GATED.forEach((power, required) -> {
+            if (rank < required) locked.add(power);
+        });
         return locked;
     }
 

@@ -1,6 +1,5 @@
 package dev.amble.core.ringpowers.constructs;
 
-import dev.amble.core.ringpowers.CorpsArsenal;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.BrightestDay;
 import dev.amble.core.attacks.utility.LumberjackManager;
@@ -8,12 +7,14 @@ import dev.amble.core.items.PowerRingItem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.util.EnumSet;
+
 public class LumberjackConstruct extends ConstructRingPower {
     private static final int USE_COST = 60;
     private static final int CHARGE_TICKS = 15;
 
     public LumberjackConstruct() {
-        super(BrightestDay.id("lumberjack"), CorpsArsenal.exclusive(LanternCorps.ORANGE));
+        super(BrightestDay.id("lumberjack"), EnumSet.allOf(LanternCorps.class));
     }
 
     @Override
