@@ -223,7 +223,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
     }
 
     public static List<RingPower<?>> abilities(Player player) {
-        return List.<RingPower<?>>of(RingPowerRegistry.TRACTOR_BEAM, RingPowerRegistry.SCAN, RingPowerRegistry.CONCUSSIVE, RingPowerRegistry.ACID).stream()
+        return List.<RingPower<?>>of(RingPowerRegistry.TRACTOR_BEAM, RingPowerRegistry.SCAN, RingPowerRegistry.CONCUSSIVE, RingPowerRegistry.ACID, RingPowerRegistry.CONVERSION).stream()
                 .filter(power -> BrightestDayAttachments.get(player, power).isPresent())
                 .toList();
     }

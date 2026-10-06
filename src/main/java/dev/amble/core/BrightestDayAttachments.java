@@ -3,6 +3,7 @@ package dev.amble.core;
 import com.mojang.serialization.Codec;
 import dev.amble.BrightestDay;
 import dev.amble.core.forge.CentralPowerBattery;
+import dev.amble.core.progression.IndigoOne;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.core.ringpowers.ColorTweak;
 import dev.amble.core.ringpowers.CorpsMimicry;
@@ -139,6 +140,7 @@ public class BrightestDayAttachments {
         if (corps != null) {
             Set<RingPower<?>> locked = RingRanks.locked(player, corps);
             if (!locked.isEmpty()) available = available.stream().filter(power -> !locked.contains(power)).toList();
+            if (!IndigoOne.isIndigoOne(player)) available = available.stream().filter(power -> power != RingPowerRegistry.CONVERSION).toList();
         }
 
         if (current.size() == available.size()) {

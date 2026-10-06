@@ -6,6 +6,7 @@ import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.AcidC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ConcussiveC2SPayload;
+import dev.amble.core.networking.payloads.c2s.ConversionC2SPayload;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
@@ -45,6 +46,7 @@ public final class AbilityClient {
         RingPower<?> held = RingInput.useHeld(client) && wantsUse(player) ? ArmedRingPower.activeAbility(player).orElse(null) : null;
         if (held != null && held != pressed) {
             if (held == RingPowerRegistry.CONCUSSIVE) ClientPlayNetworking.send(ConcussiveC2SPayload.INSTANCE);
+            if (held == RingPowerRegistry.CONVERSION) ClientPlayNetworking.send(ConversionC2SPayload.INSTANCE);
         }
         pressed = held;
 

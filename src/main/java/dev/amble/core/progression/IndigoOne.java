@@ -32,6 +32,9 @@ import java.util.UUID;
 
 public final class IndigoOne {
     private static final int CHANNEL_TICKS = 100;
+    private static final int FORCED_CHANNEL_TICKS = 160;
+    private static final float FORCE_CHARGE = 0.25F;
+    private static final float FORCE_HEALTH = 0.3F;
     private static final double CHANNEL_RANGE = 5.0;
     private static final int INDIGO = LanternCorps.INDIGO.color();
 
@@ -59,7 +62,12 @@ public final class IndigoOne {
     }
 
     private static boolean embrace(ServerPlayer indigo, ServerPlayer target) {
-        if (!isIndigoOne(indigo) || !indigo.getMainHandItem().isEmpty()) return false;
+        if (!indigo.getMainHandItem().isEmpty()) return false;
+        return begin(indigo, target);
+    }
+
+    public static boolean begin(ServerPlayer indigo, ServerPlayer target) {
+        if (!isIndigoOne(indigo)) return false;
         if (PowerRingItem.getCorps(BrightestDayAttachments.getRing(indigo)).orElse(null) != LanternCorps.INDIGO) return false;
 
         LanternCorps corps = PowerRingItem.getCorps(BrightestDayAttachments.getRing(target)).orElse(null);
@@ -68,16 +76,24 @@ public final class IndigoOne {
             indigo.sendOverlayMessage(Component.translatable("message.brightestday.indigo.red_heart").withColor(INDIGO));
             return true;
         }
-        if (SpectrumMeters.get(target, Emotion.COMPASSION) < Emotion.GATE) {
+        boolean willing = SpectrumMeters.get(target, Emotion.COMPASSION) >= Emotion.GATE;
+        if (!willing && !weakened(target)) {
             indigo.sendOverlayMessage(Component.translatable("message.brightestday.indigo.closed", target.getDisplayName()).withColor(INDIGO));
             return true;
         }
         if (CHANNELS.containsKey(indigo.getUUID())) return true;
 
-        CHANNELS.put(indigo.getUUID(), new Channel(target.getUUID(), indigo.level().getGameTime() + CHANNEL_TICKS, indigo.getHealth(), target.getHealth()));
-        target.sendSystemMessage(Component.translatable("message.brightestday.indigo.embracing", indigo.getDisplayName()).withStyle(ChatFormatting.ITALIC).withColor(INDIGO));
+        int ticks = willing ? CHANNEL_TICKS : FORCED_CHANNEL_TICKS;
+        CHANNELS.put(indigo.getUUID(), new Channel(target.getUUID(), indigo.level().getGameTime() + ticks, indigo.getHealth(), target.getHealth()));
+        target.sendSystemMessage(Component.translatable(willing ? "message.brightestday.indigo.embracing" : "message.brightestday.indigo.forcing", indigo.getDisplayName())
+                .withStyle(ChatFormatting.ITALIC).withColor(INDIGO));
         indigo.level().playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 1.5F, 0.7F);
         return true;
+    }
+
+    private static boolean weakened(ServerPlayer target) {
+        return PowerRingItem.getChargeFraction(BrightestDayAttachments.getRing(target)) < FORCE_CHARGE
+                || target.getHealth() < target.getMaxHealth() * FORCE_HEALTH;
     }
 
     private static void tick(MinecraftServer server) {

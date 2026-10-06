@@ -291,8 +291,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.duel.summoned", "The ring is already claimed by %s. Take it from them.");
         builder.add("message.brightestday.duel.won", "The orange light is yours.");
         builder.add("message.brightestday.indigo.red_heart", "A red ring cannot be embraced — it is their heart.");
-        builder.add("message.brightestday.indigo.closed", "%s's heart is closed to compassion.");
+        builder.add("message.brightestday.indigo.closed", "%s's heart is closed to compassion. Weaken them first.");
         builder.add("message.brightestday.indigo.embracing", "%s embraces you. Do not struggle...");
+        builder.add("message.brightestday.indigo.forcing", "%s seizes your will. Break free or be embraced...");
+        builder.add("message.brightestday.indigo.no_target", "Look at a ring-bearer within reach to embrace them.");
         builder.add("message.brightestday.indigo.broken", "The embrace is broken.");
         builder.add("message.brightestday.indigo.chosen", "You have been chosen. You are Indigo-1.");
         builder.add("message.brightestday.indigo.converted", "%s has joined the Indigo Tribe.");
@@ -822,6 +824,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.unknown_pattern", "The ring doesn't recognize that pattern.");
 
         builder.add(RingPowerRegistry.TRACTOR_BEAM.getTranslationKey(), "Tractor Beam");
+        builder.add(RingPowerRegistry.CONVERSION.getTranslationKey(), "Conversion");
         builder.add(RingPowerRegistry.SCAN.getTranslationKey(), "Scan");
 
         builder.add("message.brightestday.nothing_to_scan", "Nothing to scan.");

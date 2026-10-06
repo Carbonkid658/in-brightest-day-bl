@@ -3,6 +3,7 @@ package dev.amble.core.networking;
 import dev.amble.core.networking.payloads.c2s.AcidC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ChargeC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ConcussiveC2SPayload;
+import dev.amble.core.networking.payloads.c2s.ConversionC2SPayload;
 import dev.amble.core.networking.payloads.c2s.CycleConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.DismissConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.DrillModeC2SPayload;
@@ -102,6 +103,7 @@ public class Networking {
         PayloadTypeRegistry.serverboundPlay().register(SelectConstructC2SPayload.TYPE, SelectConstructC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SelectAbilityC2SPayload.TYPE, SelectAbilityC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ConcussiveC2SPayload.TYPE, ConcussiveC2SPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ConversionC2SPayload.TYPE, ConversionC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ChargeC2SPayload.TYPE, ChargeC2SPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ChargeS2CPayload.TYPE, ChargeS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(LightOrbS2CPayload.TYPE, LightOrbS2CPayload.CODEC);
@@ -161,6 +163,7 @@ public class Networking {
         ServerPlayNetworking.registerGlobalReceiver(SelectConstructC2SPayload.TYPE, SelectConstructC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(SelectAbilityC2SPayload.TYPE, SelectAbilityC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(ConcussiveC2SPayload.TYPE, ConcussiveC2SPayload::handle);
+        ServerPlayNetworking.registerGlobalReceiver(ConversionC2SPayload.TYPE, ConversionC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(ChargeC2SPayload.TYPE, ChargeC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(AcidC2SPayload.TYPE, AcidC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(SetEyesC2SPayload.TYPE, SetEyesC2SPayload::handle);

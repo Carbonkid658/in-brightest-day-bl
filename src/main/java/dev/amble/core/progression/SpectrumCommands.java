@@ -61,7 +61,7 @@ public final class SpectrumCommands {
                                 .then(Commands.literal("set").then(player().then(amount(0, BrightestDayComponents.MAX_POWER)
                                         .executes(context -> chargeSet(context, IntegerArgumentType.getInteger(context, "amount")))))))
                         .then(admin("offer")
-                                .then(Commands.literal("force").then(player().then(corps().executes(SpectrumCommands::offerForce)))))
+                                .then(admin("force").then(player().then(corps().executes(SpectrumCommands::offerForce)))))
                         .then(admin("meteor")
                                 .then(Commands.literal("drop").executes(context -> meteorDrop(context, null))
                                         .then(Commands.argument("pos", BlockPosArgument.blockPos())

@@ -30,6 +30,7 @@ import dev.amble.core.ringpowers.constructs.WallConstruct;
 import dev.amble.core.ringpowers.impl.AcidRingPower;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.ringpowers.impl.ConcussiveRingPower;
+import dev.amble.core.ringpowers.impl.ConversionRingPower;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import dev.amble.core.ringpowers.impl.LightRingPower;
 import dev.amble.core.ringpowers.impl.ScanRingPower;
@@ -83,6 +84,7 @@ public final class RingPowerRegistry {
     public static final ConcussiveRingPower CONCUSSIVE = register(new ConcussiveRingPower());
     public static final AcidRingPower ACID = register(new AcidRingPower());
     public static final SelfHealRingPower SELF_HEAL = register(new SelfHealRingPower());
+    public static final ConversionRingPower CONVERSION = register(new ConversionRingPower());
 
     public static <T extends RingPower<?>> T register(T power) {
         if (REGISTRY.putIfAbsent(power.id(), power) != null) {
