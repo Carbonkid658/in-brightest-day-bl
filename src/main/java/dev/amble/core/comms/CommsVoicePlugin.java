@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import java.util.UUID;
 
 public class CommsVoicePlugin implements VoicechatPlugin {
-    public static final String CATEGORY = "brightestday_comms";
+    public static final String CATEGORY = "ring_comms";
 
     @Override
     public String getPluginId() {
@@ -32,6 +32,7 @@ public class CommsVoicePlugin implements VoicechatPlugin {
                 .setName("Ring Comms")
                 .setDescription("Teammates talking to you through your power ring")
                 .build());
+        BrightestDay.LOGGER.info("Ring comms registered with Simple Voice Chat");
     }
 
     private void onMicrophone(MicrophonePacketEvent event) {
