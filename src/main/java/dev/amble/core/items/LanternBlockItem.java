@@ -97,6 +97,7 @@ public class LanternBlockItem extends BlockItem {
     @Override
     public void onUseTick(Level level, LivingEntity entity, ItemStack stack, int ticksRemaining) {
         if (!(entity instanceof Player player)) return;
+        if (level.isClientSide() && !player.isLocalPlayer()) return;
 
         if (!isGrounded(player) || !isStill(player) || !isChargingLantern(player)) {
             if (!level.isClientSide()) player.sendOverlayMessage(Component.translatable("message.brightestday.stand_still_to_charge"));
