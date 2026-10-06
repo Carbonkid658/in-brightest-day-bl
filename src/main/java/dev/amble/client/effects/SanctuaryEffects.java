@@ -1,6 +1,7 @@
 package dev.amble.client.effects;
 
 import dev.amble.core.networking.payloads.s2c.SanctuaryS2CPayload;
+import dev.amble.core.progression.BlueSanctuary;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -36,7 +37,6 @@ public final class SanctuaryEffects {
             ".###...###."
     };
     private static final float VOXEL = 0.2F;
-    private static final double HEIGHT = 3.2;
     private static final double BOB = 0.15;
     private static final float SPIN = 0.02F;
     private static final float ALPHA = 0.9F;
@@ -65,7 +65,7 @@ public final class SanctuaryEffects {
 
         Vec3 camera = context.levelState().cameraRenderState.pos;
         float time = client.level.getGameTime() + client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
-        Vec3 origin = Vec3.atBottomCenterOf(center).add(0.0, HEIGHT + Math.sin(time * 0.05) * BOB, 0.0);
+        Vec3 origin = BlueSanctuary.ringCenter(center).add(0.0, Math.sin(time * 0.05) * BOB, 0.0);
         if (origin.distanceTo(camera) > RENDER_DISTANCE) return;
 
         float angle = time * SPIN;

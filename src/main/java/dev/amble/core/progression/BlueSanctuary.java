@@ -1,5 +1,6 @@
 package dev.amble.core.progression;
 
+import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayBlocks;
@@ -11,9 +12,11 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,29 +24,31 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 public final class BlueSanctuary {
     private static final int BLUE = LanternCorps.BLUE.color();
-    private static final double DOME_RADIUS = 8.0;
-    private static final double PEDESTAL_REACH = 3.0;
-    private static final double VISIBLE_RANGE = 48.0;
+    private static final Identifier STRUCTURE = BrightestDay.id("blue_lantern_sanctuary");
+    private static final BlockPos ANCHOR = new BlockPos(17, 1, 13);
+    public static final Vec3 RING_OFFSET = new Vec3(0.0, 41.0, 0.0);
+    private static final double RING_REACH = 2.0;
+    private static final double BARRIER_RADIUS = 18.0;
+    private static final double BARRIER_HEIGHT = 48.0;
+    private static final double BARRIER_BELOW = 4.0;
+    private static final double VISIBLE_RANGE = 64.0;
     private static final double BARRIER_PUSH = 0.9;
-    private static final int RADIUS = 7;
-    private static final int LIGHT_RING = 4;
-    private static final int FOUNDATION_DEPTH = 6;
-    private static final int CLEARANCE = 8;
-    private static final int PILLARS = 8;
-    private static final int PILLAR_RADIUS = 6;
-    private static final int PILLAR_HEIGHT = 5;
-    private static final int SANCTUARY_SCAN = 12;
+    private static final int SHELL_PARTICLES = 90;
+    private static final int FOUNDATION_DEPTH = 16;
     private static final int PLACE_INTERVAL = 40;
     public static final long BLESSING_COOLDOWN = 24000L;
 
@@ -119,23 +124,26 @@ public final class BlueSanctuary {
 
         WorldProgress state = WorldProgress.get(server);
         if (!state.sanctuaryBuilt() || state.sanctuary().isEmpty()) return;
-        Vec3 center = Vec3.atBottomCenterOf(state.sanctuary().get()).add(0.0, 1.0, 0.0);
+        Vec3 center = Vec3.atBottomCenterOf(state.sanctuary().get());
+        Vec3 ring = ringCenter(state.sanctuary().get());
         boolean watched = false;
         for (ServerPlayer player : level.players()) {
-            double distance = player.position().distanceTo(center);
-            if (distance > VISIBLE_RANGE) continue;
+            double horizontal = Math.sqrt(Mth.lengthSquared(player.getX() - center.x, player.getZ() - center.z));
+            if (horizontal > VISIBLE_RANGE) continue;
             watched = true;
             if (player.isSpectator() || player.isCreative()) continue;
 
             boolean hopeful = SpectrumMeters.passes(player, Emotion.HOPE);
             boolean walked = Pilgrimage.complete(player);
-            if (!(hopeful && walked) && distance < DOME_RADIUS + 0.5) {
+            double height = player.getY() - center.y;
+            boolean inside = horizontal < BARRIER_RADIUS + 0.5 && height > -BARRIER_BELOW && height < BARRIER_HEIGHT;
+            if (!(hopeful && walked) && inside) {
                 Vec3 out = player.position().subtract(center).multiply(1.0, 0.0, 1.0);
                 out = out.lengthSqr() < 1.0E-4 ? new Vec3(1.0, 0.0, 0.0) : out.normalize();
                 player.setDeltaMovement(out.scale(BARRIER_PUSH).add(0.0, 0.3, 0.0));
                 player.needsSync = true;
                 player.sendOverlayMessage(Component.translatable(walked ? "message.brightestday.sanctuary.barred" : "message.brightestday.sanctuary.unwalked").withColor(BLUE));
-            } else if (hopeful && walked && distance < PEDESTAL_REACH && state.mayBeBlessed(player.getUUID(), server.overworld().getGameTime(), BLESSING_COOLDOWN)) {
+            } else if (hopeful && walked && player.getBoundingBox().getCenter().distanceTo(ring) < RING_REACH && state.mayBeBlessed(player.getUUID(), server.overworld().getGameTime(), BLESSING_COOLDOWN)) {
                 bless(player);
             }
         }
@@ -143,10 +151,10 @@ public final class BlueSanctuary {
         if (watched && server.getTickCount() % 10 == 0) {
             DustParticleOptions dust = new DustParticleOptions(BLUE, 1.6F);
             RandomSource random = level.getRandom();
-            for (int i = 0; i < 40; i++) {
+            for (int i = 0; i < SHELL_PARTICLES; i++) {
                 double theta = random.nextDouble() * Mth.TWO_PI;
                 double phi = Math.acos(random.nextDouble());
-                Vec3 point = center.add(Math.sin(phi) * Math.cos(theta) * DOME_RADIUS, Math.cos(phi) * DOME_RADIUS, Math.sin(phi) * Math.sin(theta) * DOME_RADIUS);
+                Vec3 point = center.add(Math.sin(phi) * Math.cos(theta) * BARRIER_RADIUS, Math.cos(phi) * BARRIER_HEIGHT, Math.sin(phi) * Math.sin(theta) * BARRIER_RADIUS);
                 level.sendParticles(dust, point.x, point.y, point.z, 1, 0.0, 0.0, 0.0, 0.0);
             }
         }
@@ -203,54 +211,48 @@ public final class BlueSanctuary {
         return null;
     }
 
-    private static @Nullable BlockPos existingSanctuary(ServerLevel level, BlockPos column) {
-        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, column.getX(), column.getZ());
-        for (int dy = 0; dy <= SANCTUARY_SCAN; dy++) {
-            BlockPos pos = new BlockPos(column.getX(), y - dy, column.getZ());
-            if (level.getBlockState(pos).is(Blocks.CHISELED_QUARTZ_BLOCK)) return pos.above();
-        }
-        return null;
+    public static Vec3 ringCenter(BlockPos anchor) {
+        return Vec3.atBottomCenterOf(anchor).add(RING_OFFSET);
     }
 
     private static BlockPos buildShrine(ServerLevel level, BlockPos column) {
-        BlockPos existing = existingSanctuary(level, column);
-        if (existing != null) return existing;
+        Optional<StructureTemplate> found = level.getStructureTemplateManager().get(STRUCTURE);
+        if (found.isEmpty()) {
+            BrightestDay.LOGGER.error("Missing structure template {}", STRUCTURE);
+            return column;
+        }
+        StructureTemplate template = found.get();
+        Vec3i size = template.getSize();
+        BlockPos origin = new BlockPos(column.getX() - ANCHOR.getX(), groundHeight(level, column, size) - ANCHOR.getY(), column.getZ() - ANCHOR.getZ());
+        template.placeInWorld(level, origin, origin, new StructurePlaceSettings(), level.getRandom(), Block.UPDATE_CLIENTS);
 
-        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, column.getX(), column.getZ());
-        BlockPos center = new BlockPos(column.getX(), y, column.getZ());
-        BlockState floor = Blocks.QUARTZ_BLOCK.defaultBlockState();
-        BlockState border = Blocks.PRISMARINE_BRICKS.defaultBlockState();
-        BlockState light = Blocks.SEA_LANTERN.defaultBlockState();
-        BlockState foundation = Blocks.STONE_BRICKS.defaultBlockState();
-        BlockState pillar = Blocks.QUARTZ_PILLAR.defaultBlockState();
-        BlockState glass = Blocks.STAINED_GLASS.pick(DyeColor.LIGHT_BLUE).defaultBlockState();
-
-        for (int dx = -RADIUS; dx <= RADIUS; dx++) {
-            for (int dz = -RADIUS; dz <= RADIUS; dz++) {
-                double distance = Math.sqrt(dx * dx + dz * dz);
-                if (distance > RADIUS + 0.5) continue;
-
-                BlockPos base = center.offset(dx, -1, dz);
-                BlockState surface = distance > RADIUS - 0.5 ? border : Math.abs(distance - LIGHT_RING) < 0.5 ? light : floor;
-                level.setBlockAndUpdate(base, surface);
+        BlockState foundation = Blocks.STONE.defaultBlockState();
+        for (int dx = 0; dx < size.getX(); dx++) {
+            for (int dz = 0; dz < size.getZ(); dz++) {
+                if (level.getBlockState(origin.offset(dx, 0, dz)).isAir()) continue;
                 for (int depth = 1; depth <= FOUNDATION_DEPTH; depth++) {
-                    BlockPos below = base.below(depth);
+                    BlockPos below = origin.offset(dx, -depth, dz);
                     BlockState current = level.getBlockState(below);
                     if (!current.isAir() && current.getFluidState().isEmpty() && !current.canBeReplaced()) break;
-                    level.setBlockAndUpdate(below, foundation);
+                    level.setBlock(below, foundation, Block.UPDATE_CLIENTS);
                 }
-                for (int dy = 0; dy <= CLEARANCE; dy++) level.setBlockAndUpdate(center.offset(dx, dy, dz), Blocks.AIR.defaultBlockState());
-                if (distance > PILLAR_RADIUS - 0.5 && distance < PILLAR_RADIUS + 0.5) level.setBlockAndUpdate(center.offset(dx, PILLAR_HEIGHT, dz), glass);
             }
         }
-        for (int i = 0; i < PILLARS; i++) {
-            float angle = i * Mth.TWO_PI / PILLARS;
-            BlockPos foot = center.offset(Math.round(Mth.cos(angle) * PILLAR_RADIUS), 0, Math.round(Mth.sin(angle) * PILLAR_RADIUS));
-            for (int dy = 0; dy < PILLAR_HEIGHT; dy++) level.setBlockAndUpdate(foot.above(dy), pillar);
-            level.setBlockAndUpdate(foot.above(PILLAR_HEIGHT), Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState());
+        return origin.offset(ANCHOR);
+    }
+
+    private static int groundHeight(ServerLevel level, BlockPos column, Vec3i size) {
+        int[] heights = new int[9];
+        int index = 0;
+        for (int sx = 0; sx < 3; sx++) {
+            for (int sz = 0; sz < 3; sz++) {
+                int x = column.getX() - ANCHOR.getX() + sx * (size.getX() - 1) / 2;
+                int z = column.getZ() - ANCHOR.getZ() + sz * (size.getZ() - 1) / 2;
+                heights[index++] = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+            }
         }
-        level.setBlockAndUpdate(center.below(), Blocks.CHISELED_QUARTZ_BLOCK.defaultBlockState());
-        return center;
+        Arrays.sort(heights);
+        return heights[heights.length / 2];
     }
 
     private BlueSanctuary() {}

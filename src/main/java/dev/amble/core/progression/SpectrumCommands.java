@@ -262,9 +262,10 @@ public final class SpectrumCommands {
         ServerPlayer player = context.getSource().getPlayerOrException();
         ServerLevel level = context.getSource().getServer().overworld();
         BlockPos pos = BlueSanctuary.locate(level);
-        level.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
-        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ());
-        player.teleportTo(level, pos.getX() + 0.5, y + 1, pos.getZ() + 12.5, Set.of(), player.getYRot(), player.getXRot(), true);
+        BlockPos outside = pos.south(22);
+        level.getChunk(outside.getX() >> 4, outside.getZ() >> 4);
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, outside.getX(), outside.getZ());
+        player.teleportTo(level, outside.getX() + 0.5, y, outside.getZ() + 0.5, Set.of(), player.getYRot(), player.getXRot(), true);
         return reply(context, Component.literal("Teleported to the blue sanctuary"));
     }
 
