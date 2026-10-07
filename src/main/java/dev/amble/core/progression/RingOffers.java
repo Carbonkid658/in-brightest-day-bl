@@ -80,7 +80,7 @@ public final class RingOffers {
     }
 
     private static void offer(ServerPlayer player, LanternCorps corps, String key) {
-        if (absent(player.level().getServer(), corps)) return;
+        if (absent(player.level().getServer(), corps) || !CorpsCaps.admits(player, corps)) return;
         OFFERS.put(player.getUUID(), new Offer(corps, player.level().getGameTime() + OFFER_TICKS));
         MutableComponent accept = button("accept", corps.color());
         MutableComponent refuse = button("refuse", 0xAAAAAA);
@@ -115,6 +115,7 @@ public final class RingOffers {
         }
         if (!ringless(player)) return;
 
+        if (!CorpsCaps.check(player, offer.corps())) return;
         if (absent(player.level().getServer(), offer.corps())) {
             player.sendSystemMessage(Component.translatable("message.brightestday.offer.absent").withStyle(ChatFormatting.GRAY));
             return;
@@ -138,7 +139,7 @@ public final class RingOffers {
     }
 
     public static void considerGreen(ServerPlayer player) {
-        if (!ringless(player) || RingLoyalty.inFlight(LanternCorps.GREEN)) return;
+        if (!ringless(player) || RingLoyalty.inFlight(LanternCorps.GREEN) || !CorpsCaps.admits(player, LanternCorps.GREEN)) return;
         MinecraftServer server = player.level().getServer();
         BrightestDayConfig config = BrightestDayConfig.get();
         if (SpectrumMeters.get(player, Emotion.WILL) < config.greenRingWill) return;

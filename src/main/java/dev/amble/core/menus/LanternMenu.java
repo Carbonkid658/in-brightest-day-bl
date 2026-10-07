@@ -29,7 +29,7 @@ public class LanternMenu extends AbstractContainerMenu {
         this.addSlot(new Slot(ring, 0, RING_SLOT_X, RING_SLOT_Y) {
             @Override
             public boolean mayPlace(ItemStack itemStack) {
-                return itemStack.getItem() instanceof PowerRingItem;
+                return itemStack.getItem() instanceof PowerRingItem && LanternMenu.this.ring.canPlaceItem(0, itemStack);
             }
 
             @Override

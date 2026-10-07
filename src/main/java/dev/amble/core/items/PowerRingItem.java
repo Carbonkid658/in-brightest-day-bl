@@ -3,6 +3,7 @@ package dev.amble.core.items;
 import dev.amble.core.heart.RedHeart;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
+import dev.amble.core.progression.CorpsCaps;
 import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.ChatFormatting;
@@ -37,7 +38,7 @@ public class PowerRingItem extends Item {
 
         ItemStack ring = player.getItemInHand(hand);
         ItemStack previous = BrightestDayAttachments.getRing(player);
-        if (!RedHeart.mayRemove(player, previous)) return InteractionResult.FAIL;
+        if (!RedHeart.mayRemove(player, previous) || !CorpsCaps.check(player, ring)) return InteractionResult.FAIL;
         BrightestDayAttachments.setRing(player, ring);
         player.setItemInHand(hand, previous.copy());
         level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ARMOR_EQUIP_GOLD.value(), SoundSource.PLAYERS, 1.0F, 1.2F);
@@ -180,7 +181,7 @@ public class PowerRingItem extends Item {
     }
 
     public static void awaken(Player player, ItemStack ring) {
-        if (!isDormant(ring)) return;
+        if (!isDormant(ring) || !CorpsCaps.check(player, ring)) return;
         ring.remove(BrightestDayComponents.DORMANT);
         int color = getCorps(ring).orElse(LanternCorps.GREEN).color();
         player.sendSystemMessage(Component.translatable("message.brightestday.ring.awakened").withStyle(ChatFormatting.BOLD).withColor(color));

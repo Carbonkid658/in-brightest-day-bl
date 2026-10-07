@@ -1,6 +1,8 @@
 package dev.amble.core.forge;
 
 import dev.amble.core.BrightestDayItems;
+import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.progression.CorpsCaps;
 import dev.amble.core.progression.Emotion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -123,6 +125,9 @@ public class SpectrumForgeBlock extends Block {
         if (this.fedByLava && state.getValue(LAVA) < recipe.lava()) {
             player.sendOverlayMessage(Component.translatable("forge.brightestday.needs_lava", recipe.lava()).withColor(color));
             return InteractionResult.SUCCESS_SERVER;
+        }
+        for (ItemStack output : recipe.outputs().apply(player)) {
+            if (output.getItem() instanceof PowerRingItem && !CorpsCaps.check(player, output)) return InteractionResult.SUCCESS_SERVER;
         }
         if (!recipe.affordable(player)) {
             player.sendOverlayMessage(recipe.describe().copy().withColor(color));

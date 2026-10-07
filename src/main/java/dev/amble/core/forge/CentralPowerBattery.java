@@ -1,6 +1,7 @@
 package dev.amble.core.forge;
 
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.progression.CorpsCaps;
 import dev.amble.core.progression.IndigoOne;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
@@ -349,7 +350,7 @@ public final class CentralPowerBattery {
         String name = ring.getHoverName().getString();
         ServerPlayer target = level.getServer().getPlayerList().getPlayerByName(name);
         Emotion emotion = Emotion.of(battery.corps()).orElseThrow();
-        boolean worthy = target != null && BrightestDayAttachments.getRing(target).isEmpty() && SpectrumMeters.passes(target, emotion);
+        boolean worthy = target != null && BrightestDayAttachments.getRing(target).isEmpty() && SpectrumMeters.passes(target, emotion) && CorpsCaps.admits(target, battery.corps());
         if (!worthy) {
             item.addTag("brightestday.refused");
             item.setDeltaMovement(0.0, 0.5, 0.0);

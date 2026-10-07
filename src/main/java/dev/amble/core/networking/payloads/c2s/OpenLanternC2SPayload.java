@@ -5,6 +5,7 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.menus.LanternMenu;
 import dev.amble.core.menus.RingSlotContainer;
+import dev.amble.core.progression.CorpsCaps;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -36,7 +37,7 @@ public record OpenLanternC2SPayload(ItemStack creativeCarried) implements Custom
         ServerPlayer player = context.player();
         ItemStack carried = player.hasInfiniteMaterials() && !this.creativeCarried.isEmpty() ? this.creativeCarried.copy() : player.containerMenu.getCarried();
         player.containerMenu.setCarried(ItemStack.EMPTY);
-        if (carried.getItem() instanceof PowerRingItem && BrightestDayAttachments.getRing(player).isEmpty()) {
+        if (carried.getItem() instanceof PowerRingItem && BrightestDayAttachments.getRing(player).isEmpty() && CorpsCaps.check(player, carried)) {
             BrightestDayAttachments.setRing(player, carried);
             carried = ItemStack.EMPTY;
         }

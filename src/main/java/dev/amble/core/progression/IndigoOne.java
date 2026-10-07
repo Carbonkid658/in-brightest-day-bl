@@ -95,6 +95,10 @@ public final class IndigoOne {
             return true;
         }
         if (CHANNELS.containsKey(indigo.getUUID())) return true;
+        if (!CorpsCaps.admits(target, LanternCorps.INDIGO)) {
+            CorpsCaps.refuse(indigo, LanternCorps.INDIGO);
+            return true;
+        }
 
         int ticks = willing ? CHANNEL_TICKS : FORCED_CHANNEL_TICKS;
         boolean frozen = PowerRingItem.getChargeFraction(BrightestDayAttachments.getRing(target)) < FORCE_CHARGE;
@@ -134,7 +138,7 @@ public final class IndigoOne {
             if (now < channel.ends()) return false;
 
             if (channel.frozen()) release(target);
-            convert(indigo, target);
+            if (CorpsCaps.check(indigo, LanternCorps.INDIGO) && CorpsCaps.admits(target, LanternCorps.INDIGO)) convert(indigo, target);
             return true;
         });
         tickGather(server, now);

@@ -2,6 +2,7 @@ package dev.amble.core.menus;
 
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.progression.CorpsCaps;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -55,7 +56,7 @@ public class RingSlotContainer implements Container {
 
     @Override
     public boolean canPlaceItem(int slot, ItemStack itemStack) {
-        return itemStack.getItem() instanceof PowerRingItem;
+        return itemStack.getItem() instanceof PowerRingItem && CorpsCaps.check(this.player, itemStack);
     }
 
     @Override

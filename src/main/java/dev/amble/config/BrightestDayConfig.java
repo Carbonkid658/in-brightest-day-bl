@@ -420,6 +420,21 @@ public class BrightestDayConfig extends Config {
     @ConfigGroup.Pop
     public int loveGift = 5;
 
+    public ConfigGroup corpsCaps = new ConfigGroup("corpsCaps");
+    @ValidatedInt.Restrict(min = 1, max = 100)
+    public int greenCap = 5;
+    @ValidatedInt.Restrict(min = 1, max = 100)
+    public int yellowCap = 5;
+    @ValidatedInt.Restrict(min = 1, max = 100)
+    public int redCap = 5;
+    @ValidatedInt.Restrict(min = 1, max = 100)
+    public int blueCap = 5;
+    @ValidatedInt.Restrict(min = 1, max = 100)
+    public int indigoCap = 5;
+    @ValidatedInt.Restrict(min = 1, max = 100)
+    @ConfigGroup.Pop
+    public int starSapphireCap = 5;
+
     public ConfigGroup corps = new ConfigGroup("corps");
     public int redOfferRage = 600;
     public float redOfferDailyChance = 0.25F;

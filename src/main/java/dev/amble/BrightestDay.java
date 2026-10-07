@@ -33,6 +33,7 @@ import dev.amble.core.attacks.projectile.DiscManager;
 import dev.amble.core.attacks.projectile.PlasmaManager;
 import dev.amble.core.heart.RedHeart;
 import dev.amble.core.blocks.LanternRitual;
+import dev.amble.core.progression.CorpsCaps;
 import dev.amble.core.progression.EmotionSources;
 import dev.amble.core.progression.Terror;
 import dev.amble.core.progression.RingOffers;
@@ -122,6 +123,7 @@ public class BrightestDay implements ModInitializer {
 		EmotionSources.init();
 		Terror.init();
 		RingOffers.init();
+		CorpsCaps.init();
 		IndigoOne.init();
 		CentralPowerBattery.init();
 		ForgeHammer.init();
