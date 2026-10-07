@@ -254,6 +254,7 @@ public final class CentralPowerBattery {
 
         PowerRingItem.setMaxPower(ring);
         ring.remove(BrightestDayComponents.RING_DEATHS);
+        PowerRingItem.swear(player, ring);
         if (player instanceof ServerPlayer server) RingRanks.fire(server, Trigger.RECHARGE, Milestone.Context.of("battery"));
         if (slotted) BrightestDayAttachments.setRing(player, ring);
         player.sendSystemMessage(Component.translatable(corps.oathKey()).withStyle(ChatFormatting.BOLD).withColor(corps.color()));

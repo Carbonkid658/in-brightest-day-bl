@@ -17,11 +17,14 @@ public class BrightestDayCreativeTabs {
                     .title(Component.translatable("itemGroup.brightestday.brightest_day"))
                     .icon(() -> new ItemStack(BrightestDayItems.GREEN_POWER_RING))
                     .displayItems((parameters, output) -> {
-                        BrightestDayItems.rings().values().forEach(output::accept);
+                        BrightestDayItems.rings().forEach((corps, ring) -> {
+                            ItemStack stack = new ItemStack(ring);
+                            if (corps.hasLantern()) stack.set(BrightestDayComponents.DORMANT, true);
+                            output.accept(stack);
+                        });
                         BuiltInRegistries.BLOCK.stream()
                                 .filter(block -> block instanceof LanternBlock)
                                 .forEach(output::accept);
-                        output.accept(BrightestDayBlocks.BLUE_LANTERN_SHRINE);
                         output.accept(BrightestDayBlocks.SPECTRUM_FORGE);
                         output.accept(BrightestDayBlocks.ZAMARONIAN_CRYSTAL);
                         output.accept(BrightestDayItems.PARALLAX_SHARD);

@@ -1,14 +1,20 @@
 package dev.amble.core;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.amble.BrightestDay;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.constructs.ConstructToolData;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.Registry;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+
+import java.util.UUID;
 
 public class BrightestDayComponents {
     public static final int MAX_POWER = 5000;
@@ -55,6 +61,28 @@ public class BrightestDayComponents {
                     DataComponentType.<Boolean>builder()
                             .persistent(Codec.BOOL)
                             .networkSynchronized(ByteBufCodecs.BOOL)
+                            .build()
+            );
+
+    public record Sworn(UUID owner, String name) {
+        public static final Codec<Sworn> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                UUIDUtil.CODEC.fieldOf("owner").forGetter(Sworn::owner),
+                Codec.STRING.fieldOf("name").forGetter(Sworn::name)
+        ).apply(instance, Sworn::new));
+
+        public static final StreamCodec<ByteBuf, Sworn> STREAM_CODEC = StreamCodec.composite(
+                UUIDUtil.STREAM_CODEC, Sworn::owner,
+                ByteBufCodecs.STRING_UTF8, Sworn::name,
+                Sworn::new
+        );
+    }
+
+    public static final DataComponentType<Sworn> SWORN_TO =
+            Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    BrightestDay.id("sworn_to"),
+                    DataComponentType.<Sworn>builder()
+                            .persistent(Sworn.CODEC)
+                            .networkSynchronized(Sworn.STREAM_CODEC)
                             .build()
             );
 

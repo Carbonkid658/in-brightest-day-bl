@@ -122,6 +122,18 @@ public final class ShieldEffects {
         }
     }
 
+    public static void submitGlow(LevelRenderContext context, Vec3 camera, List<Voxel> voxels, float glowScale, float glowAlpha) {
+        context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
+                (pose, buffer) -> draw(pose, buffer, camera, voxels, glowScale, glowAlpha, false));
+    }
+
+    public static void submit(LevelRenderContext context, Vec3 camera, List<Voxel> voxels, float glowScale, float glowAlpha, float glassAlpha) {
+        context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
+                (pose, buffer) -> draw(pose, buffer, camera, voxels, glowScale, glowAlpha, false));
+        context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glass(),
+                (pose, buffer) -> draw(pose, buffer, camera, voxels, 1.0F, glassAlpha, true));
+    }
+
     public static void submit(LevelRenderContext context, Vec3 camera, List<Voxel> voxels, float alpha) {
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
                 (pose, buffer) -> draw(pose, buffer, camera, voxels, GLOW_SCALE, GLOW_ALPHA * alpha, false));

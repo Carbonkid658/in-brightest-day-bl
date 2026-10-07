@@ -53,7 +53,7 @@ public final class FlightAnimator {
     private static final double REMOTE_VELOCITY_SMOOTHING = 0.35;
     private static final int LANDING_GRACE_TICKS = 4;
     private static final int MIN_PHASE_TICKS = 8;
-    public static final int ROLL_TICKS = 12;
+    public static final int ROLL_TICKS = FlightRingPower.ROLL_TICKS;
     private static final double LOCAL_VELOCITY_SMOOTHING = 0.6;
     private static final float TURN_SMOOTHING = 0.3F;
     private static final float HOVER_CAPE_LEAN = 70.0F;
@@ -190,7 +190,7 @@ public final class FlightAnimator {
         }
         motion.rollTicks--;
         float progress = 1.0F - motion.rollTicks / (float) ROLL_TICKS;
-        motion.spin = ease(progress) * 360.0F * motion.rollDirection;
+        motion.spin = FlightRingPower.rollCurve(progress) * 360.0F * motion.rollDirection;
     }
 
     public static boolean aileronRoll(Player player, boolean right) {

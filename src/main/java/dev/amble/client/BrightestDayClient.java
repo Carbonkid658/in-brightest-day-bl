@@ -9,6 +9,7 @@ import dev.amble.client.effects.ConstructClient;
 import dev.amble.client.effects.ElementAura;
 import dev.amble.client.compat.IrisCompat;
 import dev.amble.client.compat.ReplaySnapshot;
+import dev.amble.client.config.BrightestDayClientConfig;
 import dev.amble.client.effects.AbilityClient;
 import dev.amble.client.effects.attacks.area.BarrageEffects;
 import dev.amble.client.effects.attacks.area.NovaEffects;
@@ -75,6 +76,7 @@ import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 public class BrightestDayClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        BrightestDayClientConfig.load();
         BrightestDayKeybinds.init();
         FlightAnimator.init();
         FlightAnimations.init();

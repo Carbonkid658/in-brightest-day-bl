@@ -1,7 +1,7 @@
 package dev.amble.client.hud;
 
-import dev.amble.config.BrightestDayConfig;
 import dev.amble.BrightestDay;
+import dev.amble.client.config.BrightestDayClientConfig;
 import dev.amble.client.flight.FlightControls;
 import dev.amble.core.ringpowers.CorpsColors;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
@@ -54,7 +54,7 @@ public final class FlightSpeedHud {
     private static void extract(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
-        if (player == null || player.isSpectator() || !BrightestDayConfig.get().showFlightSpeedometer) return;
+        if (player == null || player.isSpectator() || !BrightestDayClientConfig.get().showFlightSpeedometer) return;
 
         float partialTicks = deltaTracker.getGameTimeDeltaPartialTick(false);
         float alpha = Mth.lerp(partialTicks, oFade, fade);

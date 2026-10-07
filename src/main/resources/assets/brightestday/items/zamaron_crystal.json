@@ -1,12 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "brightestday:item/zamaron_crystal",
-    "tints": [
-      {
-        "type": "minecraft:constant",
-        "value": -38724
-      }
-    ]
+    "model": "brightestday:item/zamaron_crystal"
   }
 }

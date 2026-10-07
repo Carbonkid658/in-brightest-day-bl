@@ -1,12 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "brightestday:item/parallax_shard",
-    "tints": [
-      {
-        "type": "minecraft:constant",
-        "value": -667616
-      }
-    ]
+    "model": "brightestday:item/parallax_shard"
   }
 }

@@ -158,10 +158,21 @@ public class PowerRingItem extends Item {
         Component component = Component.literal(String.format("%.0f%%", percentage)).withStyle(ChatFormatting.BOLD).withColor(color);
 
         builder.accept(component);
+        BrightestDayComponents.Sworn sworn = itemStack.get(BrightestDayComponents.SWORN_TO);
+        if (sworn != null) builder.accept(Component.translatable("tooltip.brightestday.ring.sworn", sworn.name()).withStyle(ChatFormatting.GRAY));
         if (isDormant(itemStack)) {
             Component lantern = PowerRingItem.getCorps(itemStack).map(LanternCorps::displayName).orElse(Component.empty());
             builder.accept(Component.translatable("tooltip.brightestday.ring.dormant", lantern).withStyle(ChatFormatting.ITALIC).withColor(color));
         }
+    }
+
+    public static void swear(Player player, ItemStack ring) {
+        BrightestDayComponents.Sworn previous = ring.get(BrightestDayComponents.SWORN_TO);
+        if (previous != null && previous.owner().equals(player.getUUID())) return;
+        ring.set(BrightestDayComponents.SWORN_TO, new BrightestDayComponents.Sworn(player.getUUID(), player.getScoreboardName()));
+        int color = getCorps(ring).orElse(LanternCorps.GREEN).color();
+        player.sendSystemMessage(Component.translatable(previous == null ? "message.brightestday.ring.sworn" : "message.brightestday.ring.reclaimed", previous == null ? "" : previous.name())
+                .withStyle(ChatFormatting.ITALIC).withColor(color));
     }
 
     public static boolean isDormant(ItemStack ring) {

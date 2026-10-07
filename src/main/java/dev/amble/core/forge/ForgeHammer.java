@@ -26,7 +26,7 @@ import java.util.UUID;
 public final class ForgeHammer {
     public static final int STRIKES = 5;
     public static final int BEAT_TICKS = 24;
-    private static final int MAX_MISSES = 2;
+    public static final int MAX_MISSES = 2;
     private static final int WINDOW = 3;
     private static final int GAP = 8;
     private static final double REACH = 8.0;

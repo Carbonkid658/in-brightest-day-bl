@@ -16,7 +16,10 @@ import java.util.List;
 
 public final class BatteryEffects {
     private static final float SHELL_HALF = 1.53F;
-    private static final float SHELL_ALPHA = 0.32F;
+    private static final float INNER_GLOW = 1.04F;
+    private static final float OUTER_GLOW = 1.1F;
+    private static final float GLOW_ALPHA = 0.95F;
+    private static final float GLASS_ALPHA = 0.7F;
     private static final double RENDER_DISTANCE = 160.0;
 
     private static List<BatteriesS2CPayload.Entry> batteries = List.of();
@@ -39,10 +42,11 @@ public final class BatteryEffects {
             if (center.distanceTo(camera) > RENDER_DISTANCE) continue;
             int color = ARGB.opaque(battery.color());
             float pulse = 0.5F + 0.5F * Mth.sin(time * 0.08F);
-            shells.add(new ShieldEffects.Voxel(center, SHELL_HALF + 0.03F * pulse, VoxelRenderer.toWhite(color, 0.1F + 0.15F * pulse)));
+            shells.add(new ShieldEffects.Voxel(center, SHELL_HALF + 0.02F * pulse, VoxelRenderer.toWhite(color, 0.5F + 0.3F * pulse)));
         }
         if (shells.isEmpty()) return;
-        ShieldEffects.submit(context, camera, shells, SHELL_ALPHA);
+        ShieldEffects.submit(context, camera, shells, INNER_GLOW, GLOW_ALPHA, GLASS_ALPHA);
+        ShieldEffects.submitGlow(context, camera, shells, OUTER_GLOW, GLOW_ALPHA * 0.6F);
     }
 
     private BatteryEffects() {}

@@ -22,6 +22,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 public class FlightRingPower extends RingPower<FlightRingPower.Data> {
 
@@ -37,6 +39,11 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
     private static final double DRAIN_SPEED_WEIGHT = 0.25;
     public static final double DIVE_ENTER_SPEED = 0.8;
     public static final double DIVE_EXIT_SPEED = 0.7;
+    public static final int ROLL_TICKS = 13;
+
+    private record Dodge(int direction, int start, double done) {}
+
+    private static final Map<Player, Dodge> DODGES = new WeakHashMap<>();
 
     public record Data(boolean enabled, int speedLevel) {
         public static final Codec<Data> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -179,6 +186,27 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
 
         player.setDeltaMovement(velocity);
         player.move(MoverType.SELF, velocity);
+        dodge(player, left);
+    }
+
+    public static void startDodge(Player player, boolean right) {
+        DODGES.put(player, new Dodge(right ? -1 : 1, player.tickCount, 0.0));
+    }
+
+    private static void dodge(Player player, Vec3 left) {
+        Dodge dodge = DODGES.get(player);
+        if (dodge == null) return;
+        float progress = Math.min(1.0F, (player.tickCount - dodge.start()) / (float) ROLL_TICKS);
+        double done = rollCurve(progress);
+        double step = (done - dodge.done()) * BrightestDayConfig.get().aileronRollDistance;
+        if (progress >= 1.0F) DODGES.remove(player);
+        else DODGES.put(player, new Dodge(dodge.direction(), dodge.start(), done));
+        if (step > 0.0) player.move(MoverType.SELF, left.scale(step * dodge.direction()));
+    }
+
+    public static float rollCurve(float t) {
+        t = Mth.clamp(t, 0.0F, 1.0F);
+        return t * t * t * (t * (t * 6.0F - 15.0F) + 10.0F);
     }
 
     public static void registerEvents() {
