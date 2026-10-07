@@ -26,16 +26,13 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.Set;
 
 public final class RingOffers {
-    private static final Set<LanternCorps> UNIQUE = EnumSet.of(LanternCorps.ORANGE);
-    private static final int BEARER_CHECK_INTERVAL = 20;
     private static final long OFFER_TICKS = 20 * 60;
     private static final long RED_COOLDOWN = 24000;
     private static final int MINUTES_PER_DAY = 20;
@@ -71,7 +68,6 @@ public final class RingOffers {
     }
 
     public static void bestow(ServerPlayer player, LanternCorps corps) {
-        if (UNIQUE.contains(corps)) WorldProgress.update(player.level().getServer(), state -> state.withUniqueBearer(corps, player.getUUID()));
         RingLoyalty.deliver(player, forge(corps, player));
     }
 
@@ -80,7 +76,7 @@ public final class RingOffers {
     }
 
     private static void offer(ServerPlayer player, LanternCorps corps, String key) {
-        if (absent(player.level().getServer(), corps) || !CorpsCaps.admits(player, corps)) return;
+        if (absent(player.level().getServer(), corps) || corps != LanternCorps.ORANGE && !CorpsCaps.admits(player, corps)) return;
         OFFERS.put(player.getUUID(), new Offer(corps, player.level().getGameTime() + OFFER_TICKS));
         MutableComponent accept = button("accept", corps.color());
         MutableComponent refuse = button("refuse", 0xAAAAAA);
@@ -115,18 +111,17 @@ public final class RingOffers {
         }
         if (!ringless(player)) return;
 
-        if (!CorpsCaps.check(player, offer.corps())) return;
         if (absent(player.level().getServer(), offer.corps())) {
             player.sendSystemMessage(Component.translatable("message.brightestday.offer.absent").withStyle(ChatFormatting.GRAY));
             return;
         }
-        if (offer.corps() == LanternCorps.ORANGE) {
+        if (offer.corps() == LanternCorps.ORANGE && !CorpsCaps.admits(player, LanternCorps.ORANGE)) {
             ServerPlayer holder = orangeHolder(player.level().getServer());
-            if (holder != null) {
-                challenge(player, holder);
-                return;
-            }
+            if (holder != null) challenge(player, holder);
+            else CorpsCaps.refuse(player, LanternCorps.ORANGE);
+            return;
         }
+        if (!CorpsCaps.check(player, offer.corps())) return;
         bestow(player, offer.corps());
     }
 
@@ -156,22 +151,11 @@ public final class RingOffers {
     }
 
     public static boolean absent(MinecraftServer server, LanternCorps corps) {
-        if (!UNIQUE.contains(corps)) return false;
-        return WorldProgress.get(server).uniqueBearer(corps).map(id -> server.getPlayerList().getPlayer(id) == null).orElse(false);
+        if (corps != LanternCorps.ORANGE) return false;
+        List<UUID> bearers = CorpsCaps.bearers(server, corps);
+        return bearers.size() >= CorpsCaps.cap(corps) && bearers.stream().noneMatch(id -> server.getPlayerList().getPlayer(id) != null);
     }
 
-    private static void trackBearers(MinecraftServer server) {
-        WorldProgress state = WorldProgress.get(server);
-        for (LanternCorps corps : UNIQUE) {
-            UUID recorded = state.uniqueBearer(corps).orElse(null);
-            ServerPlayer wearer = null;
-            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                if (PowerRingItem.getCorps(BrightestDayAttachments.getRing(player)).orElse(null) == corps) wearer = player;
-            }
-            UUID bearer = wearer != null ? wearer.getUUID() : recorded != null && server.getPlayerList().getPlayer(recorded) != null ? null : recorded;
-            if (!Objects.equals(bearer, recorded)) WorldProgress.update(server, current -> current.withUniqueBearer(corps, bearer));
-        }
-    }
 
     private static ServerPlayer orangeHolder(MinecraftServer server) {
         for (ServerPlayer other : server.getPlayerList().getPlayers()) {
@@ -204,7 +188,6 @@ public final class RingOffers {
     }
 
     private static void tick(MinecraftServer server) {
-        if (server.getTickCount() % BEARER_CHECK_INTERVAL == 0) trackBearers(server);
         long now = server.overworld().getGameTime();
         OFFERS.values().removeIf(offer -> now > offer.expires());
         CHALLENGES.values().removeIf(challenge -> {

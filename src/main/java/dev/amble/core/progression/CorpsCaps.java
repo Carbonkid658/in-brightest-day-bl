@@ -42,6 +42,7 @@ public final class CorpsCaps {
         BrightestDayConfig config = BrightestDayConfig.get();
         return switch (corps) {
             case GREEN -> config.greenCap;
+            case ORANGE -> config.orangeCap;
             case YELLOW -> config.yellowCap;
             case RED -> config.redCap;
             case BLUE -> config.blueCap;
@@ -51,9 +52,13 @@ public final class CorpsCaps {
         };
     }
 
+    public static List<UUID> bearers(MinecraftServer server, LanternCorps corps) {
+        return roster(server).getOrDefault(corps, List.of());
+    }
+
     public static boolean admits(Player player, LanternCorps corps) {
         if (!(player instanceof ServerPlayer server) || player.hasInfiniteMaterials()) return true;
-        List<UUID> bearers = roster(server.level().getServer()).getOrDefault(corps, List.of());
+        List<UUID> bearers = bearers(server.level().getServer(), corps);
         return bearers.contains(player.getUUID()) || bearers.size() < cap(corps);
     }
 

@@ -619,6 +619,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.corpsCaps", "Corps Caps");
         builder.add("brightestday.server.greenCap", "Green Lantern Cap");
         builder.add("brightestday.server.greenCap.desc", "Most Green Lanterns the server can have, online or not. The per-player ring slots still apply below this.");
+        builder.add("brightestday.server.orangeCap", "Orange Lantern Cap");
+        builder.add("brightestday.server.orangeCap.desc", "Most Orange Lanterns the server can have, online or not. When full, accepting an offer summons you to duel a bearer for their ring.");
         builder.add("brightestday.server.yellowCap", "Sinestro Corps Cap");
         builder.add("brightestday.server.yellowCap.desc", "Most Yellow Lanterns the server can have, online or not.");
         builder.add("brightestday.server.redCap", "Red Lantern Cap");
