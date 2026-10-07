@@ -6,6 +6,7 @@ import com.zigythebird.playeranim.api.PlayerAnimationAccess;
 import com.zigythebird.playeranim.api.PlayerAnimationFactory;
 import com.zigythebird.playeranimcore.animation.Animation;
 import com.zigythebird.playeranimcore.animation.RawAnimation;
+import com.zigythebird.playeranimcore.animation.keyframe.BoneAnimation;
 import com.zigythebird.playeranimcore.animation.layered.modifier.AbstractFadeModifier;
 import com.zigythebird.playeranimcore.animation.layered.modifier.AbstractModifier;
 import com.zigythebird.playeranimcore.animation.layered.modifier.AdjustmentModifier;
@@ -56,6 +57,7 @@ public final class LanternChargeAnimations {
     private static final int RITUAL_FADE_TICKS = 8;
     private static final float MODEL_SCALE = 0.9375F;
     private static final double FINISH_DRIFT = 0.3;
+    private static final float MAX_HEAD_YAW = 70.0F;
 
     private static final Map<String, Vec3f> RIG_PIVOTS = Map.of("waist", new Vec3f(0.0F, 12.0F, 0.0F));
     private static final Map<String, String> RIG_PARENTS = Map.of(
@@ -76,6 +78,7 @@ public final class LanternChargeAnimations {
     private static final Map<Player, Mode> MODES = new WeakHashMap<>();
     private static final Map<Player, Integer> LOOP_IN = new WeakHashMap<>();
     private static final Map<Player, Identifier> LOOP_TARGET = new WeakHashMap<>();
+    private static final Map<Player, Boolean> FREE_HEAD = new WeakHashMap<>();
     private record Ritual(int mode, float yaw, @Nullable Vec3 finishingAt) {}
 
     private static final Map<Integer, Ritual> RITUALS = new HashMap<>();
@@ -86,7 +89,7 @@ public final class LanternChargeAnimations {
             PlayerAnimationController controller = new PlayerAnimationController(avatar, (c, state, setter) -> PlayState.STOP);
             controller.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
             controller.setFirstPersonConfiguration(new FirstPersonConfiguration(true, true, true, true));
-            controller.addModifierLast(new AdjustmentModifier(bone -> headPitch(avatar, bone)));
+            controller.addModifierLast(new AdjustmentModifier(bone -> head(avatar, bone)));
             controller.addModifierLast(new MirrorModifier());
             return controller;
         });
@@ -181,9 +184,9 @@ public final class LanternChargeAnimations {
                 case HANDHELD -> startLooping(player, controller, START, LOOP, FADE_IN_TICKS);
                 case FLOOR -> startLooping(player, controller, FLOOR_START, FLOOR_LOOP, RITUAL_FADE_TICKS);
                 case TOP -> startLooping(player, controller, TOP_START, TOP_LOOP, RITUAL_FADE_TICKS);
-                case FLOOR_FINISH -> once(controller, animation(FLOOR_FINISH), LOOP_BLEND_TICKS);
-                case TOP_FINISH -> once(controller, animation(TOP_FINISH), LOOP_BLEND_TICKS);
-                case NONE -> finish(controller, previous);
+                case FLOOR_FINISH -> once(player, controller, animation(FLOOR_FINISH), LOOP_BLEND_TICKS);
+                case TOP_FINISH -> once(player, controller, animation(TOP_FINISH), LOOP_BLEND_TICKS);
+                case NONE -> finish(player, controller, previous);
             }
         }
     }
@@ -207,23 +210,33 @@ public final class LanternChargeAnimations {
         return new Vec3(x * Mth.cos(yaw) + z * Mth.sin(yaw), y, -x * Mth.sin(yaw) + z * Mth.cos(yaw));
     }
 
-    private static Optional<AdjustmentModifier.PartModifier> headPitch(Avatar avatar, String bone) {
-        if (!"head".equals(bone) || !(avatar instanceof Player player) || !RITUALS.containsKey(player.getId())) return Optional.empty();
+    private static Optional<AdjustmentModifier.PartModifier> head(Avatar avatar, String bone) {
+        if (!"head".equals(bone) || !(avatar instanceof Player player)) return Optional.empty();
+        boolean free = FREE_HEAD.getOrDefault(player, false);
+        if (!free && !RITUALS.containsKey(player.getId())) return Optional.empty();
         float partialTicks = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
-        float pitch = Mth.lerp(partialTicks, player.xRotO, player.getXRot()) * Mth.DEG_TO_RAD;
-        return Optional.of(new AdjustmentModifier.PartModifier(new Vec3f(pitch, 0.0F, 0.0F), Vec3f.ZERO));
+        float pitch = Mth.lerp(partialTicks, player.xRotO, player.getXRot());
+        float yaw = free ? Mth.clamp(Mth.wrapDegrees(player.getViewYRot(partialTicks) - Mth.rotLerp(partialTicks, player.yBodyRotO, player.yBodyRot)), -MAX_HEAD_YAW, MAX_HEAD_YAW) : 0.0F;
+        return Optional.of(new AdjustmentModifier.PartModifier(new Vec3f(pitch * Mth.DEG_TO_RAD, yaw * Mth.DEG_TO_RAD, 0.0F), Vec3f.ZERO));
+    }
+
+    private static void track(Player player, @Nullable Animation animation) {
+        boolean animated = animation != null && animation.getBoneOptional("head").map(BoneAnimation::hasKeyframes).orElse(false);
+        FREE_HEAD.put(player, !animated);
     }
 
     private static void startLooping(Player player, PlayerAnimationController controller, Identifier startId, Identifier loopId, int fadeTicks) {
         Animation start = animation(startId);
         if (start == null) return;
+        track(player, start);
         play(controller, RawAnimation.begin().thenPlayAndHold(start), fadeTicks);
         LOOP_IN.put(player, Math.max(1, Mth.ceil(start.length())));
         LOOP_TARGET.put(player, loopId);
     }
 
-    private static void finish(PlayerAnimationController controller, Mode previous) {
+    private static void finish(Player player, PlayerAnimationController controller, Mode previous) {
         Animation done = previous == Mode.HANDHELD ? animation(DONE) : null;
+        track(player, done);
         if (done != null) {
             play(controller, RawAnimation.begin().thenPlay(done), FADE_OUT_TICKS);
             return;
@@ -238,13 +251,15 @@ public final class LanternChargeAnimations {
         return Mth.lengthSquared(position.x - anchor.x, position.z - anchor.z) > FINISH_DRIFT * FINISH_DRIFT;
     }
 
-    private static void once(PlayerAnimationController controller, @Nullable Animation animation, int ticks) {
+    private static void once(Player player, PlayerAnimationController controller, @Nullable Animation animation, int ticks) {
         if (animation == null) return;
+        track(player, animation);
         play(controller, RawAnimation.begin().thenPlay(animation), ticks);
     }
 
-    private static void loop(PlayerAnimationController controller, @Nullable Animation animation, int ticks) {
+    private static void loop(Player player, PlayerAnimationController controller, @Nullable Animation animation, int ticks) {
         if (animation == null) return;
+        track(player, animation);
         play(controller, RawAnimation.begin().thenLoop(animation), ticks);
     }
 
@@ -259,7 +274,7 @@ public final class LanternChargeAnimations {
         Identifier target = LOOP_TARGET.remove(player);
 
         PlayerAnimationController controller = controller(player);
-        if (controller != null && target != null) loop(controller, animation(target), LOOP_BLEND_TICKS);
+        if (controller != null && target != null) loop(player, controller, animation(target), LOOP_BLEND_TICKS);
     }
 
     private static void mirror(PlayerAnimationController controller, Player player) {

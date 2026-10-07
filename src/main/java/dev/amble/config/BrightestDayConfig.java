@@ -128,8 +128,12 @@ public class BrightestDayConfig extends Config {
     @ValidatedInt.Restrict(min = 0, max = 20)
     public int ringLoyaltyDeaths = 0;
     @ValidatedDouble.Restrict(min = 16.0, max = 4096.0)
-    @ConfigGroup.Pop
     public double ringLoyaltySearchRadius = 512.0;
+    @ValidatedInt.Restrict(min = 0, max = 3600)
+    public int ringRecallCooldownSeconds = 300;
+    @ValidatedInt.Restrict(min = 1, max = 365)
+    @ConfigGroup.Pop
+    public int ringBondExpiryDays = 14;
 
     public ConfigGroup team = new ConfigGroup("team");
     @ValidatedDouble.Restrict(min = 8.0, max = 256.0)
@@ -376,6 +380,30 @@ public class BrightestDayConfig extends Config {
     @ValidatedFloat.Restrict(min = 0.0F, max = 20.0F)
     @ConfigGroup.Pop
     public float turretBoltDamage = 3.0F;
+
+    public ConfigGroup mounts = new ConfigGroup("mounts");
+    @ValidatedInt.Restrict(min = 0, max = 1000)
+    public int horseCost = 60;
+    @ValidatedInt.Restrict(min = 0, max = 100)
+    public int horseDrainPerSecond = 2;
+    @ValidatedInt.Restrict(min = 0, max = 1000)
+    public int boatCost = 40;
+    @ValidatedInt.Restrict(min = 0, max = 100)
+    public int boatDrainPerSecond = 1;
+    @ValidatedInt.Restrict(min = 0, max = 100)
+    @ConfigGroup.Pop
+    public int mountChargeTicks = 10;
+
+    public ConfigGroup sphere = new ConfigGroup("sphere");
+    @ValidatedInt.Restrict(min = 0, max = 1000)
+    public int sphereCostPerRadius = 40;
+    @ValidatedInt.Restrict(min = 0, max = 200)
+    public int sphereDrainPerRadius = 3;
+    @ValidatedInt.Restrict(min = 0, max = 100)
+    public int sphereChargeTicks = 15;
+    @ValidatedDouble.Restrict(min = 0.1, max = 4.0)
+    @ConfigGroup.Pop
+    public double breakFreeSpeed = 0.6;
 
     public ConfigGroup oath = new ConfigGroup("oath");
     public boolean oathRecognition = true;

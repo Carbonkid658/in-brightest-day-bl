@@ -3,12 +3,14 @@ package dev.amble.core.items;
 import dev.amble.core.heart.RedHeart;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
+import dev.amble.core.loyalty.RingBonds;
 import dev.amble.core.progression.CorpsCaps;
 import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -169,8 +171,12 @@ public class PowerRingItem extends Item {
 
     public static void swear(Player player, ItemStack ring) {
         BrightestDayComponents.Sworn previous = ring.get(BrightestDayComponents.SWORN_TO);
-        if (previous != null && previous.owner().equals(player.getUUID())) return;
+        if (previous != null && previous.owner().equals(player.getUUID())) {
+            if (player instanceof ServerPlayer server && !ring.has(BrightestDayComponents.RING_BOND)) RingBonds.bind(server, ring);
+            return;
+        }
         ring.set(BrightestDayComponents.SWORN_TO, new BrightestDayComponents.Sworn(player.getUUID(), player.getScoreboardName()));
+        if (player instanceof ServerPlayer server) RingBonds.bind(server, ring);
         int color = getCorps(ring).orElse(LanternCorps.GREEN).color();
         player.sendSystemMessage(Component.translatable(previous == null ? "message.brightestday.ring.sworn" : "message.brightestday.ring.reclaimed", previous == null ? "" : previous.name())
                 .withStyle(ChatFormatting.ITALIC).withColor(color));

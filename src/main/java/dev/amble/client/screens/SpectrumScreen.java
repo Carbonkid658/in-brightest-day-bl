@@ -2,7 +2,9 @@ package dev.amble.client.screens;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.loyalty.RingBonds;
 import dev.amble.core.networking.payloads.c2s.AbandonPilgrimageC2SPayload;
+import dev.amble.core.networking.payloads.c2s.RingBondC2SPayload;
 import dev.amble.core.progression.Emotion;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Milestones;
@@ -23,6 +25,9 @@ import net.minecraft.util.Util;
 import net.minecraft.world.entity.player.Player;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class SpectrumScreen extends Screen {
     private static final int WIDTH = 304;
@@ -37,9 +42,10 @@ public class SpectrumScreen extends Screen {
     private static final int TASK_BAR_HEIGHT = 3;
     private static final int DONE = 0xFF7DFF9A;
     private static final int LOCKED = 0xFF5E5A50;
-    private static final int ABANDON_HEIGHT = 14;
-    private static final int ABANDON_PADDING = 6;
-    private static final int ABANDON_Y = 5;
+    private static final int BUTTON_HEIGHT = 14;
+    private static final int BUTTON_PADDING = 6;
+    private static final int BUTTON_Y = 5;
+    private static final int BUTTON_GAP = 4;
     private static final long CONFIRM_MILLIS = 4000L;
     private static final int HOPE = ARGB.opaque(LanternCorps.BLUE.color());
 
@@ -49,6 +55,9 @@ public class SpectrumScreen extends Screen {
     private int left;
     private int top;
     private long confirmUntil;
+    private @Nullable String confirmKey;
+
+    private record Action(String key, Component label, int color, boolean enabled, boolean confirm, Runnable run) {}
 
     public SpectrumScreen(@Nullable Screen parent) {
         super(Component.translatable("gui.brightestday.spectrum.title"));
@@ -84,7 +93,7 @@ public class SpectrumScreen extends Screen {
 
         this.list(graphics, player, mouseX, mouseY);
         this.detail(graphics, player, corps, accent);
-        this.abandonButton(graphics, player, mouseX, mouseY);
+        this.actionButtons(graphics, player, mouseX, mouseY);
     }
 
     private void list(GuiGraphicsExtractor graphics, Player player, int mouseX, int mouseY) {
@@ -189,46 +198,74 @@ public class SpectrumScreen extends Screen {
         return player.getAttachedOrElse(Pilgrimage.STATE, Pilgrimage.State.NONE).active();
     }
 
-    private boolean confirming() {
-        return Util.getMillis() < this.confirmUntil;
+    private boolean confirming(String key) {
+        return key.equals(this.confirmKey) && Util.getMillis() < this.confirmUntil;
     }
 
-    private Component abandonLabel() {
-        return Component.translatable(this.confirming() ? "gui.brightestday.spectrum.abandon.confirm" : "gui.brightestday.spectrum.abandon");
+    private List<Action> actions(Player player) {
+        List<Action> actions = new ArrayList<>();
+        if (this.pilgrimaging(player)) {
+            actions.add(new Action("abandon", Component.translatable(this.confirming("abandon") ? "gui.brightestday.spectrum.abandon.confirm" : "gui.brightestday.spectrum.abandon"),
+                    HOPE, true, true, () -> ClientPlayNetworking.send(AbandonPilgrimageC2SPayload.INSTANCE)));
+        }
+        RingBonds.Status status = player.getAttachedOrElse(RingBonds.STATUS, RingBonds.Status.NONE);
+        status.corps().ifPresent(corps -> {
+            int color = ARGB.opaque(corps.color());
+            if (status.away()) {
+                Component label = status.cooldown() > 0
+                        ? Component.translatable("gui.brightestday.spectrum.recall.cooldown", status.cooldown())
+                        : Component.translatable("gui.brightestday.spectrum.recall");
+                actions.add(new Action("recall", label, color, status.cooldown() <= 0, false, () -> ClientPlayNetworking.send(new RingBondC2SPayload(false))));
+            }
+            actions.add(new Action("relinquish", Component.translatable(this.confirming("relinquish") ? "gui.brightestday.spectrum.relinquish.confirm" : "gui.brightestday.spectrum.relinquish"),
+                    color, true, true, () -> ClientPlayNetworking.send(new RingBondC2SPayload(true))));
+        });
+        return actions;
     }
 
-    private int abandonWidth() {
-        return this.font.width(this.abandonLabel()) + ABANDON_PADDING * 2;
+    private int actionWidth(Action action) {
+        return this.font.width(action.label()) + BUTTON_PADDING * 2;
     }
 
-    private int abandonX() {
-        return this.left + WIDTH - MARGIN - this.abandonWidth();
+    private @Nullable Action actionAt(Player player, double mouseX, double mouseY) {
+        int x = this.left + WIDTH - MARGIN;
+        int y = this.top + BUTTON_Y;
+        for (Action action : this.actions(player)) {
+            int width = this.actionWidth(action);
+            x -= width;
+            if (mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + BUTTON_HEIGHT) return action;
+            x -= BUTTON_GAP;
+        }
+        return null;
     }
 
-    private boolean overAbandon(double mouseX, double mouseY) {
-        int x = this.abandonX();
-        int y = this.top + ABANDON_Y;
-        return mouseX >= x && mouseX < x + this.abandonWidth() && mouseY >= y && mouseY < y + ABANDON_HEIGHT;
-    }
-
-    private void abandonButton(GuiGraphicsExtractor graphics, Player player, int mouseX, int mouseY) {
-        if (!this.pilgrimaging(player)) return;
-        int x = this.abandonX();
-        int y = this.top + ABANDON_Y;
-        boolean hovered = this.overAbandon(mouseX, mouseY);
-        LanternWidgets.button(graphics, x, y, this.abandonWidth(), ABANDON_HEIGHT, HOPE, true, hovered || this.confirming(), 1.0F);
-        Component label = this.abandonLabel();
-        graphics.text(this.font, label, x + ABANDON_PADDING, y + (ABANDON_HEIGHT - this.font.lineHeight) / 2 + 1, hovered ? 0xFFFFFFFF : LanternWidgets.TEXT, true);
+    private void actionButtons(GuiGraphicsExtractor graphics, Player player, int mouseX, int mouseY) {
+        int x = this.left + WIDTH - MARGIN;
+        int y = this.top + BUTTON_Y;
+        Action hoveredAction = this.actionAt(player, mouseX, mouseY);
+        for (Action action : this.actions(player)) {
+            int width = this.actionWidth(action);
+            x -= width;
+            boolean hovered = hoveredAction != null && hoveredAction.key().equals(action.key()) && action.enabled();
+            LanternWidgets.button(graphics, x, y, width, BUTTON_HEIGHT, action.color(), action.enabled(), hovered || this.confirming(action.key()), 1.0F);
+            int color = !action.enabled() ? LanternWidgets.TEXT_DIM : hovered ? 0xFFFFFFFF : LanternWidgets.TEXT;
+            graphics.text(this.font, action.label(), x + BUTTON_PADDING, y + (BUTTON_HEIGHT - this.font.lineHeight) / 2 + 1, color, true);
+            x -= BUTTON_GAP;
+        }
     }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-            if (this.minecraft.player != null && this.pilgrimaging(this.minecraft.player) && this.overAbandon(event.x(), event.y())) {
-                if (this.confirming()) {
+            Action action = this.minecraft.player != null ? this.actionAt(this.minecraft.player, event.x(), event.y()) : null;
+            if (action != null) {
+                if (!action.enabled()) return true;
+                if (!action.confirm() || this.confirming(action.key())) {
                     this.confirmUntil = 0L;
-                    ClientPlayNetworking.send(AbandonPilgrimageC2SPayload.INSTANCE);
+                    this.confirmKey = null;
+                    action.run().run();
                 } else {
+                    this.confirmKey = action.key();
                     this.confirmUntil = Util.getMillis() + CONFIRM_MILLIS;
                 }
                 this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));

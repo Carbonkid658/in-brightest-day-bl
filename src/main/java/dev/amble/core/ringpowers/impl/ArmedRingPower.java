@@ -27,6 +27,7 @@ import dev.amble.core.attacks.area.BarrageManager;
 import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.tractor.TractorManager;
+import dev.amble.core.sphere.ContainmentSphere;
 import net.minecraft.util.Mth;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -145,6 +146,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         data(player).ifPresent(data -> BrightestDayAttachments.setData(player, RingPowerRegistry.ARMED, data.withActive(false, false)));
         AcidManager.stop(player);
         TractorManager.release(player);
+        ContainmentSphere.stop(player);
     }
 
     public static boolean handFree(Player player) {

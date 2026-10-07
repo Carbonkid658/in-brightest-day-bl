@@ -86,6 +86,28 @@ public class BrightestDayComponents {
                             .build()
             );
 
+    public record Bond(UUID id, int generation) {
+        public static final Codec<Bond> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                UUIDUtil.CODEC.fieldOf("id").forGetter(Bond::id),
+                Codec.INT.optionalFieldOf("generation", 0).forGetter(Bond::generation)
+        ).apply(instance, Bond::new));
+
+        public static final StreamCodec<ByteBuf, Bond> STREAM_CODEC = StreamCodec.composite(
+                UUIDUtil.STREAM_CODEC, Bond::id,
+                ByteBufCodecs.VAR_INT, Bond::generation,
+                Bond::new
+        );
+    }
+
+    public static final DataComponentType<Bond> RING_BOND =
+            Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    BrightestDay.id("ring_bond"),
+                    DataComponentType.<Bond>builder()
+                            .persistent(Bond.CODEC)
+                            .networkSynchronized(Bond.STREAM_CODEC)
+                            .build()
+            );
+
     public static final DataComponentType<ConstructToolData> CONSTRUCT_TOOL =
             Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
                     BrightestDay.id("construct_tool"),

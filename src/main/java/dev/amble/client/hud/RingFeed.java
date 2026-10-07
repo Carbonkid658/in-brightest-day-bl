@@ -84,6 +84,8 @@ public final class RingFeed {
         ENTRIES.removeIf(entry -> ++entry.age > LIFETIME_TICKS);
     }
 
+    private record Row(Component text, int color, float alpha) {}
+
     private static void extract(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
@@ -91,33 +93,35 @@ public final class RingFeed {
 
         Font font = client.font;
         int accent = ARGB.opaque(CorpsColors.of(player));
-        int anchor = PowerWheel.indicatorTop();
-        int bottom = (anchor >= 0 ? anchor : graphics.guiHeight() - PowerWheel.HUD_MARGIN) - GAP;
-        int height = font.lineHeight + PADDING * 2;
         float partialTicks = deltaTracker.getGameTimeDeltaPartialTick(false);
 
-        for (Line line : CommsClient.pinned(player)) {
-            bottom = draw(graphics, font, line.text(), line.color(), accent, 1.0F, bottom, height);
-        }
-        for (int i = ENTRIES.size() - 1; i >= 0; i--) {
-            Entry entry = ENTRIES.get(i);
+        List<Row> rows = new ArrayList<>();
+        for (Line line : CommsClient.pinned(player)) rows.add(new Row(line.text(), line.color(), 1.0F));
+        for (Entry entry : ENTRIES) {
             float remaining = LIFETIME_TICKS - entry.age - partialTicks;
             float alpha = Mth.clamp(remaining / FADE_TICKS, 0.0F, 1.0F);
             if (alpha <= 0.02F) continue;
             TextColor style = entry.text.getStyle().getColor();
-            int color = style != null ? ARGB.opaque(style.getValue()) : TEXT_COLOR;
-            bottom = draw(graphics, font, entry.text, color, accent, alpha, bottom, height);
+            rows.add(new Row(entry.text, style != null ? ARGB.opaque(style.getValue()) : TEXT_COLOR, alpha));
+        }
+        if (rows.isEmpty()) return;
+
+        int height = font.lineHeight + PADDING * 2;
+        int top = graphics.guiHeight() / 2 - (rows.size() * (height + GAP) - GAP) / 2;
+        for (Row row : rows) {
+            draw(graphics, font, row.text(), row.color(), accent, row.alpha(), top, height);
+            top += height + GAP;
         }
     }
 
-    private static int draw(GuiGraphicsExtractor graphics, Font font, Component text, int color, int accent, float alpha, int bottom, int height) {
-        int top = bottom - height;
-        int left = PowerWheel.HUD_MARGIN;
+    private static void draw(GuiGraphicsExtractor graphics, Font font, Component text, int color, int accent, float alpha, int top, int height) {
+        int right = graphics.guiWidth() - PowerWheel.HUD_MARGIN;
         int width = font.width(text) + PADDING * 2 + 1;
-        graphics.fill(left, top, left + width, bottom, ARGB.color(Math.round(BACKGROUND_ALPHA * alpha), ARGB.scaleRGB(accent, 0.25F)));
-        graphics.fill(left, top, left + 1, bottom, ARGB.multiplyAlpha(accent, alpha));
-        graphics.text(font, text, left + PADDING + 1, top + PADDING + 1, ARGB.multiplyAlpha(color, alpha), true);
-        return top - GAP;
+        int left = right - width;
+        int bottom = top + height;
+        graphics.fill(left, top, right, bottom, ARGB.color(Math.round(BACKGROUND_ALPHA * alpha), ARGB.scaleRGB(accent, 0.25F)));
+        graphics.fill(right - 1, top, right, bottom, ARGB.multiplyAlpha(accent, alpha));
+        graphics.text(font, text, left + PADDING, top + PADDING + 1, ARGB.multiplyAlpha(color, alpha), true);
     }
 
     private RingFeed() {}

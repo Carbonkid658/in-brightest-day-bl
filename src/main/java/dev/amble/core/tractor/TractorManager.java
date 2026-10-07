@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -50,6 +51,7 @@ public final class TractorManager {
 
     private static final class Grip {
         final Entity target;
+        final Struggle struggle = new Struggle();
         double distance;
 
         Grip(Entity target, double distance) {
@@ -139,6 +141,11 @@ public final class TractorManager {
                 release(player);
                 continue;
             }
+            if (grip.struggle.escaped(target)) {
+                release(player);
+                breakFree(player, target);
+                continue;
+            }
             if (drainTick) RingRanks.fire(player, Trigger.TRACTOR, Milestone.Context.NONE);
 
             Vec3 goal = eye.add(player.getLookAngle().scale(grip.distance));
@@ -146,11 +153,15 @@ public final class TractorManager {
             if (velocity.length() > MAX_SPEED) velocity = velocity.normalize().scale(MAX_SPEED);
             if (!target.isNoGravity()) velocity = velocity.add(0.0, GRAVITY_COMPENSATION, 0.0);
 
-            target.setDeltaMovement(velocity);
-            target.needsSync = true;
-            target.resetFallDistance();
+            grip.struggle.push(target, velocity);
             if (target instanceof FallingBlockEntity block) block.time = 1;
         }
+    }
+
+    public static void breakFree(ServerPlayer holder, Entity escapee) {
+        holder.sendOverlayMessage(Component.translatable("message.brightestday.break_free.holder", escapee.getDisplayName()));
+        if (escapee instanceof ServerPlayer player) player.sendOverlayMessage(Component.translatable("message.brightestday.break_free.escaped"));
+        escapee.level().playSound(null, escapee.getX(), escapee.getY(), escapee.getZ(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 1.0F, 0.8F);
     }
 
     private static void broadcast(ServerPlayer player, int targetId) {

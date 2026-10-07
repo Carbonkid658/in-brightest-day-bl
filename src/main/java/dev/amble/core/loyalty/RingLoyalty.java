@@ -100,6 +100,7 @@ public final class RingLoyalty {
 
         BrightestDayAttachments.setRing(player, ItemStack.EMPTY);
         ring.remove(BrightestDayComponents.RING_DEATHS);
+        RingBonds.release(player.level().getServer(), ring);
         player.sendSystemMessage(Component.translatable("message.brightestday.loyalty_departed").withStyle(ChatFormatting.ITALIC).withColor(color));
         depart(player.level(), player.getEyePosition(), ring, player.getUUID());
     }
@@ -162,7 +163,8 @@ public final class RingLoyalty {
         return !player.getUUID().equals(exclude)
                 && player.isAlive()
                 && !player.isSpectator()
-                && BrightestDayAttachments.getRing(player).isEmpty();
+                && BrightestDayAttachments.getRing(player).isEmpty()
+                && !RingBonds.bonded(player);
     }
 
     private static Vec3 skyEntry(ServerPlayer target) {
@@ -223,6 +225,7 @@ public final class RingLoyalty {
 
     private static void arrive(ServerPlayer bearer, ItemStack ring) {
         LanternCorps corps = corps(ring);
+        RingBonds.bind(bearer, ring);
         BrightestDayAttachments.setRing(bearer, ring);
 
         ServerLevel level = bearer.level();

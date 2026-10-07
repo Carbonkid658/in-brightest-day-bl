@@ -1,6 +1,7 @@
 package dev.amble.core.progression;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import dev.amble.core.loyalty.RingBonds;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayAttachments;
@@ -72,7 +73,8 @@ public final class RingOffers {
     }
 
     private static boolean ringless(Player player) {
-        return BrightestDayAttachments.getRing(player).isEmpty() && !player.isSpectator();
+        return BrightestDayAttachments.getRing(player).isEmpty() && !player.isSpectator()
+                && !(player instanceof ServerPlayer server && RingBonds.bonded(server));
     }
 
     private static void offer(ServerPlayer player, LanternCorps corps, String key) {
@@ -141,9 +143,7 @@ public final class RingOffers {
 
         int online = server.getPlayerList().getPlayerCount();
         int slots = Math.max(1, online / Math.max(1, config.greenPlayersPerRing));
-        long bearers = server.getPlayerList().getPlayers().stream()
-                .filter(other -> PowerRingItem.getCorps(BrightestDayAttachments.getRing(other)).orElse(null) == LanternCorps.GREEN)
-                .count();
+        int bearers = CorpsCaps.bearers(server, LanternCorps.GREEN).size();
         if (bearers >= slots) return;
 
         player.sendSystemMessage(Component.translatable("message.brightestday.offer.green").withStyle(ChatFormatting.ITALIC).withColor(LanternCorps.GREEN.color()));

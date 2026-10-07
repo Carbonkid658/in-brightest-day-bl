@@ -14,7 +14,9 @@
 		"AnimalMixin",
 		"TamableAnimalMixin",
 		"ItemEntityMixin",
-		"ZombieVillagerMixin"
+		"ZombieVillagerMixin",
+		"MobMixin",
+		"AbstractHorseMixin"
 	],
 	"client": [
 		"client.AbstractClientPlayerMixin",
@@ -34,7 +36,10 @@
 		"client.FlashbackRecorderMixin",
 		"client.PlayerModelArmedMixin",
 		"client.ItemInHandLayerMixin",
-		"client.EntityTurnMixin"
+		"client.EntityTurnMixin",
+		"client.EntityRendererMixin",
+		"client.LivingEntityRendererMixin",
+		"client.AbstractBoatRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

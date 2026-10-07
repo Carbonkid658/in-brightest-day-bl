@@ -1,5 +1,6 @@
 package dev.amble.core.heart;
 
+import dev.amble.core.loyalty.RingBonds;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
@@ -160,6 +161,7 @@ public final class RedHeart {
         ATTEMPTS.remove(red.getUUID());
         ItemStack ring = BrightestDayAttachments.getRing(red);
         BrightestDayAttachments.setRing(red, ItemStack.EMPTY);
+        RingBonds.release(red.level().getServer(), ring);
         red.drop(ring, true, Prediction.SERVER_ONLY);
 
         ServerLevel level = red.level();

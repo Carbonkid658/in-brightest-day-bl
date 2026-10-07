@@ -38,6 +38,7 @@ import dev.amble.client.effects.SculptClient;
 import dev.amble.client.wheel.PowerWheel;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.TractorEffects;
+import dev.amble.client.effects.SphereEffects;
 import dev.amble.client.effects.WallEffects;
 import dev.amble.client.effects.BatteryEffects;
 import dev.amble.client.effects.LanternChargeAnimations;
@@ -98,6 +99,7 @@ public class BrightestDayClient implements ClientModInitializer {
         ArmedPose.init();
         ElementAura.init();
         TractorEffects.init();
+        SphereEffects.init();
         ScanEffects.init();
         GlowAura.init();
         LanternSuit.init();

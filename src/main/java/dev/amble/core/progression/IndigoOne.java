@@ -1,5 +1,6 @@
 package dev.amble.core.progression;
 
+import dev.amble.core.loyalty.RingBonds;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayAttachments;
@@ -147,7 +148,7 @@ public final class IndigoOne {
         Optional<UUID> current = WorldProgress.get(server).indigoOne();
         if (current.isPresent()) {
             ServerPlayer bearer = server.getPlayerList().getPlayer(current.get());
-            if (bearer != null && !bearer.isSpectator() && BrightestDayAttachments.getRing(bearer).isEmpty() && !RingLoyalty.inFlight(LanternCorps.INDIGO)) {
+            if (bearer != null && !bearer.isSpectator() && BrightestDayAttachments.getRing(bearer).isEmpty() && !RingBonds.bonded(bearer) && !RingLoyalty.inFlight(LanternCorps.INDIGO)) {
                 Long gifted = LAST_GIFT.get(bearer.getUUID());
                 if (gifted == null || now - gifted >= REGIFT_COOLDOWN) {
                     LAST_GIFT.put(bearer.getUUID(), now);
@@ -158,7 +159,7 @@ public final class IndigoOne {
         }
         List<ServerPlayer> online = server.getPlayerList().getPlayers();
         if (online.size() < BrightestDayConfig.get().indigoMinPlayers) return;
-        List<ServerPlayer> ringless = online.stream().filter(player -> BrightestDayAttachments.getRing(player).isEmpty() && !player.isSpectator()).toList();
+        List<ServerPlayer> ringless = online.stream().filter(player -> BrightestDayAttachments.getRing(player).isEmpty() && !player.isSpectator() && !RingBonds.bonded(player)).toList();
         if (ringless.isEmpty()) return;
 
         ServerPlayer chosen = ringless.get(server.overworld().getRandom().nextInt(ringless.size()));
@@ -234,6 +235,8 @@ public final class IndigoOne {
         float charge = PowerRingItem.getChargeFraction(old);
         ItemStack ring = new ItemStack(BrightestDayItems.ring(LanternCorps.INDIGO));
         ring.set(BrightestDayComponents.POWER_TYPE, Math.round(RingRanks.capacity(target, LanternCorps.INDIGO) * charge));
+        RingBonds.release(target.level().getServer(), old);
+        RingBonds.bind(target, ring);
         BrightestDayAttachments.setRing(target, ring);
         BrightestDayBlocks.lantern(LanternCorps.INDIGO).ifPresent(lantern -> {
             ItemStack gift = new ItemStack(lantern);

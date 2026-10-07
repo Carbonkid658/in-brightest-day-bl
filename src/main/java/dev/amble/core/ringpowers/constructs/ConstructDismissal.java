@@ -13,6 +13,8 @@ import dev.amble.core.drill.PlacedDrillManager;
 import dev.amble.core.glide.GlideManager;
 import dev.amble.core.beams.HealBeamManager;
 import dev.amble.core.light.LightOrbManager;
+import dev.amble.core.mounts.ConstructMounts;
+import dev.amble.core.sphere.ContainmentSphere;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.shields.ShieldManager;
 import dev.amble.core.walls.WallManager;
@@ -44,13 +46,16 @@ public final class ConstructDismissal {
         long lumberjackCreated = LumberjackManager.latestCreatedAt(player.getUUID());
         long probeCreated = OreProbeManager.latestCreatedAt(player.getUUID());
         long toolCreated = ConstructTools.latestCreatedAt(player);
-        long newest = LongStream.of(shieldCreated, wallCreated, sculptCreated, orbCreated, turretCreated, glideCreated, drillCreated, lumberjackCreated, probeCreated, toolCreated).max().getAsLong();
+        long mountCreated = ConstructMounts.latestCreatedAt(player.getUUID());
+        long newest = LongStream.of(shieldCreated, wallCreated, sculptCreated, orbCreated, turretCreated, glideCreated, drillCreated, lumberjackCreated, probeCreated, toolCreated, mountCreated).max().getAsLong();
         if (newest == Long.MIN_VALUE) {
             player.sendOverlayMessage(Component.translatable("message.brightestday.no_constructs_to_dismiss"));
             return;
         }
 
-        if (newest == toolCreated) {
+        if (newest == mountCreated) {
+            ConstructMounts.dismissLatest(player.getUUID());
+        } else if (newest == toolCreated) {
             ConstructTools.dissolveAll(player);
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 0.8F, 1.4F);
         } else if (newest == lumberjackCreated) {
@@ -93,6 +98,8 @@ public final class ConstructDismissal {
         LumberjackManager.dismissAll(player.getUUID());
         OreProbeManager.dismissAll(player.getUUID());
         ConstructTools.dissolveAll(player);
+        ConstructMounts.dismissAll(player.getUUID());
+        ContainmentSphere.stop(player);
     }
 
     private ConstructDismissal() {}

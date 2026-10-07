@@ -7,6 +7,7 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+import dev.amble.core.loyalty.RingBonds;
 import dev.amble.BrightestDay;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
@@ -214,6 +215,7 @@ public final class SpectrumCommands {
 
     private static int ringTake(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         ServerPlayer player = target(context);
+        RingBonds.release(player.level().getServer(), BrightestDayAttachments.getRing(player));
         BrightestDayAttachments.setRing(player, ItemStack.EMPTY);
         return reply(context, Component.literal("Removed " + player.getScoreboardName() + "'s ring"));
     }
