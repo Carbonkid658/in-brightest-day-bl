@@ -288,6 +288,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.offer.accept", "[Accept]");
         builder.add("message.brightestday.offer.refuse", "[Refuse]");
         builder.add("message.brightestday.offer.expired", "That moment has passed.");
+        builder.add("message.brightestday.offer.absent", "The ring hesitates. Its keeper is not here to answer for it.");
         builder.add("message.brightestday.offer.refused", "You turn away. For now.");
         builder.add("message.brightestday.duel.warning", "%s hungers for your ring. They arrive in ten seconds.");
         builder.add("message.brightestday.duel.summoned", "The ring is already claimed by %s. Take it from them.");
@@ -297,6 +298,12 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.indigo.embracing", "%s embraces you. Do not struggle...");
         builder.add("message.brightestday.indigo.forcing", "%s seizes your will. Break free or be embraced...");
         builder.add("message.brightestday.indigo.no_target", "Look at a ring-bearer within reach to embrace them.");
+        builder.add("message.brightestday.indigo.held", "The indigo light holds you in place...");
+        builder.add("message.brightestday.indigo.gathering", "Calling the tribe...");
+        builder.add("message.brightestday.indigo.gather_cooldown", "The tribe can be called again in %ss.");
+        builder.add("message.brightestday.indigo.gathered", "%s calls the tribe together.");
+        builder.add("message.brightestday.indigo.gather_done", "%s of the tribe answered the call.");
+        builder.add("message.brightestday.team.tribe_bound", "The Indigo Tribe is one. You cannot leave it while you wear the ring.");
         builder.add("message.brightestday.berserk.not_ready", "Your rage has not yet peaked.");
         builder.add("message.brightestday.berserk.start", "RAGE CONSUMES YOU");
         builder.add("message.brightestday.berserk.end", "The red haze fades.");
@@ -322,12 +329,24 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("forge.brightestday.lava", "%s lava");
         builder.add("forge.brightestday.lava_level", "Lava: %s / %s");
         builder.add("forge.brightestday.needs_lava", "The forge needs %s lava.");
+        builder.add("forge.brightestday.ritual.fear", "The forge of fear only answers at night, away from the light.");
+        builder.add("forge.brightestday.hammer.begin", "Strike the forge when the ring closes!");
+        builder.add("forge.brightestday.hammer.failed", "The forging shatters. Only the catalyst survives.");
+        builder.add("hud.brightestday.forge.hit", "HIT");
+        builder.add("hud.brightestday.forge.miss", "MISS");
         builder.add("forge.brightestday.unworthy.fear", "The forge does not answer to the unafraid... or the unfeared.");
         builder.add("forge.brightestday.unworthy.love", "The crystal stays cold to you.");
         builder.add("message.brightestday.battery.overworld", "A Central Power Battery can only be built in the Overworld.");
         builder.add("message.brightestday.battery.incomplete", "The core needs a full 3×3×3 shell to awaken.");
         builder.add("message.brightestday.battery.online", "The Central Power Battery hums to life.");
         builder.add("message.brightestday.battery.offline", "The Central Power Battery falls silent.");
+        builder.add("message.brightestday.battery.warded", "This battery is warded against outsiders.");
+        builder.add("message.brightestday.battery.destroyed", "%s has shattered the central power battery!");
+        builder.add("message.brightestday.battery.offer_empty", "You have nothing left to give it.");
+        builder.add("message.brightestday.battery.ceremony", "%s swears the oath at the battery (%s of %s).");
+        builder.add("message.brightestday.battery.lit", "The central power battery blazes to life!");
+        builder.add("message.brightestday.battery.awaits", "The battery is whole, but dark. Gather and swear the oath at its core to light it.");
+        builder.add("bossbar.brightestday.battery", "%s Central Power Battery");
         builder.add("message.brightestday.battery.unworthy", "The ring finds no worthy heart named %s.");
         builder.add("message.brightestday.battery.sent", "The ring streaks away in search of %s.");
         builder.add("message.brightestday.battery.dormant", "Your ring is dormant. It needs a Central Power Battery.");
@@ -337,6 +356,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.meteor.landed", "Something lovely fell from the sky.");
         builder.add("block.brightestday.spectrum_forge", "Spectrum Forge");
         builder.add("block.brightestday.zamaronian_crystal", "Zamaronian Crystal");
+        builder.add("item.brightestday.parallax_shard", "Parallax Shard");
+        builder.add("item.brightestday.zamaron_crystal", "Zamaron Crystal");
+        builder.add("tooltip.brightestday.ring.dormant", "Dormant. Charge it at a %s lantern to awaken it.");
+        builder.add("message.brightestday.ring.awakened", "Your ring awakens.");
         builder.add("block.brightestday.yellow_battery_core", "Yellow Battery Core");
         builder.add("block.brightestday.sapphire_battery_core", "Sapphire Battery Core");
         builder.add("config.brightestday.group.team", "Lantern Teams");
@@ -847,6 +870,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
 
         builder.add(RingPowerRegistry.TRACTOR_BEAM.getTranslationKey(), "Tractor Beam");
         builder.add(RingPowerRegistry.CONVERSION.getTranslationKey(), "Conversion");
+        builder.add(RingPowerRegistry.GATHER.getTranslationKey(), "Gather the Tribe");
         builder.add(RingPowerRegistry.BERSERK.getTranslationKey(), "Berserk");
         builder.add(RingPowerRegistry.BLOOD_HUNT.getTranslationKey(), "Blood Hunt");
         builder.add(RingPowerRegistry.COMMS.getTranslationKey(), "Comms");

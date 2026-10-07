@@ -51,6 +51,11 @@ public class BrightestDayItems {
             .attributes(MaceItem.createAttributes())
             .component(DataComponents.WEAPON, new Weapon(1)), MaceItem::new);
 
+    public static final Item PARALLAX_SHARD = register("parallax_shard", id -> new Item(new Item.Properties()
+            .setId(ResourceKey.create(Registries.ITEM, id)).rarity(Rarity.RARE).fireResistant()));
+    public static final Item ZAMARON_CRYSTAL = register("zamaron_crystal", id -> new Item(new Item.Properties()
+            .setId(ResourceKey.create(Registries.ITEM, id)).rarity(Rarity.RARE)));
+
     public static Item constructTool(ConstructTool tool) {
         return CONSTRUCT_TOOLS.get(tool);
     }

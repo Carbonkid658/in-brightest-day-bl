@@ -35,6 +35,7 @@ import dev.amble.core.ringpowers.impl.BerserkRingPower;
 import dev.amble.core.ringpowers.impl.CommsRingPower;
 import dev.amble.core.ringpowers.impl.ConcussiveRingPower;
 import dev.amble.core.ringpowers.impl.ConversionRingPower;
+import dev.amble.core.ringpowers.impl.GatherRingPower;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import dev.amble.core.ringpowers.impl.LightRingPower;
 import dev.amble.core.ringpowers.impl.ScanRingPower;
@@ -93,6 +94,7 @@ public final class RingPowerRegistry {
     public static final ConversionRingPower CONVERSION = register(new ConversionRingPower());
     public static final BerserkRingPower BERSERK = register(new BerserkRingPower());
     public static final CommsRingPower COMMS = register(new CommsRingPower());
+    public static final GatherRingPower GATHER = register(new GatherRingPower());
 
     public static <T extends RingPower<?>> T register(T power) {
         if (REGISTRY.putIfAbsent(power.id(), power) != null) {

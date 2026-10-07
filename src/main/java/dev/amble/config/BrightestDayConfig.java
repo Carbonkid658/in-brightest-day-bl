@@ -374,6 +374,12 @@ public class BrightestDayConfig {
     @SerialEntry
     public int fearFlee = 5;
     @SerialEntry
+    public int fearAmbush = 12;
+    @SerialEntry
+    public int fearFleeingKill = 15;
+    @SerialEntry
+    public int fearFleeingKillPlayer = 60;
+    @SerialEntry
     public int willLowHit = 10;
     @SerialEntry
     public int willOutclassKill = 80;
@@ -406,6 +412,10 @@ public class BrightestDayConfig {
     public int greenPlayersPerRing = 4;
     @SerialEntry
     public int indigoMinPlayers = 3;
+    @SerialEntry
+    public boolean batteryCeremony = true;
+    @SerialEntry
+    public int batteryCeremonyMembers = 2;
     @SerialEntry
     public int bluePathDistance = 2000;
     @SerialEntry

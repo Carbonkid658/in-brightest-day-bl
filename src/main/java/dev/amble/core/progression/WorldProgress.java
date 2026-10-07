@@ -9,16 +9,19 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.MinecraftServer;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Optional<BlockPos> sanctuary, boolean sanctuaryBuilt,
-                            List<Shrine> shrines, List<Blessing> blessed, List<Battery> batteries) {
-    public static final WorldProgress EMPTY = new WorldProgress(Optional.empty(), false, Optional.empty(), false, List.of(), List.of(), List.of());
+                            List<Shrine> shrines, List<Blessing> blessed, List<Battery> batteries, Map<LanternCorps, UUID> uniqueBearers) {
+    public static final WorldProgress EMPTY = new WorldProgress(Optional.empty(), false, Optional.empty(), false, List.of(), List.of(), List.of(), Map.of());
 
     public record Blessing(UUID player, long time) {
         public static final Codec<Blessing> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -34,15 +37,35 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
         ).apply(instance, Shrine::new));
     }
 
-    public record Battery(BlockPos pos, LanternCorps corps, boolean active) {
+    public record Battery(BlockPos pos, LanternCorps corps, boolean active, int health, boolean lit) {
+        public static final int MAX_HEALTH = 200;
+
         public static final Codec<Battery> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 BlockPos.CODEC.fieldOf("pos").forGetter(Battery::pos),
                 LanternCorps.CODEC.fieldOf("corps").forGetter(Battery::corps),
-                Codec.BOOL.optionalFieldOf("active", false).forGetter(Battery::active)
+                Codec.BOOL.optionalFieldOf("active", false).forGetter(Battery::active),
+                Codec.INT.optionalFieldOf("health", MAX_HEALTH).forGetter(Battery::health),
+                Codec.BOOL.optionalFieldOf("lit", true).forGetter(Battery::lit)
         ).apply(instance, Battery::new));
 
+        public static Battery fresh(BlockPos pos, LanternCorps corps) {
+            return new Battery(pos, corps, false, MAX_HEALTH, false);
+        }
+
         public Battery withActive(boolean active) {
-            return new Battery(this.pos, this.corps, active);
+            return new Battery(this.pos, this.corps, active, this.health, this.lit);
+        }
+
+        public Battery withHealth(int health) {
+            return new Battery(this.pos, this.corps, this.active, Math.clamp(health, 0, MAX_HEALTH), this.lit);
+        }
+
+        public Battery withLit(boolean lit) {
+            return new Battery(this.pos, this.corps, this.active, this.health, lit);
+        }
+
+        public float strength() {
+            return this.health / (float) MAX_HEALTH;
         }
     }
 
@@ -53,7 +76,8 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
             Codec.BOOL.optionalFieldOf("sanctuary_built", false).forGetter(WorldProgress::sanctuaryBuilt),
             Shrine.CODEC.listOf().optionalFieldOf("shrines", List.of()).forGetter(WorldProgress::shrines),
             Blessing.CODEC.listOf().optionalFieldOf("blessings", List.of()).forGetter(WorldProgress::blessed),
-            Battery.CODEC.listOf().optionalFieldOf("batteries", List.of()).forGetter(WorldProgress::batteries)
+            Battery.CODEC.listOf().optionalFieldOf("batteries", List.of()).forGetter(WorldProgress::batteries),
+            Codec.unboundedMap(LanternCorps.CODEC, UUIDUtil.CODEC).optionalFieldOf("unique_bearers", Map.of()).forGetter(WorldProgress::uniqueBearers)
     ).apply(instance, WorldProgress::new));
 
     public static final AttachmentType<WorldProgress> STATE =
@@ -73,26 +97,26 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
     }
 
     public WorldProgress withIndigoOne(UUID uuid) {
-        return new WorldProgress(Optional.of(uuid), this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, this.shrines, this.blessed, this.batteries);
+        return new WorldProgress(Optional.of(uuid), this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, this.shrines, this.blessed, this.batteries, this.uniqueBearers);
     }
 
     public WorldProgress withoutIndigoOne() {
-        return new WorldProgress(Optional.empty(), this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, this.shrines, this.blessed, this.batteries);
+        return new WorldProgress(Optional.empty(), this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, this.shrines, this.blessed, this.batteries, this.uniqueBearers);
     }
 
     public WorldProgress withMeteorFallen() {
-        return new WorldProgress(this.indigoOne, true, this.sanctuary, this.sanctuaryBuilt, this.shrines, this.blessed, this.batteries);
+        return new WorldProgress(this.indigoOne, true, this.sanctuary, this.sanctuaryBuilt, this.shrines, this.blessed, this.batteries, this.uniqueBearers);
     }
 
     public WorldProgress withSanctuary(BlockPos pos, boolean built) {
-        return new WorldProgress(this.indigoOne, this.meteorFallen, Optional.of(pos), built, this.shrines, this.blessed, this.batteries);
+        return new WorldProgress(this.indigoOne, this.meteorFallen, Optional.of(pos), built, this.shrines, this.blessed, this.batteries, this.uniqueBearers);
     }
 
     public WorldProgress withShrine(int index, BlockPos pos) {
         List<Shrine> shrines = new ArrayList<>(this.shrines);
         shrines.removeIf(shrine -> shrine.index() == index);
         shrines.add(new Shrine(index, pos));
-        return new WorldProgress(this.indigoOne, this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, List.copyOf(shrines), this.blessed, this.batteries);
+        return new WorldProgress(this.indigoOne, this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, List.copyOf(shrines), this.blessed, this.batteries, this.uniqueBearers);
     }
 
     public Optional<BlockPos> shrine(int index) {
@@ -103,7 +127,7 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
         List<Blessing> blessed = new ArrayList<>(this.blessed);
         blessed.removeIf(blessing -> blessing.player().equals(uuid));
         blessed.add(new Blessing(uuid, time));
-        return new WorldProgress(this.indigoOne, this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, this.shrines, List.copyOf(blessed), this.batteries);
+        return new WorldProgress(this.indigoOne, this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, this.shrines, List.copyOf(blessed), this.batteries, this.uniqueBearers);
     }
 
     public Optional<Long> blessedAt(UUID uuid) {
@@ -114,8 +138,20 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
         return this.blessedAt(uuid).map(time -> now - time >= cooldown).orElse(true);
     }
 
+    public Optional<UUID> uniqueBearer(LanternCorps corps) {
+        return Optional.ofNullable(this.uniqueBearers.get(corps));
+    }
+
+    public WorldProgress withUniqueBearer(LanternCorps corps, @Nullable UUID bearer) {
+        Map<LanternCorps, UUID> bearers = new EnumMap<>(LanternCorps.class);
+        bearers.putAll(this.uniqueBearers);
+        if (bearer == null) bearers.remove(corps);
+        else bearers.put(corps, bearer);
+        return new WorldProgress(this.indigoOne, this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, this.shrines, this.blessed, this.batteries, Map.copyOf(bearers));
+    }
+
     public WorldProgress withBatteries(List<Battery> batteries) {
-        return new WorldProgress(this.indigoOne, this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, this.shrines, this.blessed, List.copyOf(batteries));
+        return new WorldProgress(this.indigoOne, this.meteorFallen, this.sanctuary, this.sanctuaryBuilt, this.shrines, this.blessed, List.copyOf(batteries), this.uniqueBearers);
     }
 
     public WorldProgress withBattery(Battery battery) {

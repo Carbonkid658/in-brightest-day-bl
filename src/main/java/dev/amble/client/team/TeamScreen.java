@@ -6,6 +6,7 @@ import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayItems;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.TeamActionC2SPayload;
+import dev.amble.core.networking.payloads.s2c.TeamRosterS2CPayload;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.team.EmotionalSpectrum;
 import dev.amble.core.team.LanternTeams;
@@ -103,13 +104,8 @@ public class TeamScreen extends Screen {
         return lanterns;
     }
 
-    private List<Player> teammates() {
-        List<Player> members = new ArrayList<>();
-        for (AbstractClientPlayer other : this.minecraft.level.players()) {
-            if (LanternTeams.areTeammates(this.minecraft.player, other)) members.add(other);
-        }
-        members.sort(Comparator.comparing(player -> player.getName().getString()));
-        return members;
+    private List<TeamRosterS2CPayload.Member> teammates() {
+        return LanternTeams.team(this.minecraft.player).isPresent() ? ClientTeams.roster() : List.of();
     }
 
     @Override
@@ -126,7 +122,7 @@ public class TeamScreen extends Screen {
         });
 
         List<Lantern> lanterns = this.nearby();
-        List<Player> teammates = this.teammates();
+        List<TeamRosterS2CPayload.Member> teammates = this.teammates();
         this.spectrum(graphics, lanterns, teammates);
         this.team(graphics, teammates, mouseX, mouseY);
         this.list(graphics, lanterns, mouseX, mouseY);
@@ -139,7 +135,7 @@ public class TeamScreen extends Screen {
         }
     }
 
-    private void spectrum(GuiGraphicsExtractor graphics, List<Lantern> lanterns, List<Player> teammates) {
+    private void spectrum(GuiGraphicsExtractor graphics, List<Lantern> lanterns, List<TeamRosterS2CPayload.Member> teammates) {
         int x0 = this.left + MARGIN;
         int x1 = this.left + WIDTH - MARGIN;
         int y = this.top + SPECTRUM_Y;
@@ -162,8 +158,8 @@ public class TeamScreen extends Screen {
         }
 
         Map<LanternCorps, Integer> stacks = new EnumMap<>(LanternCorps.class);
-        for (Player teammate : teammates) {
-            PowerRingItem.getWornCorps(teammate).ifPresent(corps -> this.marker(graphics, corps, stacks, TEAMMATE, innerLeft, innerRight, x0, x1, y));
+        for (TeamRosterS2CPayload.Member teammate : teammates) {
+            teammate.wornCorps().ifPresent(corps -> this.marker(graphics, corps, stacks, TEAMMATE, innerLeft, innerRight, x0, x1, y));
         }
         for (Lantern lantern : lanterns) {
             this.marker(graphics, lantern.corps(), stacks, ARGB.opaque(lantern.corps().color()), innerLeft, innerRight, x0, x1, y);
@@ -193,13 +189,13 @@ public class TeamScreen extends Screen {
         return innerLeft + Math.round(EmotionalSpectrum.position(corps) / (float) last * (innerRight - innerLeft - 1));
     }
 
-    private void team(GuiGraphicsExtractor graphics, List<Player> teammates, int mouseX, int mouseY) {
+    private void team(GuiGraphicsExtractor graphics, List<TeamRosterS2CPayload.Member> teammates, int mouseX, int mouseY) {
         int x0 = this.left + MARGIN;
         int y = this.top + TEAM_Y;
         graphics.text(this.font, Component.translatable("gui.brightestday.team.your_team"), x0, y, LanternWidgets.TEXT, true);
         divider(graphics, x0 + this.font.width(Component.translatable("gui.brightestday.team.your_team")) + 6, this.left + WIDTH - MARGIN - BUTTON_WIDTH - 6, y + 4);
 
-        if (LanternTeams.team(this.minecraft.player).isPresent()) {
+        if (LanternTeams.team(this.minecraft.player).isPresent() && !LanternTeams.inTribe(this.minecraft.player)) {
             UUID self = this.minecraft.player.getUUID();
             this.button(graphics, this.left + WIDTH - MARGIN - BUTTON_WIDTH, y - 3, BUTTON_WIDTH, Component.translatable("gui.brightestday.team.leave"),
                     mouseX, mouseY, () -> ClientTeams.send(TeamActionC2SPayload.Action.LEAVE, self));
@@ -215,14 +211,14 @@ public class TeamScreen extends Screen {
         int chipX = x0;
         int limit = this.left + WIDTH - MARGIN;
         for (int i = 0; i < teammates.size(); i++) {
-            Player teammate = teammates.get(i);
-            Component name = teammate.getName();
+            TeamRosterS2CPayload.Member teammate = teammates.get(i);
+            Component name = Component.literal(teammate.name());
             int chipWidth = 20 + this.font.width(name) + 6;
             if (chipX + chipWidth > limit) {
                 graphics.text(this.font, "+" + (teammates.size() - i), chipX, chipY + 4, LanternWidgets.TEXT_DIM, false);
                 break;
             }
-            Optional<LanternCorps> corps = PowerRingItem.getWornCorps(teammate);
+            Optional<LanternCorps> corps = teammate.wornCorps();
             int color = corps.map(c -> ARGB.opaque(c.color())).orElse(TEAMMATE);
             graphics.fill(chipX, chipY - 1, chipX + chipWidth, chipY + 17, ARGB.color(0x50, color));
             graphics.fill(chipX, chipY - 1, chipX + 2, chipY + 17, color);

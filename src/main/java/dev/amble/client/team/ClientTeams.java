@@ -2,6 +2,7 @@ package dev.amble.client.team;
 
 import dev.amble.core.networking.payloads.c2s.TeamActionC2SPayload;
 import dev.amble.core.networking.payloads.s2c.TeamInvitesS2CPayload;
+import dev.amble.core.networking.payloads.s2c.TeamRosterS2CPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import dev.amble.core.items.PowerRingItem;
@@ -11,12 +12,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 public final class ClientTeams {
     private static final Set<UUID> INCOMING = new HashSet<>();
     private static final Set<UUID> OUTGOING = new HashSet<>();
+    private static List<TeamRosterS2CPayload.Member> roster = List.of();
 
     public static void init() {
         ClientPlayNetworking.registerGlobalReceiver(TeamInvitesS2CPayload.TYPE, (payload, context) -> {
@@ -28,9 +31,11 @@ public final class ClientTeams {
             OUTGOING.clear();
             OUTGOING.addAll(payload.outgoing());
         });
+        ClientPlayNetworking.registerGlobalReceiver(TeamRosterS2CPayload.TYPE, (payload, context) -> roster = List.copyOf(payload.members()));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             INCOMING.clear();
             OUTGOING.clear();
+            roster = List.of();
         });
     }
 
@@ -39,6 +44,10 @@ public final class ClientTeams {
         Component name = player != null ? player.getDisplayName() : Component.translatable("toast.brightestday.team_invite.someone");
         LanternCorps corps = player != null ? PowerRingItem.getWornCorps(player).orElse(null) : null;
         client.gui.toastManager().addToast(new TeamInviteToast(inviter, name, corps));
+    }
+
+    public static List<TeamRosterS2CPayload.Member> roster() {
+        return roster;
     }
 
     public static boolean invitedBy(UUID player) {

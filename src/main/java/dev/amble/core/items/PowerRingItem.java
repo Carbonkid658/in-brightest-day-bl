@@ -158,5 +158,21 @@ public class PowerRingItem extends Item {
         Component component = Component.literal(String.format("%.0f%%", percentage)).withStyle(ChatFormatting.BOLD).withColor(color);
 
         builder.accept(component);
+        if (isDormant(itemStack)) {
+            Component lantern = PowerRingItem.getCorps(itemStack).map(LanternCorps::displayName).orElse(Component.empty());
+            builder.accept(Component.translatable("tooltip.brightestday.ring.dormant", lantern).withStyle(ChatFormatting.ITALIC).withColor(color));
+        }
+    }
+
+    public static boolean isDormant(ItemStack ring) {
+        return ring.getOrDefault(BrightestDayComponents.DORMANT, false);
+    }
+
+    public static void awaken(Player player, ItemStack ring) {
+        if (!isDormant(ring)) return;
+        ring.remove(BrightestDayComponents.DORMANT);
+        int color = getCorps(ring).orElse(LanternCorps.GREEN).color();
+        player.sendSystemMessage(Component.translatable("message.brightestday.ring.awakened").withStyle(ChatFormatting.BOLD).withColor(color));
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.2F, 1.4F);
     }
 }

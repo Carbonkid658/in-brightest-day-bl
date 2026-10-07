@@ -104,6 +104,7 @@ public final class PowerWheel {
             Map.entry(RingPowerRegistry.TRACTOR_BEAM, Items.LEAD),
             Map.entry(RingPowerRegistry.SCAN, Items.SPYGLASS),
             Map.entry(RingPowerRegistry.CONVERSION, Items.ECHO_SHARD),
+            Map.entry(RingPowerRegistry.GATHER, Items.RECOVERY_COMPASS),
             Map.entry(RingPowerRegistry.BERSERK, Items.BLAZE_POWDER),
             Map.entry(RingPowerRegistry.COMMS, Items.BELL),
             Map.entry(RingPowerRegistry.CONCUSSIVE, Items.WIND_CHARGE),

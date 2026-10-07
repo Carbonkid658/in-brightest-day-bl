@@ -90,6 +90,19 @@ public final class SpectrumMeters {
         EmotionTriggers.onMeterChanged(player, emotion, before, after);
     }
 
+    public static long lastFed(Player player, Emotion emotion) {
+        return get(player).fed().getOrDefault(emotion, 0L);
+    }
+
+    public static void drain(ServerPlayer player, Emotion emotion, int amount) {
+        Meters meters = get(player);
+        int before = meters.get(emotion);
+        int after = Math.max(0, before - amount);
+        if (after == before) return;
+        player.setAttached(METERS, meters.with(emotion, after, lastFed(player, emotion)));
+        EmotionTriggers.onMeterChanged(player, emotion, before, after);
+    }
+
     public static void reset(ServerPlayer player) {
         player.setAttached(METERS, Meters.EMPTY);
     }

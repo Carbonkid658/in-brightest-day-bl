@@ -124,12 +124,13 @@ public final class EmotionSources {
                 SpectrumMeters.add(attacker, Emotion.WILL, config().willLowHit);
             }
             if (victim instanceof Animal && ready(attacker, "fear_flee", 100)) {
-                SpectrumMeters.add(attacker, Emotion.FEAR, config().fearFlee);
+                Terror.add(attacker, victim, config().fearFlee);
             }
             if (victim instanceof ServerPlayer hurt && ready(hurt, "rage_hurt", 20)) {
                 SpectrumMeters.add(hurt, Emotion.RAGE, config().rageHurtByPlayer);
             }
             if (source.is(RingDamage.RING_CONSTRUCT)) RingRanks.fire(attacker, Trigger.RING_DAMAGE, Milestone.Context.of(victim), Math.round(amount));
+            Terror.onHurt(victim, attacker);
         }
 
         if (!(victim instanceof ServerPlayer ward) || !ward.isAlive()) return;
@@ -164,8 +165,9 @@ public final class EmotionSources {
             SpectrumMeters.add(killer, Emotion.RAGE, config.rageKillAnimal);
         }
 
-        if (killer.isShiftKeyDown() || killer.isInvisible()) SpectrumMeters.add(killer, Emotion.FEAR, config.fearStealthKill);
-        if (victim.hasEffect(MobEffects.SLOWNESS) || victim.hasEffect(MobEffects.WEAKNESS)) SpectrumMeters.add(killer, Emotion.FEAR, config.fearFeebleKill);
+        if (killer.isShiftKeyDown() || killer.isInvisible()) Terror.add(killer, victim, config.fearStealthKill);
+        if (victim.hasEffect(MobEffects.SLOWNESS) || victim.hasEffect(MobEffects.WEAKNESS)) Terror.add(killer, victim, config.fearFeebleKill);
+        Terror.onKill(victim, killer);
         if (OUTCLASSING.contains(victim.getType())) SpectrumMeters.add(killer, Emotion.WILL, config.willOutclassKill);
 
         boolean byYellow = feared && fear.yellow().equals(killer.getUUID());

@@ -8,6 +8,7 @@ import dev.amble.core.networking.payloads.c2s.AcidC2SPayload;
 import dev.amble.core.networking.payloads.c2s.BerserkC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ConcussiveC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ConversionC2SPayload;
+import dev.amble.core.networking.payloads.c2s.GatherC2SPayload;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
@@ -49,6 +50,7 @@ public final class AbilityClient {
             if (held == RingPowerRegistry.CONCUSSIVE) ClientPlayNetworking.send(ConcussiveC2SPayload.INSTANCE);
             if (held == RingPowerRegistry.CONVERSION) ClientPlayNetworking.send(ConversionC2SPayload.INSTANCE);
             if (held == RingPowerRegistry.BERSERK) ClientPlayNetworking.send(BerserkC2SPayload.INSTANCE);
+            if (held == RingPowerRegistry.GATHER) ClientPlayNetworking.send(GatherC2SPayload.INSTANCE);
         }
         pressed = held;
 

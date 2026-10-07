@@ -5,6 +5,7 @@ import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.BrightestDay;
 import dev.amble.core.team.RingDamage;
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.forge.CentralPowerBattery;
 import dev.amble.core.networking.payloads.s2c.BlastS2CPayload;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -27,6 +28,7 @@ import org.jspecify.annotations.Nullable;
 public class BlastConstruct extends ConstructRingPower {
     private static final double LIFT = 0.35;
     private static final int MAX_SIZE = 5;
+    private static final float BLAST_BATTERY_DAMAGE = 6.0F;
     private static final int EMPOWERED_MAX_SIZE = 6;
     private static final float SCALE_PER_SIZE = 0.4F;
     private static final float KNOCKBACK_PER_SIZE = 0.2F;
@@ -122,6 +124,7 @@ public class BlastConstruct extends ConstructRingPower {
             entity.needsSync = true;
         }
 
+        if (hit) CentralPowerBattery.blast(level, impact, blastRadius, Math.round(BLAST_BATTERY_DAMAGE * scale), player);
         if (hit) {
             level.explode(player, null, BLOCKS_ONLY, impact.x, impact.y, impact.z, config.blastExplosionPower * scale, false,
                     config.blastBreaksBlocks ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE);

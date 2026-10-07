@@ -175,6 +175,7 @@ public class LanternBlockItem extends BlockItem {
     private void complete(Level level, Player player, boolean announce) {
         ItemStack ring = PowerRingItem.getWornRing(player);
         PowerRingItem.setMaxPower(ring);
+        PowerRingItem.awaken(player, ring);
         if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
 
         if (announce) {

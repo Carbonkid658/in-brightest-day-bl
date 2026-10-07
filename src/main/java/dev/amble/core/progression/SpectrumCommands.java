@@ -299,7 +299,7 @@ public final class SpectrumCommands {
     }
 
     private static int batteryActivate(CommandContext<CommandSourceStack> context) {
-        WorldProgress.update(context.getSource().getServer(), state -> state.withBatteries(state.batteries().stream().map(battery -> battery.withActive(true)).toList()));
+        WorldProgress.update(context.getSource().getServer(), state -> state.withBatteries(state.batteries().stream().map(battery -> battery.withHealth(WorldProgress.Battery.MAX_HEALTH).withLit(true).withActive(true)).toList()));
         CentralPowerBattery.broadcast(context.getSource().getServer());
         return reply(context, Component.literal("Activated all registered batteries"));
     }

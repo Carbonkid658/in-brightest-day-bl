@@ -4,6 +4,7 @@ import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.TeamInvitesS2CPayload;
+import dev.amble.core.networking.payloads.s2c.TeamRosterS2CPayload;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
@@ -12,6 +13,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
@@ -21,7 +23,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import org.jspecify.annotations.Nullable;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,11 +45,16 @@ public final class LanternTeams {
                     .buildAndRegister(BrightestDay.id("lantern_team"));
 
     private static final Map<UUID, Map<UUID, Integer>> INVITES = new HashMap<>();
+    private static final Map<UUID, List<TeamRosterS2CPayload.Member>> SENT_ROSTERS = new HashMap<>();
+    public static final UUID INDIGO_TRIBE = UUID.nameUUIDFromBytes("brightestday:indigo_tribe".getBytes(StandardCharsets.UTF_8));
+    private static final int ROSTER_INTERVAL = 20;
 
     public static void init() {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) ->
                 !(source.is(RingDamage.RING_CONSTRUCT) && areTeammates(entity, source.getEntity())));
         ServerTickEvents.END_SERVER_TICK.register(LanternTeams::expireInvites);
+        ServerTickEvents.END_SERVER_TICK.register(LanternTeams::tickMembership);
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> SENT_ROSTERS.remove(handler.player.getUUID()));
         ServerPlayerEvents.LEAVE.register(LanternTeams::forgetInvites);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> INVITES.clear());
     }
@@ -75,6 +84,8 @@ public final class LanternTeams {
                 && inviter.distanceTo(invitee) <= BrightestDayConfig.get().teamInviteRange
                 && PowerRingItem.getWornCorps(inviter).isPresent()
                 && PowerRingItem.getWornCorps(invitee).isPresent()
+                && !inTribe(inviter)
+                && !inTribe(invitee)
                 && !areTeammates(inviter, invitee);
     }
 
@@ -148,18 +159,59 @@ public final class LanternTeams {
         sync(inviter);
     }
 
+    public static boolean inTribe(Player player) {
+        return PowerRingItem.getWornCorps(player).orElse(null) == LanternCorps.INDIGO;
+    }
+
+    public static void joinTribe(ServerPlayer player) {
+        if (INDIGO_TRIBE.equals(player.getAttached(TEAM))) return;
+        detach(player, false);
+        player.setAttached(TEAM, INDIGO_TRIBE);
+    }
+
     public static void leave(ServerPlayer player, boolean announce) {
+        if (inTribe(player) && INDIGO_TRIBE.equals(player.getAttached(TEAM))) {
+            if (announce) player.sendOverlayMessage(Component.translatable("message.brightestday.team.tribe_bound").withColor(LanternCorps.INDIGO.color()));
+            return;
+        }
+        detach(player, announce);
+    }
+
+    private static void detach(ServerPlayer player, boolean announce) {
         UUID team = player.getAttached(TEAM);
         if (team == null) return;
 
         player.removeAttached(TEAM);
         List<ServerPlayer> remaining = members(player.level().getServer(), team);
-        if (remaining.size() == 1) remaining.getFirst().removeAttached(TEAM);
+        if (remaining.size() == 1 && !INDIGO_TRIBE.equals(team)) remaining.getFirst().removeAttached(TEAM);
         if (!announce) return;
 
         Component left = Component.translatable("message.brightestday.team.left", player.getDisplayName());
         player.sendSystemMessage(Component.translatable("message.brightestday.team.you_left"));
         for (ServerPlayer member : remaining) member.sendSystemMessage(left);
+    }
+
+    private static void tickMembership(MinecraftServer server) {
+        if (server.getTickCount() % ROSTER_INTERVAL != 0) return;
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            boolean tribe = INDIGO_TRIBE.equals(player.getAttached(TEAM));
+            if (inTribe(player) && !tribe) joinTribe(player);
+            else if (!inTribe(player) && tribe) player.removeAttached(TEAM);
+        }
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            List<TeamRosterS2CPayload.Member> roster = new ArrayList<>();
+            team(player).ifPresent(team -> {
+                for (ServerPlayer member : members(server, team)) {
+                    if (member == player) continue;
+                    roster.add(new TeamRosterS2CPayload.Member(member.getUUID(), member.getScoreboardName(),
+                            PowerRingItem.getWornCorps(member).map(Enum::ordinal).orElse(-1)));
+                }
+            });
+            roster.sort(Comparator.comparing(TeamRosterS2CPayload.Member::name));
+            if (roster.equals(SENT_ROSTERS.get(player.getUUID()))) continue;
+            SENT_ROSTERS.put(player.getUUID(), roster);
+            ServerPlayNetworking.send(player, new TeamRosterS2CPayload(roster));
+        }
     }
 
     private static int teamSize(ServerPlayer player) {

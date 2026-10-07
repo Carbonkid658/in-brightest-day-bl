@@ -1,5 +1,6 @@
 package dev.amble.core.forge;
 
+import dev.amble.core.BrightestDayItems;
 import dev.amble.core.progression.Emotion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -7,8 +8,10 @@ import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -17,6 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
@@ -34,6 +38,8 @@ import java.util.function.Supplier;
 
 public class SpectrumForgeBlock extends Block {
     public static final int MAX_LAVA = 4;
+    private static final int RITUAL_DARKNESS = 7;
+    private static final int SHED_CHANCE = 26;
     public static final IntegerProperty LAVA = IntegerProperty.create("lava", 0, MAX_LAVA);
     public static final IntegerProperty MODE = IntegerProperty.create("mode", 0, 3);
     public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
@@ -110,6 +116,10 @@ public class SpectrumForgeBlock extends Block {
             player.sendOverlayMessage(Component.translatable("forge.brightestday.unworthy." + this.emotion.getSerializedName()).withColor(color));
             return InteractionResult.SUCCESS_SERVER;
         }
+        if (this.emotion == Emotion.FEAR && !player.hasInfiniteMaterials() && (!level.isDarkOutside() || level.getBrightness(LightLayer.SKY, pos.above()) - level.getSkyDarken() > RITUAL_DARKNESS)) {
+            player.sendOverlayMessage(Component.translatable("forge.brightestday.ritual.fear").withColor(color));
+            return InteractionResult.SUCCESS_SERVER;
+        }
         if (this.fedByLava && state.getValue(LAVA) < recipe.lava()) {
             player.sendOverlayMessage(Component.translatable("forge.brightestday.needs_lava", recipe.lava()).withColor(color));
             return InteractionResult.SUCCESS_SERVER;
@@ -119,20 +129,37 @@ public class SpectrumForgeBlock extends Block {
             return InteractionResult.SUCCESS_SERVER;
         }
 
+        if (!(player instanceof ServerPlayer smith) || !(level instanceof ServerLevel server) || ForgeHammer.forging(smith)) return InteractionResult.SUCCESS_SERVER;
+
         recipe.consume(player);
         if (this.fedByLava) level.setBlockAndUpdate(pos, state.setValue(LAVA, state.getValue(LAVA) - recipe.lava()));
+        ForgeHammer.begin(smith, server, pos, recipe, color, this.fedByLava);
+        return InteractionResult.SUCCESS_SERVER;
+    }
+
+    static void craft(ServerLevel level, BlockPos pos, ForgeRecipe recipe, Player player, int color, boolean lava) {
         for (ItemStack output : recipe.outputs().apply(player)) {
             ItemEntity item = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5, output);
             item.setDeltaMovement(0.0, 0.2, 0.0);
             level.addFreshEntity(item);
         }
-
-        if (level instanceof ServerLevel server) {
-            server.sendParticles(new DustParticleOptions(color, 2.0F), pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5, 40, 0.4, 0.4, 0.4, 0.0);
-            server.sendParticles(this.fedByLava ? ParticleTypes.LAVA : ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, 12, 0.3, 0.2, 0.3, 0.05);
-        }
+        level.sendParticles(new DustParticleOptions(color, 2.0F), pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5, 40, 0.4, 0.4, 0.4, 0.0);
+        level.sendParticles(lava ? ParticleTypes.LAVA : ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, 12, 0.3, 0.2, 0.3, 0.05);
         level.playSound(null, pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 1.0F, 0.7F);
         level.playSound(null, pos, SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.0F, 1.2F);
-        return InteractionResult.SUCCESS_SERVER;
+    }
+
+    @Override
+    protected boolean isRandomlyTicking(BlockState state) {
+        return !this.fedByLava;
+    }
+
+    @Override
+    protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        if (this.fedByLava || random.nextInt(SHED_CHANCE) != 0) return;
+        ItemEntity crystal = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5, new ItemStack(BrightestDayItems.ZAMARON_CRYSTAL));
+        crystal.setDeltaMovement(0.0, 0.15, 0.0);
+        level.addFreshEntity(crystal);
+        level.playSound(null, pos, SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.BLOCKS, 0.8F, 1.4F);
     }
 }

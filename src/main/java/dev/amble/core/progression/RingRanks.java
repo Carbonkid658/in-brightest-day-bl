@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.amble.BrightestDay;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
+import dev.amble.core.forge.CentralPowerBattery;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
@@ -16,6 +17,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -207,7 +209,9 @@ public final class RingRanks {
     }
 
     public static int capacity(Player player, LanternCorps corps) {
-        return Math.round(BrightestDayComponents.MAX_POWER * CAPACITY[Mth.clamp(rank(player, corps), 1, MAX_RANK)]);
+        MinecraftServer server = player.level().getServer();
+        float battery = server == null ? 1.0F : CentralPowerBattery.strength(server, corps);
+        return Math.round(BrightestDayComponents.MAX_POWER * CAPACITY[Mth.clamp(rank(player, corps), 1, MAX_RANK)] * battery);
     }
 
     public static void clampCharge(ServerPlayer player) {

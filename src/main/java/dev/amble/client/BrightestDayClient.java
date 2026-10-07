@@ -45,6 +45,7 @@ import dev.amble.client.effects.CommsClient;
 import dev.amble.client.effects.MegaphoneClient;
 import dev.amble.client.effects.SanctuaryEffects;
 import dev.amble.client.forge.ForgeClient;
+import dev.amble.client.forge.ForgeHammerHud;
 import dev.amble.client.flight.FlightAnimations;
 import dev.amble.client.flight.FlightAnimator;
 import dev.amble.client.flight.AileronRolls;
@@ -99,6 +100,7 @@ public class BrightestDayClient implements ClientModInitializer {
         GlowAura.init();
         LanternSuit.init();
         ForgeClient.init();
+        ForgeHammerHud.init();
         ConstructClient.init();
         SculptClient.init();
         PowerWheel.init();

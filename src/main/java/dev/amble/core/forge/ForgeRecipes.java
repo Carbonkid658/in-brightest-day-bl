@@ -21,11 +21,11 @@ public final class ForgeRecipes {
 
     public static List<ForgeRecipe> yellow() {
         return List.of(
-                new ForgeRecipe("ring", List.of(new ItemStack(Items.NETHERITE_INGOT), new ItemStack(Items.GOLD_INGOT, 4), new ItemStack(Items.NETHER_STAR)), 1,
+                new ForgeRecipe("ring", List.of(new ItemStack(Items.NETHERITE_INGOT), new ItemStack(Items.GOLD_INGOT, 4), new ItemStack(BrightestDayItems.PARALLAX_SHARD)), 1,
                         player -> List.of(ring(LanternCorps.YELLOW))),
                 new ForgeRecipe("lantern", List.of(new ItemStack(Items.NETHERITE_INGOT), new ItemStack(Items.GOLD_INGOT, 8)), 2,
                         player -> List.of(lantern(LanternCorps.YELLOW))),
-                new ForgeRecipe("core", List.of(new ItemStack(Items.NETHERITE_INGOT, 2), new ItemStack(Items.GOLD_BLOCK, 4)), 2,
+                new ForgeRecipe("core", List.of(new ItemStack(Items.NETHERITE_INGOT, 2), new ItemStack(Items.GOLD_BLOCK, 4), new ItemStack(BrightestDayItems.PARALLAX_SHARD)), 2,
                         player -> List.of(new ItemStack(BrightestDayBlocks.YELLOW_BATTERY_CORE))),
                 new ForgeRecipe(FUSE, List.of(new ItemStack(BrightestDayItems.BLUE_POWER_RING), new ItemStack(BrightestDayItems.STAR_SAPPHIRE_POWER_RING)), 4,
                         player -> List.of(ring(LanternCorps.INDIGO), lantern(LanternCorps.INDIGO))));
@@ -33,11 +33,11 @@ public final class ForgeRecipes {
 
     public static List<ForgeRecipe> sapphire() {
         return List.of(
-                new ForgeRecipe("ring", List.of(new ItemStack(Items.DIAMOND), new ItemStack(Items.GOLD_INGOT, 4), new ItemStack(Items.AMETHYST_SHARD, 8)), 0,
+                new ForgeRecipe("ring", List.of(new ItemStack(Items.DIAMOND), new ItemStack(Items.GOLD_INGOT, 4), new ItemStack(Items.AMETHYST_SHARD, 8), new ItemStack(BrightestDayItems.ZAMARON_CRYSTAL)), 0,
                         player -> List.of(ring(LanternCorps.STAR_SAPPHIRE))),
                 new ForgeRecipe("lantern", List.of(new ItemStack(Items.DIAMOND), new ItemStack(Items.GOLD_INGOT, 8), new ItemStack(Items.AMETHYST_BLOCK, 4)), 0,
                         player -> List.of(lantern(LanternCorps.STAR_SAPPHIRE))),
-                new ForgeRecipe("core", List.of(new ItemStack(Items.DIAMOND_BLOCK), new ItemStack(Items.AMETHYST_BLOCK, 4), new ItemStack(Items.GOLD_BLOCK, 2)), 0,
+                new ForgeRecipe("core", List.of(new ItemStack(Items.DIAMOND_BLOCK), new ItemStack(Items.AMETHYST_BLOCK, 4), new ItemStack(Items.GOLD_BLOCK, 2), new ItemStack(BrightestDayItems.ZAMARON_CRYSTAL)), 0,
                         player -> List.of(new ItemStack(BrightestDayBlocks.SAPPHIRE_BATTERY_CORE))));
     }
 
@@ -54,7 +54,8 @@ public final class ForgeRecipes {
 
     private static ItemStack ring(LanternCorps corps) {
         ItemStack ring = new ItemStack(BrightestDayItems.ring(corps));
-        ring.set(BrightestDayComponents.POWER_TYPE, BrightestDayComponents.MAX_POWER);
+        ring.set(BrightestDayComponents.POWER_TYPE, 0);
+        ring.set(BrightestDayComponents.DORMANT, true);
         return ring;
     }
 

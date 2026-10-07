@@ -194,6 +194,7 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
 
     public void complete(Level level, BlockPos pos, Player player, ItemStack ring, boolean slotted, boolean announce) {
         PowerRingItem.setMaxPower(ring);
+        PowerRingItem.awaken(player, ring);
         ring.remove(BrightestDayComponents.RING_DEATHS);
         if (player instanceof ServerPlayer server) RingRanks.fire(server, Trigger.RECHARGE, Milestone.Context.of("lantern"));
         if (level instanceof ServerLevel serverLevel) RingLoyalty.bind(ring, serverLevel, pos);

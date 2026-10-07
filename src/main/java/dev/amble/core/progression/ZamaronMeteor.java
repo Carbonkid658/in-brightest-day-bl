@@ -2,6 +2,7 @@ package dev.amble.core.progression;
 
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayBlocks;
+import dev.amble.core.BrightestDayItems;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
@@ -16,6 +17,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
@@ -24,6 +27,7 @@ import org.jspecify.annotations.Nullable;
 public final class ZamaronMeteor {
     private static final int PINK = LanternCorps.STAR_SAPPHIRE.color();
     private static final int FLIGHT_TICKS = 140;
+    private static final int CRATER_CRYSTALS = 6;
     private static final int MIN_DISTANCE = 300;
     private static final int MAX_DISTANCE = 800;
     private static final double APPROACH = 220.0;
@@ -114,6 +118,12 @@ public final class ZamaronMeteor {
         BlockPos heart = impact.below(CRATER_RADIUS - 2);
         level.setBlockAndUpdate(heart.below(), Blocks.CRYING_OBSIDIAN.defaultBlockState());
         level.setBlockAndUpdate(heart, BrightestDayBlocks.ZAMARONIAN_CRYSTAL.defaultBlockState());
+        for (int i = 0; i < CRATER_CRYSTALS; i++) {
+            ItemEntity crystal = new ItemEntity(level, heart.getX() + 0.5 + random.nextGaussian() * 2.0, heart.getY() + 1.5, heart.getZ() + 0.5 + random.nextGaussian() * 2.0,
+                    new ItemStack(BrightestDayItems.ZAMARON_CRYSTAL));
+            crystal.setDeltaMovement(random.nextGaussian() * 0.1, 0.3, random.nextGaussian() * 0.1);
+            level.addFreshEntity(crystal);
+        }
 
         level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, impact.getX(), impact.getY(), impact.getZ(), 3, 2.0, 1.0, 2.0, 0.0);
         level.sendParticles(new DustParticleOptions(PINK, 4.0F), impact.getX(), impact.getY() + 1, impact.getZ(), 200, 4.0, 3.0, 4.0, 0.0);

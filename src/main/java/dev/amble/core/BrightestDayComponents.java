@@ -49,6 +49,15 @@ public class BrightestDayComponents {
                             .build()
             );
 
+    public static final DataComponentType<Boolean> DORMANT =
+            Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    BrightestDay.id("dormant"),
+                    DataComponentType.<Boolean>builder()
+                            .persistent(Codec.BOOL)
+                            .networkSynchronized(ByteBufCodecs.BOOL)
+                            .build()
+            );
+
     public static final DataComponentType<ConstructToolData> CONSTRUCT_TOOL =
             Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
                     BrightestDay.id("construct_tool"),

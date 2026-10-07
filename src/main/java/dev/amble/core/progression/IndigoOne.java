@@ -1,5 +1,6 @@
 package dev.amble.core.progression;
 
+import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayBlocks;
@@ -8,18 +9,25 @@ import dev.amble.core.BrightestDayItems;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.loyalty.RingLoyalty;
 import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.ringpowers.impl.FlightRingPower;
+import dev.amble.core.team.LanternTeams;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
@@ -28,20 +36,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public final class IndigoOne {
     private static final int CHANNEL_TICKS = 100;
     private static final int FORCED_CHANNEL_TICKS = 160;
-    private static final float FORCE_CHARGE = 0.25F;
+    private static final float FORCE_CHARGE = 0.5F;
     private static final float FORCE_HEALTH = 0.3F;
     private static final double CHANNEL_RANGE = 5.0;
     private static final int INDIGO = LanternCorps.INDIGO.color();
+    private static final Identifier HOLD = BrightestDay.id("indigo_hold");
+    private static final int GATHER_TICKS = 60;
+    private static final long GATHER_COOLDOWN = 20L * 60 * 5;
 
-    private record Channel(UUID target, long ends, float indigoHealth, float targetHealth) {}
+    private record Channel(UUID target, long ends, float indigoHealth, float targetHealth, boolean frozen) {}
 
     private static final Map<UUID, Channel> CHANNELS = new HashMap<>();
     private static final Map<UUID, Long> LAST_GIFT = new HashMap<>();
+    private static final Map<UUID, Long> GATHERING = new HashMap<>();
+    private static final Map<UUID, Long> GATHERED_AT = new HashMap<>();
     private static final long REGIFT_COOLDOWN = 24000L;
 
     public static void init() {
@@ -67,7 +81,6 @@ public final class IndigoOne {
     }
 
     public static boolean begin(ServerPlayer indigo, ServerPlayer target) {
-        if (!isIndigoOne(indigo)) return false;
         if (PowerRingItem.getCorps(BrightestDayAttachments.getRing(indigo)).orElse(null) != LanternCorps.INDIGO) return false;
 
         LanternCorps corps = PowerRingItem.getCorps(BrightestDayAttachments.getRing(target)).orElse(null);
@@ -84,7 +97,9 @@ public final class IndigoOne {
         if (CHANNELS.containsKey(indigo.getUUID())) return true;
 
         int ticks = willing ? CHANNEL_TICKS : FORCED_CHANNEL_TICKS;
-        CHANNELS.put(indigo.getUUID(), new Channel(target.getUUID(), indigo.level().getGameTime() + ticks, indigo.getHealth(), target.getHealth()));
+        boolean frozen = PowerRingItem.getChargeFraction(BrightestDayAttachments.getRing(target)) < FORCE_CHARGE;
+        if (frozen) freeze(target);
+        CHANNELS.put(indigo.getUUID(), new Channel(target.getUUID(), indigo.level().getGameTime() + ticks, indigo.getHealth(), target.getHealth(), frozen));
         target.sendSystemMessage(Component.translatable(willing ? "message.brightestday.indigo.embracing" : "message.brightestday.indigo.forcing", indigo.getDisplayName())
                 .withStyle(ChatFormatting.ITALIC).withColor(INDIGO));
         indigo.level().playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 1.5F, 0.7F);
@@ -105,8 +120,10 @@ public final class IndigoOne {
             if (indigo == null || target == null || indigo.level() != target.level() || indigo.distanceTo(target) > CHANNEL_RANGE
                     || indigo.getHealth() < channel.indigoHealth() || target.getHealth() < channel.targetHealth()) {
                 if (indigo != null) indigo.sendOverlayMessage(Component.translatable("message.brightestday.indigo.broken").withColor(INDIGO));
+                if (target != null && channel.frozen()) release(target);
                 return true;
             }
+            if (channel.frozen()) hold(target);
 
             Vec3 from = indigo.getEyePosition();
             Vec3 to = target.getBoundingBox().getCenter();
@@ -116,9 +133,11 @@ public final class IndigoOne {
             }
             if (now < channel.ends()) return false;
 
+            if (channel.frozen()) release(target);
             convert(indigo, target);
             return true;
         });
+        tickGather(server, now);
 
         if (server.getTickCount() % 100 != 0 || !multiplayer(server)) return;
         Optional<UUID> current = WorldProgress.get(server).indigoOne();
@@ -145,6 +164,67 @@ public final class IndigoOne {
         RingOffers.bestow(chosen, LanternCorps.INDIGO);
     }
 
+    private static void freeze(ServerPlayer target) {
+        for (AttributeInstance attribute : new AttributeInstance[]{target.getAttribute(Attributes.MOVEMENT_SPEED), target.getAttribute(Attributes.JUMP_STRENGTH)}) {
+            if (attribute != null && !attribute.hasModifier(HOLD)) attribute.addTransientModifier(new AttributeModifier(HOLD, -1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+        }
+        hold(target);
+        target.sendOverlayMessage(Component.translatable("message.brightestday.indigo.held").withColor(INDIGO));
+    }
+
+    private static void hold(ServerPlayer target) {
+        if (FlightRingPower.isFlying(target)) FlightRingPower.setEnabled(target, false);
+        Vec3 motion = target.getDeltaMovement();
+        target.setDeltaMovement(0.0, Math.min(motion.y, 0.0), 0.0);
+        target.needsSync = true;
+    }
+
+    private static void release(ServerPlayer target) {
+        for (AttributeInstance attribute : new AttributeInstance[]{target.getAttribute(Attributes.MOVEMENT_SPEED), target.getAttribute(Attributes.JUMP_STRENGTH)}) {
+            if (attribute != null) attribute.removeModifier(HOLD);
+        }
+    }
+
+    public static void gather(ServerPlayer leader) {
+        if (!isIndigoOne(leader) || GATHERING.containsKey(leader.getUUID())) return;
+        long now = leader.level().getGameTime();
+        Long last = GATHERED_AT.get(leader.getUUID());
+        if (last != null && now - last < GATHER_COOLDOWN) {
+            leader.sendOverlayMessage(Component.translatable("message.brightestday.indigo.gather_cooldown", (GATHER_COOLDOWN - (now - last) + 19) / 20).withColor(INDIGO));
+            return;
+        }
+        GATHERING.put(leader.getUUID(), now + GATHER_TICKS);
+        leader.sendOverlayMessage(Component.translatable("message.brightestday.indigo.gathering").withColor(INDIGO));
+        leader.level().playSound(null, leader.getX(), leader.getY(), leader.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.2F, 0.6F);
+    }
+
+    private static void tickGather(MinecraftServer server, long now) {
+        GATHERING.entrySet().removeIf(entry -> {
+            ServerPlayer leader = server.getPlayerList().getPlayer(entry.getKey());
+            if (leader == null || !leader.isAlive() || !isIndigoOne(leader)) return true;
+            float angle = now * 0.35F;
+            for (int strand = 0; strand < 3; strand++) {
+                float a = angle + strand * Mth.TWO_PI / 3.0F;
+                leader.level().sendParticles(new DustParticleOptions(INDIGO, 1.4F), leader.getX() + Mth.cos(a) * 1.2, leader.getY() + 0.2 + (entry.getValue() - now) % 20 * 0.1, leader.getZ() + Mth.sin(a) * 1.2, 1, 0.0, 0.0, 0.0, 0.0);
+            }
+            if (now < entry.getValue()) return false;
+
+            GATHERED_AT.put(leader.getUUID(), now);
+            int called = 0;
+            for (ServerPlayer member : server.getPlayerList().getPlayers()) {
+                if (member == leader || member.isSpectator() || PowerRingItem.getWornCorps(member).orElse(null) != LanternCorps.INDIGO) continue;
+                Vec3 offset = new Vec3(member.getRandom().nextDouble() * 3.0 - 1.5, 0.0, member.getRandom().nextDouble() * 3.0 - 1.5);
+                member.teleportTo(leader.level(), leader.getX() + offset.x, leader.getY(), leader.getZ() + offset.z, Set.of(), member.getYRot(), member.getXRot(), true);
+                member.sendSystemMessage(Component.translatable("message.brightestday.indigo.gathered", leader.getDisplayName()).withStyle(ChatFormatting.ITALIC).withColor(INDIGO));
+                member.level().playSound(null, member.getX(), member.getY(), member.getZ(), SoundEvents.PLAYER_TELEPORT, SoundSource.PLAYERS, 1.0F, 0.8F);
+                called++;
+            }
+            leader.sendOverlayMessage(Component.translatable("message.brightestday.indigo.gather_done", called).withColor(INDIGO));
+            leader.level().playSound(null, leader.getX(), leader.getY(), leader.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.2F, 0.7F);
+            return true;
+        });
+    }
+
     private static void convert(ServerPlayer indigo, ServerPlayer target) {
         ItemStack old = BrightestDayAttachments.getRing(target);
         float charge = PowerRingItem.getChargeFraction(old);
@@ -160,6 +240,7 @@ public final class IndigoOne {
         indigo.sendSystemMessage(message);
         target.sendSystemMessage(message);
         target.level().playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.5F, 0.6F);
+        LanternTeams.joinTribe(target);
         RingRanks.fire(indigo, Trigger.CONVERT, Milestone.Context.of(target));
     }
 
