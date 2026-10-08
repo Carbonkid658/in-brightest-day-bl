@@ -2,7 +2,6 @@ package dev.amble.client.screens;
 
 import dev.amble.BrightestDay;
 import dev.amble.client.render.BatteryTextures;
-import dev.amble.core.BrightestDayItems;
 import dev.amble.core.official.OfficialServer;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -10,6 +9,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerStatusPinger;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
@@ -21,7 +21,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.network.EventLoopGroupHolder;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ResolvableProfile;
 import org.jspecify.annotations.Nullable;
 
@@ -40,6 +39,7 @@ public class OfficialServerScreen extends Screen {
     private static final int BORDER = 2;
     private static final int FRAME = FACE + BORDER * 2;
     private static final int GAP = 4;
+    private static final int RING_ICON = 12;
     private static final int STEP = FRAME + GAP;
     private static final int PADDING = 10;
     private static final int HEADER = 54;
@@ -276,13 +276,8 @@ public class OfficialServerScreen extends Screen {
         graphics.fill(x, y, x + FRAME, y + FRAME, hovered ? ARGB.srgbLerp(0.5F, color, 0xFFFFFFFF) : color);
         ResolvableProfile profile = this.profiles.computeIfAbsent(member.id(), ResolvableProfile::createUnresolved);
         PlayerFaceExtractor.extractRenderState(graphics, profile, x + BORDER, y + BORDER, FACE);
-        member.corps().ifPresent(corps -> {
-            graphics.pose().pushMatrix();
-            graphics.pose().translate(x + FRAME - 11.0F, y + FRAME - 11.0F);
-            graphics.pose().scale(0.75F, 0.75F);
-            graphics.item(new ItemStack(BrightestDayItems.ring(corps)), 0, 0);
-            graphics.pose().popMatrix();
-        });
+        member.corps().ifPresent(corps -> graphics.blit(RenderPipelines.GUI_TEXTURED, BrightestDay.id("textures/item/" + corps.getSerializedName() + "_power_ring.png"),
+                x + FRAME - RING_ICON + 1, y + FRAME - RING_ICON + 1, 0.0F, 0.0F, RING_ICON, RING_ICON, 16, 16, 16, 16));
     }
 
     private void empty(GuiGraphicsExtractor graphics, int x, int y) {
