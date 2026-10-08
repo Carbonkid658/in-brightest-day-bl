@@ -768,6 +768,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.meteorNight.desc", "The night on which the Zamaron meteor falls.");
         builder.add("brightestday.client.showOathText", "Show Oath Text");
         builder.add("brightestday.client.showOathText.desc", "While speaking your oath to charge a ring, show the oath beneath the crosshair with spoken words lit up. Turn off to show a progress bar above the hotbar instead.");
+        builder.add("brightestday.client.showRageVignette", "Show Rage Vignette");
+        builder.add("brightestday.client.showRageVignette.desc", "While wearing a Red Lantern ring, tint the screen edges with blood-red veins that swell as threats close in.");
+        builder.add("brightestday.client.showIndigoVignette", "Show Indigo Vignette");
+        builder.add("brightestday.client.showIndigoVignette.desc", "While wearing an Indigo ring, tint the screen edges with an indigo haze that deepens as threats close in.");
         builder.add("brightestday.server.synergy", "Corps Synergy");
         builder.add("brightestday.server.synergyLinkRadius", "Hope/Will Range");
         builder.add("brightestday.server.synergyLinkRadius.desc", "How close Blue and Green Lanterns must be to empower each other.");

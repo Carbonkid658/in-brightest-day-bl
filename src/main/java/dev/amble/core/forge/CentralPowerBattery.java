@@ -273,8 +273,15 @@ public final class CentralPowerBattery {
     }
 
     public static boolean panel(BlockPos core, BlockPos clicked, Direction face, Direction.Axis arms) {
-        if (arms == Direction.Axis.X) return face == Direction.EAST && clicked.getX() == core.getX() + 1 || face == Direction.WEST && clicked.getX() == core.getX() - 1;
-        return face == Direction.NORTH && clicked.getZ() == core.getZ() - 1 || face == Direction.SOUTH && clicked.getZ() == core.getZ() + 1;
+        if (face.getAxis() != arms) return false;
+        BlockPos pad = core.relative(face, 2 + ARM);
+        Direction.Axis across = across(face);
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int da = -1; da <= 1; da++) {
+                if (plane(pad, across, dy, da).equals(clicked)) return true;
+            }
+        }
+        return false;
     }
 
     public static boolean isShell(BlockState state, Block shell) {

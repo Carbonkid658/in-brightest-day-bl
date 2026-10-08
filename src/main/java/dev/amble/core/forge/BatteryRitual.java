@@ -30,7 +30,7 @@ import java.util.UUID;
 public final class BatteryRitual {
     private static final int DURATION_TICKS = 60;
     private static final int HOLD_GRACE_TICKS = 14;
-    private static final double MAX_DISTANCE = 6.0;
+    private static final double MAX_DISTANCE = 8.0;
     private static final int PARTICLE_INTERVAL = 2;
     private static final int CHIME_INTERVAL = 20;
 

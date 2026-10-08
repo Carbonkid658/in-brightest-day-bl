@@ -15,6 +15,8 @@ public class BrightestDayClientConfig extends Config {
     public boolean showFlightSpeedometer = true;
     public boolean showFlightTrails = true;
     public boolean showOathText = true;
+    public boolean showRageVignette = true;
+    public boolean showIndigoVignette = true;
 
     public static BrightestDayClientConfig get() {
         return instance;

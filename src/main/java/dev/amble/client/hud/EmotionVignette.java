@@ -1,6 +1,7 @@
 package dev.amble.client.hud;
 
 import dev.amble.BrightestDay;
+import dev.amble.client.config.BrightestDayClientConfig;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.TintFlashS2CPayload;
@@ -64,7 +65,10 @@ public final class EmotionVignette {
 
     private static LanternCorps corps(LocalPlayer player) {
         LanternCorps corps = PowerRingItem.getCorps(BrightestDayAttachments.getRing(player)).orElse(null);
-        return corps == LanternCorps.RED || corps == LanternCorps.INDIGO ? corps : null;
+        BrightestDayClientConfig config = BrightestDayClientConfig.get();
+        if (corps == LanternCorps.RED) return config.showRageVignette ? corps : null;
+        if (corps == LanternCorps.INDIGO) return config.showIndigoVignette ? corps : null;
+        return null;
     }
 
     private static void tick(Minecraft client) {
