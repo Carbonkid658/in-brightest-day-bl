@@ -25,7 +25,7 @@ public final class SlottedRingRenderer {
 
     public static void extract(Avatar entity, AvatarRenderState state) {
         FabricRenderState data = (FabricRenderState) state;
-        ItemStack ring = entity instanceof Player player ? BrightestDayAttachments.getRing(player) : ItemStack.EMPTY;
+        ItemStack ring = entity instanceof Player player ? BrightestDayAttachments.getRing(player) : Holograms.is(entity) ? Holograms.of(entity).ring() : ItemStack.EMPTY;
         boolean holdingRing = entity.getMainHandItem().getItem() instanceof PowerRingItem
                 || entity.getOffhandItem().getItem() instanceof PowerRingItem;
 

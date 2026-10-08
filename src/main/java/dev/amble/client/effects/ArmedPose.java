@@ -1,5 +1,6 @@
 package dev.amble.client.effects;
 
+import dev.amble.client.render.Holograms;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.networking.payloads.s2c.ActiveConstructS2CPayload;
@@ -121,6 +122,14 @@ public final class ArmedPose {
             data.setData(CONSTRUCTING, ActiveConstructs.hasActive(player) || PoseAnimations.glowing(player));
             data.setData(CHARGE_ANIMATING, LanternChargeAnimations.handheld(player) || PoseAnimations.posing(player));
             data.setData(COMMS, CommsClient.talking(player, partialTicks));
+        } else if (Holograms.is(entity)) {
+            data.setData(AMOUNT, 0.0F);
+            data.setData(COLOR, Holograms.color(entity));
+            data.setData(CHARGED, Holograms.lit(entity));
+            data.setData(ACTIVITY, 0.0F);
+            data.setData(CONSTRUCTING, Holograms.of(entity).settings().glow());
+            data.setData(CHARGE_ANIMATING, PoseAnimations.posing(entity));
+            data.setData(COMMS, 0.0F);
         } else {
             data.setData(AMOUNT, 0.0F);
         }

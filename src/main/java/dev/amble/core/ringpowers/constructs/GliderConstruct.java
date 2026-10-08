@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.mannequin.Mannequins;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.BrightestDay;
 import dev.amble.core.attacks.projectile.ProjectileTargeting;
@@ -54,7 +55,7 @@ public class GliderConstruct extends ConstructRingPower {
         LivingEntity best = null;
         double bestCos = -1.0;
         for (Entity entity : player.level().getEntities(player, new AABB(eye, eye).inflate(BrightestDayConfig.get().gliderRange),
-                entity -> entity instanceof LivingEntity && entity.isAlive() && entity.isPickable() && !entity.isSpectator())) {
+                entity -> !Mannequins.isHologram(entity) && entity instanceof LivingEntity && entity.isAlive() && entity.isPickable() && !entity.isSpectator())) {
             Vec3 to = entity.getBoundingBox().getCenter().subtract(eye);
             double distance = to.length();
             if (distance > BrightestDayConfig.get().gliderRange || distance < 1.0E-3) continue;

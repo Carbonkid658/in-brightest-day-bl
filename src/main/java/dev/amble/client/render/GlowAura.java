@@ -20,8 +20,11 @@ import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Avatar;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.WeakHashMap;
@@ -31,7 +34,7 @@ public final class GlowAura {
     private static final float BOOST = 1.35F;
     private static final float FADE_TICKS = 10.0F;
     private static final float MIN_VISIBLE = 0.02F;
-    private static final Map<Player, float[]> FADES = new WeakHashMap<>();
+    private static final Map<Entity, float[]> FADES = new WeakHashMap<>();
 
     public static final RenderPipeline ADDITIVE_OUTLINE_BLIT = RenderPipelines.register(
             RenderPipeline.builder(RenderPipelines.GLOBALS_SNIPPET)
@@ -54,30 +57,40 @@ public final class GlowAura {
         return !tweak.auraFlightOnly() || FlightRingPower.isFlying(player);
     }
 
+    private static boolean wanted(Entity entity) {
+        if (entity instanceof Player player) return wanted(player);
+        return Holograms.lit(entity) && Holograms.of(entity).settings().aura();
+    }
+
+    private static int color(Entity entity) {
+        return entity instanceof Player player ? CorpsColors.of(player) : Holograms.color(entity);
+    }
+
     private static void tick(Minecraft client) {
         if (client.level == null || client.isPaused()) return;
-        for (Player player : client.level.players()) {
-            float[] fade = FADES.get(player);
-            boolean wanted = wanted(player);
+        List<Entity> entities = new ArrayList<>(client.level.players());
+        entities.addAll(Holograms.all(client.level));
+        for (Entity entity : entities) {
+            float[] fade = FADES.get(entity);
+            boolean wanted = wanted(entity);
             if (fade == null) {
                 if (!wanted) continue;
                 fade = new float[2];
-                FADES.put(player, fade);
+                FADES.put(entity, fade);
             }
             fade[0] = fade[1];
             fade[1] = Mth.approach(fade[1], wanted ? 1.0F : 0.0F, 1.0F / FADE_TICKS);
-            if (!wanted && fade[0] <= 0.0F) FADES.remove(player);
+            if (!wanted && fade[0] <= 0.0F) FADES.remove(entity);
         }
     }
 
     public static void extract(Avatar entity, AvatarRenderState state) {
-        if (!(entity instanceof Player player)) return;
-        float[] fade = FADES.get(player);
+        float[] fade = FADES.get(entity);
         if (fade == null) return;
         float amount = Mth.lerp(Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false), fade[0], fade[1]);
         if (amount < MIN_VISIBLE) return;
 
-        int color = ARGB.scaleRGB(VoxelRenderer.toWhite(CorpsColors.of(player), WHITEN), BOOST * amount);
+        int color = ARGB.scaleRGB(VoxelRenderer.toWhite(color(entity), WHITEN), BOOST * amount);
         state.outlineColor = ARGB.opaque(color);
     }
 

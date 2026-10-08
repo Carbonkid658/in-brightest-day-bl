@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.mannequin.Mannequins;
 import dev.amble.core.ringpowers.CorpsArsenal;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.BrightestDay;
@@ -108,7 +109,7 @@ public class BlastConstruct extends ConstructRingPower {
         boolean hit = direct != null || aim.eye().distanceTo(impact) < range - 1.0E-3;
         DamageSource source = RingDamage.source(level, player);
 
-        for (Entity entity : level.getEntities(player, new AABB(impact, impact).inflate(blastRadius), entity -> !player.isAlliedTo(entity))) {
+        for (Entity entity : level.getEntities(player, new AABB(impact, impact).inflate(blastRadius), entity -> !Mannequins.isHologram(entity) && !player.isAlliedTo(entity))) {
             Vec3 center = entity.getBoundingBox().getCenter();
             double distance = center.distanceTo(impact);
             if (distance > blastRadius && entity != direct) continue;

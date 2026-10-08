@@ -5,6 +5,7 @@ import dev.amble.client.effects.InsigniaEffects;
 import dev.amble.client.effects.ArmedPose;
 import dev.amble.client.flight.FlightAnimator;
 import dev.amble.client.render.GlowAura;
+import dev.amble.client.render.Holograms;
 import dev.amble.client.render.LanternSuit;
 import dev.amble.client.render.SlottedRingRenderer;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
@@ -27,6 +28,7 @@ public abstract class AvatarRendererMixin {
         LanternSuit.extract(entity, state, partialTicks);
         InsigniaEffects.extract(entity, state, partialTicks);
         FlightAnimator.extractDive(entity, state, partialTicks);
+        Holograms.extract(entity, state);
     }
 
     @Inject(method = "extractCapeState", at = @At("TAIL"))

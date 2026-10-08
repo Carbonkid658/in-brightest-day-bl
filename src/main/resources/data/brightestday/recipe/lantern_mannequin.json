@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": "minecraft:glass",
+    "L": "minecraft:glowstone",
+    "A": "minecraft:armor_stand",
+    "Q": "minecraft:quartz_slab"
+  },
+  "pattern": [
+    "GLG",
+    "GAG",
+    "QQQ"
+  ],
+  "result": {
+    "count": 1,
+    "id": "brightestday:lantern_mannequin"
+  }
+}

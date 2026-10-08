@@ -16,7 +16,8 @@
 		"ItemEntityMixin",
 		"ZombieVillagerMixin",
 		"MobMixin",
-		"AbstractHorseMixin"
+		"AbstractHorseMixin",
+		"MannequinAccessor"
 	],
 	"client": [
 		"client.AbstractClientPlayerMixin",

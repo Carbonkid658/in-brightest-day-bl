@@ -44,7 +44,7 @@ public final class BatteryTextures implements ResourceManagerReloadListener {
         return available;
     }
 
-    private static boolean load(ResourceManager manager, Identifier source, Identifier target) {
+    public static boolean load(ResourceManager manager, Identifier source, Identifier target) {
         Optional<Resource> resource = manager.getResource(source);
         if (resource.isEmpty()) return false;
         try (InputStream stream = resource.get().open()) {

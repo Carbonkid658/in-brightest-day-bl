@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.mannequin.Mannequins;
 import dev.amble.BrightestDay;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.BloodHunt;
@@ -39,7 +40,7 @@ public class BloodHuntConstruct extends ConstructRingPower {
         Vec3 reach = player.level().clip(new ClipContext(eye, eye.add(player.getLookAngle().scale(RANGE)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player)).getLocation();
         AABB area = player.getBoundingBox().expandTowards(reach.subtract(eye)).inflate(1.0);
         EntityHitResult hit = ProjectileUtil.getEntityHitResult(player.level(), player, eye, reach, area,
-                entity -> entity instanceof LivingEntity living && living.isAlive() && !entity.isSpectator(), 0.5F);
+                entity -> !Mannequins.isHologram(entity) && entity instanceof LivingEntity living && living.isAlive() && !entity.isSpectator(), 0.5F);
 
         if (hit == null || !(hit.getEntity() instanceof LivingEntity prey)) {
             PowerRingItem.refund(player, this.cost(radius));

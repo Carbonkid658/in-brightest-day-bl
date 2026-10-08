@@ -6,6 +6,7 @@ import dev.amble.core.BrightestDayBlockEntityTypes;
 import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.BrightestDayCreativeTabs;
 import dev.amble.core.BrightestDayItems;
+import dev.amble.core.mannequin.Mannequins;
 import dev.amble.core.BrightestDayMenus;
 import dev.amble.core.BrightestDaySounds;
 import dev.amble.core.networking.Networking;
@@ -140,6 +141,7 @@ public class BrightestDay implements ModInitializer {
 		RingBonds.init();
 		IndigoOne.init();
 		CentralPowerBattery.init();
+		Mannequins.init();
 		ForgeHammer.init();
 		Catalysts.init();
 		BlueSanctuary.init();

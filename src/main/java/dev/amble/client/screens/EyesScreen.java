@@ -6,6 +6,7 @@ import dev.amble.core.networking.payloads.c2s.SetEyesC2SPayload;
 import dev.amble.core.ringpowers.CorpsColors;
 import dev.amble.core.ringpowers.EyePaint;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -15,6 +16,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.jspecify.annotations.Nullable;
+
+import java.util.function.Consumer;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public class EyesScreen extends Screen {
     private static final int CELL = 16;
@@ -26,7 +31,10 @@ public class EyesScreen extends Screen {
     private static final int HOVER = 0xA0FFFFFF;
 
     private final @Nullable Screen parent;
-    private EyePaint eyes = EyePaint.EMPTY;
+    private final Supplier<Identifier> skin;
+    private final IntSupplier color;
+    private final Consumer<EyePaint> apply;
+    private EyePaint eyes;
     private int brush = EyePaint.WHITE;
     private int stroke = EyePaint.NONE;
     private boolean painting;
@@ -36,13 +44,24 @@ public class EyesScreen extends Screen {
     private @Nullable Button corpsButton;
 
     public EyesScreen(@Nullable Screen parent) {
+        this(parent, BrightestDayAttachments.getEyes(Minecraft.getInstance().player), () -> Minecraft.getInstance().player.getSkin().body().texturePath(),
+                () -> CorpsColors.of(Minecraft.getInstance().player), eyes -> {
+                    BrightestDayAttachments.setEyes(Minecraft.getInstance().player, eyes);
+                    ClientPlayNetworking.send(new SetEyesC2SPayload(eyes));
+                });
+    }
+
+    public EyesScreen(@Nullable Screen parent, EyePaint eyes, Supplier<Identifier> skin, IntSupplier color, Consumer<EyePaint> apply) {
         super(Component.translatable("gui.brightestday.eyes"));
         this.parent = parent;
+        this.eyes = eyes;
+        this.skin = skin;
+        this.color = color;
+        this.apply = apply;
     }
 
     @Override
     protected void init() {
-        this.eyes = BrightestDayAttachments.getEyes(this.minecraft.player);
         this.gridLeft = (this.width - GRID) / 2 - (BUTTON_WIDTH + GAP * 2) / 2;
         this.gridTop = (this.height - GRID) / 2;
 
@@ -74,7 +93,7 @@ public class EyesScreen extends Screen {
     }
 
     private int corpsColor() {
-        return ARGB.opaque(CorpsColors.of(this.minecraft.player));
+        return ARGB.opaque(this.color.getAsInt());
     }
 
     private int cellAt(double x, double y) {
@@ -91,8 +110,7 @@ public class EyesScreen extends Screen {
     private void update(EyePaint next) {
         if (next.equals(this.eyes)) return;
         this.eyes = next;
-        BrightestDayAttachments.setEyes(this.minecraft.player, next);
-        ClientPlayNetworking.send(new SetEyesC2SPayload(next));
+        this.apply.accept(next);
     }
 
     @Override
@@ -128,7 +146,7 @@ public class EyesScreen extends Screen {
         graphics.centeredText(this.font, this.title, this.gridLeft + GRID / 2, this.gridTop - 22, 0xFFFFFFFF);
         graphics.centeredText(this.font, Component.translatable("gui.brightestday.eyes.hint"), this.gridLeft + GRID / 2, this.gridTop + GRID + 8, 0xFFA0A0A0);
 
-        Identifier skin = this.minecraft.player.getSkin().body().texturePath();
+        Identifier skin = this.skin.get();
         graphics.fill(this.gridLeft - 1, this.gridTop - 1, this.gridLeft + GRID + 1, this.gridTop + GRID + 1, 0xFF000000);
         graphics.blit(RenderPipelines.GUI_TEXTURED, skin, this.gridLeft, this.gridTop, 8.0F, 8.0F, GRID, GRID, 8, 8, 64, 64);
         graphics.blit(RenderPipelines.GUI_TEXTURED, skin, this.gridLeft, this.gridTop, 40.0F, 8.0F, GRID, GRID, 8, 8, 64, 64);

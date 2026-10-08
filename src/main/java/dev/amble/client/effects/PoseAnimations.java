@@ -17,11 +17,13 @@ import com.zigythebird.playeranimcore.enums.PlayState;
 import com.zigythebird.playeranimcore.bones.PlayerAnimBone;
 import com.zigythebird.playeranimcore.math.Vec3f;
 import dev.amble.BrightestDay;
+import dev.amble.client.render.Holograms;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.PoseC2SPayload;
 import dev.amble.core.networking.payloads.s2c.PoseS2CPayload;
 import dev.amble.client.poses.PoseLibrary;
 import dev.amble.core.poses.Poses;
+import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -33,7 +35,9 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Avatar;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -43,6 +47,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,8 +67,11 @@ public final class PoseAnimations {
     private static final float HAND_Y = 10.0F;
 
     private static final Map<Integer, Integer> POSES = new HashMap<>();
-    private static final Map<Player, String> PLAYING = new WeakHashMap<>();
-    private static final Map<Player, Boolean> FREE_HEAD = new WeakHashMap<>();
+    private static final Map<Avatar, String> PLAYING = new WeakHashMap<>();
+    private static final Map<Avatar, Boolean> FREE_HEAD = new WeakHashMap<>();
+    private static final Map<Player, Boolean> AIRBORNE = new WeakHashMap<>();
+    private static final Map<Player, Integer> AIRBORNE_PENDING = new WeakHashMap<>();
+    private static final int AIRBORNE_SETTLE_TICKS = 8;
 
     public static void init() {
         PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(LAYER, PRIORITY, avatar -> {
@@ -109,15 +117,22 @@ public final class PoseAnimations {
         return player.getPosition(partialTicks).add(x * Mth.cos(yaw) + z * Mth.sin(yaw), y, -x * Mth.sin(yaw) + z * Mth.cos(yaw));
     }
 
-    public static boolean posing(Player player) {
+    public static boolean posing(Entity player) {
         return PLAYING.containsKey(player);
     }
 
     public static void cycle(LocalPlayer player) {
         if (PowerRingItem.getWornCorps(player).isEmpty() || ArmedRingPower.isArmed(player)) return;
-        int states = Math.min(poses(player, FlightRingPower.isFlying(player)).size() * 2, Poses.MAX_STATE);
+        int states = Math.min(poses(player, airborne(player)).size() * 2, Poses.MAX_STATE);
         if (states == 0) return;
         ClientPlayNetworking.send(new PoseC2SPayload(pose(player) % states + 1));
+    }
+
+    public static List<PoseLibrary.Pose> mannequinPoses(@Nullable LanternCorps corps) {
+        Map<String, PoseLibrary.Pose> poses = new LinkedHashMap<>();
+        for (PoseLibrary.Pose pose : PoseLibrary.poses(corps, false)) poses.putIfAbsent(pose.key(), pose);
+        for (PoseLibrary.Pose pose : PoseLibrary.poses(corps, true)) poses.putIfAbsent(pose.key(), pose);
+        return List.copyOf(poses.values());
     }
 
     public static List<PoseLibrary.Pose> poses(Player player, boolean hover) {
@@ -134,31 +149,43 @@ public final class PoseAnimations {
 
         for (AbstractClientPlayer player : client.level.players()) {
             int state = pose(player);
-            List<PoseLibrary.Pose> available = state > 0 ? poses(player, FlightRingPower.isFlying(player)) : List.of();
-            PoseLibrary.Pose desired = available.isEmpty() ? null : available.get((state - 1) / 2 % available.size());
-            String current = PLAYING.get(player);
-            if (desired == null ? current == null : desired.key().equals(current)) continue;
+            settle(player, state > 0);
+            List<PoseLibrary.Pose> available = state > 0 ? poses(player, airborne(player)) : List.of();
+            play(player, available.isEmpty() ? null : available.get((state - 1) / 2 % available.size()));
+        }
 
-            PlayerAnimationController controller = controller(player);
-            if (controller == null) continue;
-            if (desired == null) {
-                PLAYING.remove(player);
-                FREE_HEAD.remove(player);
-                controller.replaceAnimationWithFade(AbstractFadeModifier.standardFadeIn(FADE_TICKS, EasingType.EASE_IN_OUT_SINE), (RawAnimation) null);
-                controller.stop();
-                continue;
-            }
-            Animation animation = desired.animation();
-            PLAYING.put(player, desired.key());
-            FREE_HEAD.put(player, animation.getBoneOptional("head").map(bone -> still(bone.rotationKeyFrames())).orElse(true));
-            mirror(controller, player);
-            controller.replaceAnimationWithFade(AbstractFadeModifier.standardFadeIn(FADE_TICKS, EasingType.EASE_IN_OUT_SINE), RawAnimation.begin().thenLoop(animation));
+        for (Mannequin mannequin : Holograms.all(client.level)) {
+            int state = Holograms.of(mannequin).settings().pose();
+            List<PoseLibrary.Pose> available = state > 0 ? mannequinPoses(Holograms.corps(mannequin).orElse(null)) : List.of();
+            play(mannequin, available.isEmpty() ? null : available.get((state - 1) % available.size()));
         }
     }
 
-    private static void mirror(PlayerAnimationController controller, Player player) {
+    private static void play(Avatar avatar, PoseLibrary.@Nullable Pose desired) {
+        String current = PLAYING.get(avatar);
+        PlayerAnimationController controller = controller(avatar);
+        if (desired == null ? current == null : desired.key().equals(current)) {
+            if (desired != null && controller != null) mirror(controller, avatar);
+            return;
+        }
+        if (controller == null) return;
+        if (desired == null) {
+            PLAYING.remove(avatar);
+            FREE_HEAD.remove(avatar);
+            controller.replaceAnimationWithFade(AbstractFadeModifier.standardFadeIn(FADE_TICKS, EasingType.EASE_IN_OUT_SINE), (RawAnimation) null);
+            controller.stop();
+            return;
+        }
+        Animation animation = desired.animation();
+        PLAYING.put(avatar, desired.key());
+        FREE_HEAD.put(avatar, animation.getBoneOptional("head").map(bone -> still(bone.rotationKeyFrames())).orElse(true));
+        mirror(controller, avatar);
+        controller.replaceAnimationWithFade(AbstractFadeModifier.standardFadeIn(FADE_TICKS, EasingType.EASE_IN_OUT_SINE), RawAnimation.begin().thenLoop(animation));
+    }
+
+    private static void mirror(PlayerAnimationController controller, Avatar avatar) {
         for (AbstractModifier modifier : controller.getModifiers()) {
-            if (modifier instanceof MirrorModifier mirror) mirror.enabled = player.getMainArm() == HumanoidArm.LEFT;
+            if (modifier instanceof MirrorModifier mirror) mirror.enabled = avatar.getMainArm() == HumanoidArm.LEFT;
         }
     }
 
@@ -174,16 +201,41 @@ public final class PoseAnimations {
         return true;
     }
 
+    private static boolean airborne(Player player) {
+        return AIRBORNE.getOrDefault(player, FlightRingPower.isFlying(player));
+    }
+
+    private static void settle(Player player, boolean posing) {
+        boolean raw = FlightRingPower.isFlying(player);
+        Boolean stable = AIRBORNE.get(player);
+        if (!posing || stable == null) {
+            AIRBORNE.put(player, raw);
+            AIRBORNE_PENDING.remove(player);
+            return;
+        }
+        if (raw == stable) {
+            AIRBORNE_PENDING.remove(player);
+            return;
+        }
+        int pending = AIRBORNE_PENDING.getOrDefault(player, 0) + 1;
+        if (pending >= AIRBORNE_SETTLE_TICKS) {
+            AIRBORNE.put(player, raw);
+            AIRBORNE_PENDING.remove(player);
+        } else {
+            AIRBORNE_PENDING.put(player, pending);
+        }
+    }
+
     private static boolean moving(Input input) {
         return input.forward() || input.backward() || input.left() || input.right() || input.jump() || input.shift();
     }
 
-    private static @Nullable PlayerAnimationController controller(Player player) {
+    private static @Nullable PlayerAnimationController controller(Avatar player) {
         return PlayerAnimationAccess.getPlayerAnimationLayer(player, LAYER) instanceof PlayerAnimationController controller ? controller : null;
     }
 
     private static Optional<AdjustmentModifier.PartModifier> head(Avatar avatar, String bone) {
-        if (!"head".equals(bone) || !(avatar instanceof Player player) || !FREE_HEAD.getOrDefault(player, false)) return Optional.empty();
+        if (!"head".equals(bone) || !(avatar instanceof Player player) || !FREE_HEAD.getOrDefault(avatar, false)) return Optional.empty();
         float partialTicks = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
         float pitch = Mth.lerp(partialTicks, player.xRotO, player.getXRot());
         float yaw = Mth.clamp(Mth.wrapDegrees(player.getViewYRot(partialTicks) - Mth.rotLerp(partialTicks, player.yBodyRotO, player.yBodyRot)), -MAX_HEAD_YAW, MAX_HEAD_YAW);

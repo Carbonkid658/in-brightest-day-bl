@@ -1,5 +1,6 @@
 package dev.amble.core.team;
 
+import dev.amble.core.mannequin.Mannequins;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -17,7 +18,7 @@ import java.util.Set;
 
 public final class RingTargets {
     public static boolean isHittable(Entity entity) {
-        if (!entity.isAlive() || entity.isSpectator()) return false;
+        if (!entity.isAlive() || entity.isSpectator() || Mannequins.isHologram(entity)) return false;
         if (entity instanceof EnderDragonPart part) return part.parentMob.isAlive();
         if (entity instanceof EnderDragon) return false;
         return entity instanceof LivingEntity || entity instanceof EndCrystal;

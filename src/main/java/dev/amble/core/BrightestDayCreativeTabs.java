@@ -29,6 +29,7 @@ public class BrightestDayCreativeTabs {
                         output.accept(BrightestDayBlocks.ZAMARONIAN_CRYSTAL);
                         output.accept(BrightestDayItems.PARALLAX_SHARD);
                         output.accept(BrightestDayItems.ZAMARON_CRYSTAL);
+                        output.accept(BrightestDayItems.LANTERN_MANNEQUIN);
                         output.accept(BrightestDayBlocks.YELLOW_BATTERY_CORE);
                         output.accept(BrightestDayBlocks.SAPPHIRE_BATTERY_CORE);
                         output.accept(BrightestDayBlocks.GREEN_BATTERY_CORE);

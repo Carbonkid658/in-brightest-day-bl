@@ -1,5 +1,6 @@
 package dev.amble.core.shields;
 
+import dev.amble.core.mannequin.Mannequins;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
@@ -137,7 +138,7 @@ public final class ShieldManager {
         double radius = shield.currentRadius();
 
         for (Entity entity : shield.level.getEntities((Entity) null, new AABB(center, center).inflate(radius + 3.0))) {
-            if (entity == shield.target || entity.getUUID().equals(shield.caster)) continue;
+            if (entity == shield.target || entity.getUUID().equals(shield.caster) || Mannequins.isHologram(entity)) continue;
 
             Vec3 position = entity.getBoundingBox().getCenter();
             Vec3 previous = position.subtract(entity.getX() - entity.xo, entity.getY() - entity.yo, entity.getZ() - entity.zo);

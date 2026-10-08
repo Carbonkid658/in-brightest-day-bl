@@ -1,5 +1,6 @@
 package dev.amble.core.sphere;
 
+import dev.amble.core.mannequin.Mannequins;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.mounts.ConstructMounts;
@@ -107,7 +108,7 @@ public final class ContainmentSphere {
 
     private static boolean capturable(ServerPlayer player, Entity entity) {
         if (entity == player || entity.isSpectator() || !entity.isAlive() || entity.isPassenger() || entity == player.getVehicle()) return false;
-        if (ConstructMounts.isConstruct(entity) || holds(entity)) return false;
+        if (ConstructMounts.isConstruct(entity) || Mannequins.isHologram(entity) || holds(entity)) return false;
         return entity instanceof LivingEntity || entity instanceof ItemEntity || entity instanceof ExperienceOrb || entity instanceof FallingBlockEntity;
     }
 

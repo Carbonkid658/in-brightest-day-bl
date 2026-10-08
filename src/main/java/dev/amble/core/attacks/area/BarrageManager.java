@@ -1,5 +1,6 @@
 package dev.amble.core.attacks.area;
 
+import dev.amble.core.mannequin.Mannequins;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.RingDamage;
 import dev.amble.core.team.RingTargets;
@@ -108,7 +109,7 @@ public final class BarrageManager {
 
         AABB searchArea = player.getBoundingBox().expandTowards(end.subtract(eye)).inflate(1.0);
         EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(level, player, eye, end, searchArea,
-                entity -> entity != player && !entity.isSpectator() && entity.isPickable(), 0.3F);
+                entity -> !Mannequins.isHologram(entity) && entity != player && !entity.isSpectator() && entity.isPickable(), 0.3F);
         if (entityHit != null) {
             end = entityHit.getLocation();
             hit = true;

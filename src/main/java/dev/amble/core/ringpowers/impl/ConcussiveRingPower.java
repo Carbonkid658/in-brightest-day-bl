@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.impl;
 
+import dev.amble.core.mannequin.Mannequins;
 import dev.amble.core.ringpowers.CorpsCombat;
 import com.mojang.serialization.MapCodec;
 import dev.amble.BrightestDay;
@@ -72,7 +73,7 @@ public class ConcussiveRingPower extends RingPower<Unit> {
         double range = config.concussiveRange;
         double coneCos = Math.cos(Math.toRadians(config.concussiveConeDegrees / 2.0));
 
-        for (Entity entity : level.getEntities(player, new AABB(eye, eye).inflate(range), entity -> !entity.isSpectator() && !player.isAlliedTo(entity) && entity.isPickable())) {
+        for (Entity entity : level.getEntities(player, new AABB(eye, eye).inflate(range), entity -> !Mannequins.isHologram(entity) && !entity.isSpectator() && !player.isAlliedTo(entity) && entity.isPickable())) {
             Vec3 to = entity.getBoundingBox().getCenter().subtract(eye);
             double distance = to.length();
             if (distance > range || distance < 1.0E-3) continue;

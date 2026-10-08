@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.mannequin.Mannequins;
 import com.mojang.serialization.MapCodec;
 import dev.amble.core.ringpowers.CorpsArsenal;
 import dev.amble.core.ringpowers.CorpsSynergy;
@@ -126,7 +127,7 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
 
         AABB searchArea = player.getBoundingBox().expandTowards(end.subtract(eye)).inflate(1.0);
         EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(level, player, eye, end, searchArea,
-                entity -> entity != player && !entity.isSpectator() && entity.isPickable(), 0.3F);
+                entity -> !Mannequins.isHologram(entity) && entity != player && !entity.isSpectator() && entity.isPickable(), 0.3F);
         if (entityHit != null) return new Aim(eye, look, entityHit.getLocation(), entityHit.getEntity());
         return new Aim(eye, look, end, null);
     }

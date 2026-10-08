@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.mannequin.Mannequins;
 import dev.amble.BrightestDay;
 import dev.amble.core.team.RingDamage;
 import dev.amble.core.team.RingTargets;
@@ -44,7 +45,7 @@ public class NovaBurstConstruct extends ConstructRingPower {
         Vec3 center = player.getBoundingBox().getCenter();
         DamageSource source = RingDamage.source(level, player);
 
-        for (Entity entity : level.getEntities(player, new AABB(center, center).inflate(radius), entity -> !entity.isSpectator() && !player.isAlliedTo(entity) && entity.isPickable())) {
+        for (Entity entity : level.getEntities(player, new AABB(center, center).inflate(radius), entity -> !Mannequins.isHologram(entity) && !entity.isSpectator() && !player.isAlliedTo(entity) && entity.isPickable())) {
             Vec3 to = entity.getBoundingBox().getCenter().subtract(center);
             double distance = to.length();
             if (distance > radius || !player.hasLineOfSight(entity)) continue;

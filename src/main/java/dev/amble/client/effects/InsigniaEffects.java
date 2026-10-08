@@ -1,5 +1,6 @@
 package dev.amble.client.effects;
 
+import dev.amble.client.render.Holograms;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.InsigniaS2CPayload;
@@ -65,6 +66,9 @@ public final class InsigniaEffects {
             float fade = Mth.clamp(time / FADE_TICKS, 0.0F, 1.0F);
             if (shown.fade >= 0) fade *= 1.0F - Mth.clamp((shown.fade + partialTicks) / FADE_TICKS, 0.0F, 1.0F);
             if (texture != null && fade > 0.01F) projection = new Projection(texture, ARGB.opaque(CorpsColors.of(player)), fade, BrightestDayAttachments.getInsigniaAnchor(player));
+        } else if (Holograms.lit(entity) && Holograms.of(entity).settings().insignia()) {
+            Identifier texture = Insignia.texture(Holograms.corps(entity).orElseThrow());
+            if (texture != null) projection = new Projection(texture, ARGB.opaque(Holograms.color(entity)), 1.0F, Holograms.of(entity).settings().anchor());
         }
         ((FabricRenderState) state).setData(PROJECTION, projection);
     }

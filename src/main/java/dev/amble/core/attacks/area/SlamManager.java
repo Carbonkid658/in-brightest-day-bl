@@ -1,5 +1,6 @@
 package dev.amble.core.attacks.area;
 
+import dev.amble.core.mannequin.Mannequins;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.RingDamage;
 import dev.amble.core.team.RingTargets;
@@ -124,7 +125,7 @@ public final class SlamManager {
         float damage = Math.min(config.slamBaseDamage + (float) fall * config.slamDamagePerBlock, config.slamMaxDamage);
         DamageSource source = RingDamage.source(level, player);
 
-        for (Entity entity : level.getEntities(player, new AABB(center, center).inflate(radius, VERTICAL_REACH, radius), entity -> !entity.isSpectator() && !player.isAlliedTo(entity) && entity.isPickable())) {
+        for (Entity entity : level.getEntities(player, new AABB(center, center).inflate(radius, VERTICAL_REACH, radius), entity -> !Mannequins.isHologram(entity) && !entity.isSpectator() && !player.isAlliedTo(entity) && entity.isPickable())) {
             Vec3 to = entity.position().subtract(center);
             double distance = to.horizontalDistance();
             if (distance > radius || Math.abs(to.y) > VERTICAL_REACH) continue;

@@ -1,6 +1,7 @@
 package dev.amble.core;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.items.LanternMannequinItem;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.constructs.ConstructTool;
@@ -53,6 +54,8 @@ public class BrightestDayItems {
 
     public static final Item PARALLAX_SHARD = register("parallax_shard", id -> new Item(new Item.Properties()
             .setId(ResourceKey.create(Registries.ITEM, id)).rarity(Rarity.RARE).fireResistant()));
+    public static final Item LANTERN_MANNEQUIN = register("lantern_mannequin", id -> new LanternMannequinItem(new Item.Properties()
+            .setId(ResourceKey.create(Registries.ITEM, id)).stacksTo(16).rarity(Rarity.UNCOMMON)));
     public static final Item ZAMARON_CRYSTAL = register("zamaron_crystal", id -> new Item(new Item.Properties()
             .setId(ResourceKey.create(Registries.ITEM, id)).rarity(Rarity.RARE)));
 

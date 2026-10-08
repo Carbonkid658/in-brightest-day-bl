@@ -2,6 +2,7 @@ package dev.amble.client.render;
 
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.mannequin.HologramSettings;
 import dev.amble.core.ringpowers.ColorTweak;
 import dev.amble.core.ringpowers.CorpsColors;
 import dev.amble.core.ringpowers.EyePaint;
@@ -18,7 +19,7 @@ import net.minecraft.core.ClientAsset;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Avatar;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.entity.player.PlayerSkin;
 import org.jspecify.annotations.Nullable;
 
@@ -52,33 +53,42 @@ public final class LanternSuit {
             boolean wanted = corps.isPresent()
                     && tweak.suit()
                     && PowerRingItem.hasCharge(player);
-
             EyePaint eyes = BrightestDayAttachments.getEyes(player);
             boolean eyesWanted = !eyes.isEmpty() && RingBenefits.isActive(player);
+            track(player.getId(), corps.orElse(null), CorpsColors.of(player), wanted, tweak.mask(), tweak.maskOffset(), eyes, eyesWanted);
+        }
 
-            Fade fade = FADES.get(player.getId());
-            if (fade == null) {
-                if (!wanted && !eyesWanted) continue;
-                fade = new Fade(tweak.mask());
-                FADES.put(player.getId(), fade);
-            }
-            if (wanted) {
-                fade.corps = corps.get();
-                fade.color = CorpsColors.of(player);
-                fade.maskOffset = tweak.maskOffset();
-            }
-            if (eyesWanted) {
-                fade.eyes = eyes;
-                fade.eyeColor = CorpsColors.of(player);
-            }
-            fade.tick(wanted, tweak.mask(), eyesWanted);
+        for (Mannequin mannequin : Holograms.all(level)) {
+            HologramSettings settings = Holograms.of(mannequin).settings();
+            boolean lit = Holograms.lit(mannequin);
+            track(mannequin.getId(), Holograms.corps(mannequin).orElse(null), Holograms.color(mannequin), lit && settings.suit(), settings.mask(), settings.maskOffset(),
+                    settings.eyes(), lit && !settings.eyes().isEmpty());
         }
 
         FADES.entrySet().removeIf(entry -> {
-            boolean done = !(level.getEntity(entry.getKey()) instanceof Player) || entry.getValue().hidden();
+            boolean done = !(level.getEntity(entry.getKey()) instanceof Avatar) || entry.getValue().hidden();
             if (done) SuitTextures.release(entry.getKey());
             return done;
         });
+    }
+
+    private static void track(int id, @Nullable LanternCorps corps, int color, boolean wanted, boolean mask, int maskOffset, EyePaint eyes, boolean eyesWanted) {
+        Fade fade = FADES.get(id);
+        if (fade == null) {
+            if (!wanted && !eyesWanted) return;
+            fade = new Fade(mask);
+            FADES.put(id, fade);
+        }
+        if (wanted && corps != null) {
+            fade.corps = corps;
+            fade.color = color;
+            fade.maskOffset = maskOffset;
+        }
+        if (eyesWanted) {
+            fade.eyes = eyes;
+            fade.eyeColor = color;
+        }
+        fade.tick(wanted, mask, eyesWanted);
     }
 
     public static void extract(Avatar entity, AvatarRenderState state, float partialTicks) {
@@ -86,7 +96,7 @@ public final class LanternSuit {
         data.setData(GLOW, null);
 
         Fade fade = FADES.get(entity.getId());
-        if (fade == null || !(entity instanceof Player)) return;
+        if (fade == null) return;
 
         float progress = fade.progress(partialTicks);
         float eyeProgress = fade.eyeProgress(partialTicks);

@@ -70,9 +70,11 @@ import dev.amble.client.render.LanternSuit;
 import dev.amble.client.render.SuitGlowLayer;
 import dev.amble.client.render.InsigniaLayer;
 import dev.amble.client.render.BatteryTextures;
+import dev.amble.client.render.Holograms;
 import dev.amble.client.render.SlottedRingLayer;
 import dev.amble.client.screens.LanternButtons;
 import dev.amble.client.screens.LanternScreen;
+import dev.amble.client.screens.MannequinScreen;
 import dev.amble.core.BrightestDayBlockEntityTypes;
 import dev.amble.core.BrightestDayMenus;
 import net.fabricmc.api.ClientModInitializer;
@@ -93,6 +95,7 @@ public class BrightestDayClient implements ClientModInitializer {
         PoseLibrary.init();
         InsigniaEffects.init();
         BatteryTextures.init();
+        Holograms.init();
         FlightTrail.init();
         AileronRolls.init();
         ClientTeams.init();
@@ -154,6 +157,7 @@ public class BrightestDayClient implements ClientModInitializer {
         PilgrimageHud.init();
         FlightSpeedHud.init();
         MenuScreens.register(BrightestDayMenus.LANTERN, LanternScreen::new);
+        MenuScreens.register(BrightestDayMenus.MANNEQUIN, MannequinScreen::new);
         LivingEntityRenderLayerRegistrationCallback.EVENT.register((entityType, entityRenderer, helper, context) -> {
             if (entityRenderer instanceof AvatarRenderer<?> avatarRenderer) {
                 helper.register(new SlottedRingLayer(avatarRenderer));

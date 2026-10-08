@@ -1,5 +1,6 @@
 package dev.amble.core.tractor;
 
+import dev.amble.core.mannequin.Mannequins;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
@@ -106,7 +107,7 @@ public final class TractorManager {
 
         AABB searchArea = player.getBoundingBox().expandTowards(reach.subtract(eye)).inflate(1.0);
         EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(level, player, eye, reach, searchArea,
-                entity -> !entity.isSpectator() && entity.isAlive() && !isHeld(entity), 0.3F);
+                entity -> !Mannequins.isHologram(entity) && !entity.isSpectator() && entity.isAlive() && !isHeld(entity), 0.3F);
         if (entityHit != null) return entityHit.getEntity();
 
         if (blockHit.getType() != HitResult.Type.BLOCK) return null;

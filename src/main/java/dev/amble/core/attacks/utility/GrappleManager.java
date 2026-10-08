@@ -1,5 +1,6 @@
 package dev.amble.core.attacks.utility;
 
+import dev.amble.core.mannequin.Mannequins;
 import dev.amble.core.ringpowers.ActiveConstructs;
 import dev.amble.core.team.RingDamage;
 import dev.amble.core.attacks.projectile.ProjectileTargeting;
@@ -215,7 +216,7 @@ public final class GrappleManager {
         Entity best = null;
         double bestDistance = Double.MAX_VALUE;
         for (Entity entity : owner.level().getEntities(owner, new AABB(from, to).inflate(HIT_PADDING),
-                entity -> entity instanceof LivingEntity && entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !entity.isPassengerOfSameVehicle(owner))) {
+                entity -> !Mannequins.isHologram(entity) && entity instanceof LivingEntity && entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !entity.isPassengerOfSameVehicle(owner))) {
             AABB box = entity.getBoundingBox().inflate(HIT_PADDING);
             if (!box.contains(from) && box.clip(from, to).isEmpty()) continue;
             double distance = entity.getBoundingBox().getCenter().distanceToSqr(from);
