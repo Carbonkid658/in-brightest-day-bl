@@ -3,14 +3,11 @@ package dev.amble.core.oath;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sun.jna.Pointer;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import net.fabricmc.loader.api.FabricLoader;
 import org.jspecify.annotations.Nullable;
-import org.vosk.LibVosk;
-import org.vosk.LogLevel;
-import org.vosk.Model;
-import org.vosk.Recognizer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +35,8 @@ final class OathRecognizer {
     }
 
     private static volatile State state = State.IDLE;
-    private static volatile @Nullable Model model;
+    private static volatile @Nullable VoskLibrary vosk;
+    private static volatile @Nullable Pointer model;
 
     static State state() {
         return state;
@@ -54,10 +52,14 @@ final class OathRecognizer {
 
     private static void load() {
         try {
-            LibVosk.setLogLevel(LogLevel.WARNINGS);
+            VoskLibrary library = VoskLibrary.load();
+            library.vosk_set_log_level(VoskLibrary.LOG_WARNINGS);
             Path directory = modelDirectory();
             if (!Files.isDirectory(directory)) download(directory);
-            model = new Model(directory.toString());
+            Pointer loaded = library.vosk_model_new(directory.toString());
+            if (loaded == null) throw new IOException("Failed to load oath model from " + directory);
+            vosk = library;
+            model = loaded;
             state = State.READY;
             BrightestDay.LOGGER.info("Oath recognition ready ({})", directory.getFileName());
         } catch (Throwable throwable) {
@@ -107,13 +109,16 @@ final class OathRecognizer {
 
     static @Nullable Listener listen(List<String> words) {
         if (state != State.READY) return null;
-        Model loaded = model;
-        if (loaded == null) return null;
+        VoskLibrary library = vosk;
+        Pointer loaded = model;
+        if (library == null || loaded == null) return null;
         JsonArray grammar = new JsonArray();
         OathMatcher.grammar(words).forEach(grammar::add);
         grammar.add("[unk]");
         try {
-            return new Listener(new Recognizer(loaded, SAMPLE_RATE, grammar.toString()));
+            Pointer recognizer = library.vosk_recognizer_new_grm(loaded, SAMPLE_RATE, grammar.toString());
+            if (recognizer == null) throw new IOException("Failed to create oath recognizer");
+            return new Listener(library, recognizer);
         } catch (Throwable throwable) {
             BrightestDay.LOGGER.warn("Could not start oath recognizer", throwable);
             return null;
@@ -121,9 +126,12 @@ final class OathRecognizer {
     }
 
     static final class Listener {
-        private final Recognizer recognizer;
+        private final VoskLibrary library;
+        private final Pointer recognizer;
+        private volatile boolean closed;
 
-        private Listener(Recognizer recognizer) {
+        private Listener(VoskLibrary library, Pointer recognizer) {
+            this.library = library;
             this.recognizer = recognizer;
         }
 
@@ -134,17 +142,20 @@ final class OathRecognizer {
                 int base = i * DOWNSAMPLE;
                 samples[i] = (short) ((samples48k[base] + samples48k[base + 1] + samples48k[base + 2]) / DOWNSAMPLE);
             }
-            if (this.recognizer.acceptWaveForm(samples, length)) {
-                String[] heard = words(this.recognizer.getResult(), "text");
+            if (this.closed) return;
+            if (this.library.vosk_recognizer_accept_waveform_s(this.recognizer, samples, length)) {
+                String[] heard = words(this.library.vosk_recognizer_result(this.recognizer), "text");
                 if (heard.length > 0) BrightestDay.LOGGER.debug("Oath heard: {}", String.join(" ", heard));
                 matcher.result(heard);
             } else {
-                matcher.partial(words(this.recognizer.getPartialResult(), "partial"));
+                matcher.partial(words(this.library.vosk_recognizer_partial_result(this.recognizer), "partial"));
             }
         }
 
         void close() {
-            this.recognizer.close();
+            if (this.closed) return;
+            this.closed = true;
+            this.library.vosk_recognizer_free(this.recognizer);
         }
 
         private static String[] words(String json, String field) {

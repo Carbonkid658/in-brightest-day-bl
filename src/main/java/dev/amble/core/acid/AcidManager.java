@@ -2,6 +2,7 @@ package dev.amble.core.acid;
 
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.AcidS2CPayload;
@@ -120,14 +121,18 @@ public final class AcidManager {
         for (int i = 1; i < path.size(); i++) {
             Vec3 from = path.get(i - 1);
             Vec3 to = path.get(i);
-            for (Entity entity : level.getEntities(player, new AABB(from, to).inflate(HIT_PADDING), entity -> entity instanceof LivingEntity && !player.isAlliedTo(entity) && entity.isAlive() && !entity.isSpectator())) {
+            for (Entity entity : level.getEntities(player, new AABB(from, to).inflate(HIT_PADDING), entity -> RingTargets.isTarget(player, entity))) {
                 AABB box = entity.getBoundingBox().inflate(HIT_PADDING);
+                if (RingTargets.excluded(hit, entity)) continue;
                 if (box.contains(from) || box.clip(from, to).isPresent()) hit.add(entity);
             }
         }
 
         for (Entity entity : hit) {
-            LivingEntity living = (LivingEntity) entity;
+            if (!(entity instanceof LivingEntity living)) {
+                RingTargets.hurt(level, entity, RingDamage.source(level, player), config.acidDamage);
+                continue;
+            }
             living.igniteForSeconds(config.acidFireSeconds);
             living.hurtServer(level, RingDamage.source(level, player), config.acidDamage);
             if (config.acidArmorWear <= 0) continue;

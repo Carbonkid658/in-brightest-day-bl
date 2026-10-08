@@ -102,7 +102,7 @@ public final class BeamEffects {
     private static Vec3 impact(ClientLevel level, Player player, float partialTicks) {
         Vec3 eye = player.getEyePosition(partialTicks);
         Vec3 look = RemoteAim.look(player, partialTicks);
-        Vec3 end = eye.add(look.scale(BeamManager.RANGE));
+        Vec3 end = eye.add(look.scale(BeamManager.range()));
 
         HitResult blockHit = level.clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
         if (blockHit.getType() != HitResult.Type.MISS) end = blockHit.getLocation();

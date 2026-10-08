@@ -2,6 +2,7 @@ package dev.amble.core.attacks.weapon;
 
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import dev.amble.core.networking.payloads.s2c.FistS2CPayload;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -14,7 +15,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
@@ -122,9 +122,9 @@ public final class FistManager {
         BrightestDayConfig config = BrightestDayConfig.get();
         for (Entity entity : punch.level.getEntities(player, box,
                 entity -> entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !player.isAlliedTo(entity) && entity != player.getVehicle())) {
-            if (!punch.hit.add(entity.getId())) continue;
+            if (!punch.hit.add(RingTargets.rootId(entity))) continue;
 
-            if (entity instanceof LivingEntity living) living.hurtServer(punch.level, RingDamage.source(punch.level, player), config.fistDamage);
+            RingTargets.hurt(punch.level, entity, RingDamage.source(punch.level, player), config.fistDamage);
             entity.push(punch.direction.scale(config.fistKnockback).add(0.0, LIFT, 0.0));
             entity.needsSync = true;
             Vec3 center = entity.getBoundingBox().getCenter();
@@ -143,8 +143,8 @@ public final class FistManager {
             if (distance > radius) continue;
 
             double falloff = 1.0 - distance / radius;
-            if (!punch.hit.contains(entity.getId()) && entity instanceof LivingEntity living) {
-                living.hurtServer(punch.level, RingDamage.source(punch.level, player), (float) (config.fistImpactDamage * falloff));
+            if (!punch.hit.contains(RingTargets.rootId(entity))) {
+                RingTargets.hurt(punch.level, entity, RingDamage.source(punch.level, player), (float) (config.fistImpactDamage * falloff));
             }
             away = distance < 1.0E-3 ? punch.direction.reverse() : away.normalize();
             entity.push(away.scale(IMPACT_KNOCKBACK * falloff).add(0.0, LIFT * falloff, 0.0));

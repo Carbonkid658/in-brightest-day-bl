@@ -6,6 +6,7 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.TurretBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TurretS2CPayload;
 import dev.amble.core.ringpowers.CorpsColors;
+import dev.amble.core.team.RingTargets;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -17,7 +18,6 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -169,16 +169,17 @@ public final class TurretEffects {
         while (bolts.hasNext()) {
             Bolt bolt = bolts.next();
             bolt.prevPos = bolt.pos;
-            Entity target = client.level == null ? null : client.level.getEntity(bolt.targetId);
-            if (bolt.level != client.level || ++bolt.age > BOLT_LIFETIME || !(target instanceof LivingEntity living) || !living.isAlive()) {
+            Entity tracked = client.level == null ? null : client.level.getEntity(bolt.targetId);
+            Entity target = tracked == null ? null : RingTargets.nearestPart(tracked, bolt.pos);
+            if (bolt.level != client.level || ++bolt.age > BOLT_LIFETIME || target == null || !target.isAlive()) {
                 bolts.remove();
                 continue;
             }
 
-            Vec3 to = living.getBoundingBox().getCenter().subtract(bolt.pos);
+            Vec3 to = target.getBoundingBox().getCenter().subtract(bolt.pos);
             double distance = to.length();
-            if (distance <= bolt.speed + BOLT_RADIUS + living.getBbWidth() * 0.5F) {
-                SPARKS.add(new Spark(living.getBoundingBox().getCenter(), boltColor(client, bolt)));
+            if (distance <= bolt.speed + BOLT_RADIUS + target.getBbWidth() * 0.5F) {
+                SPARKS.add(new Spark(target.getBoundingBox().getCenter(), boltColor(client, bolt)));
                 bolts.remove();
                 continue;
             }
@@ -189,8 +190,9 @@ public final class TurretEffects {
     }
 
     private static Vec3 desiredAim(Minecraft client, ClientTurret turret) {
-        if (client.level != null && turret.targetId >= 0 && client.level.getEntity(turret.targetId) instanceof LivingEntity target && target.isAlive()) {
-            Vec3 to = target.getBoundingBox().getCenter().subtract(turret.center);
+        Entity tracked = client.level != null && turret.targetId >= 0 ? client.level.getEntity(turret.targetId) : null;
+        if (tracked != null && tracked.isAlive()) {
+            Vec3 to = RingTargets.nearestPart(tracked, turret.center).getBoundingBox().getCenter().subtract(turret.center);
             if (to.lengthSqr() > 1.0E-4) return to.normalize();
         }
         turret.targetId = -1;

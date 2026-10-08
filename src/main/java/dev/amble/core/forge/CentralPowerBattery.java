@@ -7,6 +7,7 @@ import dev.amble.core.progression.IndigoOne;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
+import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.networking.payloads.s2c.BatteriesS2CPayload;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
@@ -17,6 +18,7 @@ import dev.amble.core.progression.SpectrumMeters;
 import dev.amble.core.progression.WorldProgress;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.sync.RingSync;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
@@ -26,6 +28,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.chat.Component;
@@ -42,6 +45,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -66,11 +70,14 @@ public final class CentralPowerBattery {
     private static final int OFFER_COST = 50;
     private static final int OFFER_HEALTH = 20;
     private static final long CEREMONY_WINDOW = 600L;
+    public static final int STALK = 2;
+    public static final int TOP_STALK = 1;
 
     private static final Map<BlockPos, ServerBossEvent> BARS = new HashMap<>();
     private static final Map<BlockPos, Map<UUID, Long>> CEREMONIES = new HashMap<>();
     private static final Map<UUID, Long> LAST_STRIKE = new HashMap<>();
     private static final Set<BlockPos> AWAITING = new HashSet<>();
+    private static final Set<BlockPos> FORMED = new HashSet<>();
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(CentralPowerBattery::tick);
@@ -80,11 +87,13 @@ public final class CentralPowerBattery {
             BARS.clear();
             CEREMONIES.clear();
             AWAITING.clear();
+            FORMED.clear();
         });
         UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
             if (hand != InteractionHand.MAIN_HAND || !(level instanceof ServerLevel server) || server.dimension() != Level.OVERWORLD) return InteractionResult.PASS;
             WorldProgress.Battery battery = at(server, hit.getBlockPos(), false);
             if (battery == null) return InteractionResult.PASS;
+            if (!panel(battery.pos(), hit.getBlockPos(), hit.getDirection())) return InteractionResult.PASS;
             boolean member = PowerRingItem.getWornCorps(player).orElse(null) == battery.corps();
             ItemStack held = player.getMainHandItem();
             if (member && player.isSecondaryUseActive() && held.isEmpty() && battery.health() < WorldProgress.Battery.MAX_HEALTH) return offer(server, battery, player);
@@ -171,25 +180,32 @@ public final class CentralPowerBattery {
     private static InteractionResult ceremony(ServerLevel level, WorldProgress.Battery battery, Player player) {
         BrightestDayConfig config = BrightestDayConfig.get();
         if (!config.batteryCeremony || battery.lit() || battery.health() <= 0 || !complete(level, battery.pos())) return InteractionResult.PASS;
+        if (!(player instanceof ServerPlayer server)) return InteractionResult.PASS;
+        BatteryRitual.hold(server, battery.pos(), battery.corps(), true);
+        return InteractionResult.SUCCESS_SERVER;
+    }
+
+    static void sworn(ServerLevel level, BlockPos pos, ServerPlayer player) {
+        WorldProgress.Battery battery = at(level, pos, false);
+        BrightestDayConfig config = BrightestDayConfig.get();
+        if (battery == null || !config.batteryCeremony || battery.lit() || battery.health() <= 0 || !complete(level, battery.pos())) return;
         Emotion emotion = Emotion.of(battery.corps()).orElse(null);
         long now = level.getGameTime();
-        Map<UUID, Long> sworn = CEREMONIES.computeIfAbsent(battery.pos(), pos -> new HashMap<>());
+        Map<UUID, Long> sworn = CEREMONIES.computeIfAbsent(battery.pos(), key -> new HashMap<>());
         sworn.values().removeIf(time -> now - time > CEREMONY_WINDOW);
         sworn.put(player.getUUID(), now);
         int needed = IndigoOne.multiplayer(level.getServer()) ? Math.max(1, config.batteryCeremonyMembers) : 1;
         boolean worthy = emotion != null && SpectrumMeters.get(player, emotion) >= Emotion.MAX;
-        player.sendSystemMessage(Component.translatable(battery.corps().oathKey()).withStyle(ChatFormatting.BOLD).withColor(battery.corps().color()));
         if (!worthy && sworn.size() < needed) {
             announce(level, battery.pos(), Component.translatable("message.brightestday.battery.ceremony", player.getDisplayName(), sworn.size(), needed), battery.corps());
             level.playSound(null, battery.pos(), SoundEvents.BEACON_AMBIENT, SoundSource.BLOCKS, 1.5F, 0.8F);
-            return InteractionResult.SUCCESS_SERVER;
+            return;
         }
         CEREMONIES.remove(battery.pos());
         AWAITING.remove(battery.pos());
         WorldProgress.update(level.getServer(), state -> state.withBattery(battery.withLit(true)));
         announce(level, battery.pos(), Component.translatable("message.brightestday.battery.lit").withStyle(ChatFormatting.BOLD), battery.corps());
         level.playSound(null, battery.pos(), SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 2.0F, 0.7F);
-        return InteractionResult.SUCCESS_SERVER;
     }
 
     private static void bar(ServerLevel level, WorldProgress.Battery battery) {
@@ -224,9 +240,78 @@ public final class CentralPowerBattery {
 
     public static BatteriesS2CPayload payload(MinecraftServer server) {
         return new BatteriesS2CPayload(WorldProgress.get(server).batteries().stream()
-                .filter(WorldProgress.Battery::active)
-                .map(battery -> new BatteriesS2CPayload.Entry(battery.pos(), battery.corps().color()))
+                .filter(battery -> battery.active() || FORMED.contains(battery.pos()))
+                .map(battery -> new BatteriesS2CPayload.Entry(battery.pos(), battery.corps().color(), battery.active()))
                 .toList());
+    }
+
+    public static boolean panel(BlockPos core, BlockPos clicked, Direction face) {
+        return face == Direction.NORTH && clicked.getZ() == core.getZ() - 1 || face == Direction.SOUTH && clicked.getZ() == core.getZ() + 1;
+    }
+
+    public static boolean isShell(BlockState state, Block shell) {
+        return state.is(shell) || state.getBlock() instanceof BatteryFrameBlock && BatteryFrameBlock.original(state) == shell;
+    }
+
+    private static List<BlockPos> structure(BlockPos core) {
+        List<BlockPos> positions = new ArrayList<>();
+        for (BlockPos pos : BlockPos.betweenClosed(core.offset(-1, -1, -1), core.offset(1, 1, 1))) {
+            if (!pos.equals(core)) positions.add(pos.immutable());
+        }
+        for (int step = 1; step <= STALK; step++) positions.add(core.below(1 + step));
+        for (int step = 1; step <= TOP_STALK; step++) positions.add(core.above(1 + step));
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                positions.add(core.offset(dx, -(2 + STALK), dz));
+                positions.add(core.offset(dx, 2 + TOP_STALK, dz));
+            }
+        }
+        return positions;
+    }
+
+    private static void conceal(ServerLevel level, BlockPos core, Block shell) {
+        BatteryFrameBlock.Material material = BatteryFrameBlock.Material.of(shell);
+        if (material == null) return;
+        BlockState frame = BrightestDayBlocks.BATTERY_FRAME.defaultBlockState().setValue(BatteryFrameBlock.MATERIAL, material);
+        for (BlockPos pos : structure(core)) {
+            if (level.getBlockState(pos).is(shell)) level.setBlockAndUpdate(pos, frame);
+        }
+    }
+
+    private static void reveal(ServerLevel level, BlockPos core) {
+        for (BlockPos pos : structure(core)) {
+            BlockState state = level.getBlockState(pos);
+            if (state.getBlock() instanceof BatteryFrameBlock) level.setBlockAndUpdate(pos, BatteryFrameBlock.original(state).defaultBlockState());
+        }
+    }
+
+    public static boolean elevated(ServerLevel level, BlockPos core) {
+        if (!(level.getBlockState(core).getBlock() instanceof BatteryCoreBlock block)) return false;
+        Block shell = block.shell();
+        return pillar(level, core, shell, -1, STALK) && pillar(level, core, shell, 1, TOP_STALK);
+    }
+
+    private static boolean pillar(ServerLevel level, BlockPos core, Block shell, int direction, int length) {
+        for (int step = 1; step <= length; step++) {
+            int y = direction * (1 + step);
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    BlockPos pos = core.offset(dx, y, dz);
+                    if (dx == 0 && dz == 0) {
+                        if (!isShell(level.getBlockState(pos), shell)) return false;
+                    } else if (!level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        int pad = direction * (2 + length);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (!isShell(level.getBlockState(core.offset(dx, pad, dz)), shell)) return false;
+            }
+        }
+        return true;
     }
 
     public static void broadcast(MinecraftServer server) {
@@ -237,7 +322,7 @@ public final class CentralPowerBattery {
     private static WorldProgress.Battery at(ServerLevel level, BlockPos pos, boolean activeOnly) {
         for (WorldProgress.Battery battery : WorldProgress.get(level.getServer()).batteries()) {
             BlockPos core = battery.pos();
-            if ((!activeOnly || battery.active()) && Math.abs(pos.getX() - core.getX()) <= 1 && Math.abs(pos.getY() - core.getY()) <= 1 && Math.abs(pos.getZ() - core.getZ()) <= 1) return battery;
+            if ((!activeOnly || battery.active()) && Math.abs(pos.getX() - core.getX()) <= 1 && pos.getY() - core.getY() >= -(2 + STALK) && pos.getY() - core.getY() <= 2 + TOP_STALK && Math.abs(pos.getZ() - core.getZ()) <= 1) return battery;
         }
         return null;
     }
@@ -252,17 +337,27 @@ public final class CentralPowerBattery {
             player.sendOverlayMessage(Component.translatable("message.brightestday.wrong_lantern", corps.displayName()).withColor(corps.color()));
             return InteractionResult.FAIL;
         }
-        if (PowerRingItem.getRingPower(ring) >= BrightestDayComponents.MAX_POWER) return InteractionResult.PASS;
+        BrightestDayComponents.Sworn sworn = ring.get(BrightestDayComponents.SWORN_TO);
+        boolean settled = sworn != null && sworn.owner().equals(player.getUUID()) && !PowerRingItem.isDormant(ring);
+        if (settled && PowerRingItem.getRingPower(ring) >= BrightestDayComponents.MAX_POWER && RingSync.sync(ring) >= 1.0F) return InteractionResult.PASS;
+        if (!(player instanceof ServerPlayer server)) return InteractionResult.PASS;
+        BatteryRitual.hold(server, battery.pos(), corps, false);
+        return InteractionResult.SUCCESS_SERVER;
+    }
 
+    static void resync(ServerLevel level, BlockPos core, ServerPlayer player, LanternCorps corps) {
+        ItemStack ring = PowerRingItem.getWornRing(player);
+        boolean slotted = ring == BrightestDayAttachments.getRing(player);
         PowerRingItem.setMaxPower(ring);
         ring.remove(BrightestDayComponents.RING_DEATHS);
+        RingSync.restore(ring);
+        PowerRingItem.awaken(player, ring);
         PowerRingItem.swear(player, ring);
-        if (player instanceof ServerPlayer server) RingRanks.fire(server, Trigger.RECHARGE, Milestone.Context.of("battery"));
+        RingRanks.fire(player, Trigger.RECHARGE, Milestone.Context.of("battery"));
         if (slotted) BrightestDayAttachments.setRing(player, ring);
-        player.sendSystemMessage(Component.translatable(corps.oathKey()).withStyle(ChatFormatting.BOLD).withColor(corps.color()));
-        level.playSound(null, battery.pos(), SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.4F, 0.8F);
+        player.sendOverlayMessage(Component.translatable("message.brightestday.sync.restored").withColor(corps.color()));
+        level.playSound(null, core, SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.4F, 0.8F);
         level.sendParticles(new DustParticleOptions(corps.color(), 2.0F), player.getX(), player.getY(1.0), player.getZ(), 30, 0.4, 0.6, 0.4, 0.0);
-        return InteractionResult.SUCCESS_SERVER;
     }
 
     public static boolean active(MinecraftServer server, LanternCorps corps) {
@@ -270,7 +365,10 @@ public final class CentralPowerBattery {
     }
 
     public static boolean required(LanternCorps corps) {
-        return corps == LanternCorps.YELLOW || corps == LanternCorps.STAR_SAPPHIRE;
+        return switch (corps) {
+            case GREEN, YELLOW, RED, BLUE, INDIGO, STAR_SAPPHIRE -> true;
+            default -> false;
+        };
     }
 
     static void track(ServerLevel level, BlockPos pos, LanternCorps corps) {
@@ -278,18 +376,24 @@ public final class CentralPowerBattery {
             announce(level, pos, Component.translatable("message.brightestday.battery.overworld"), corps);
             return;
         }
-        if (!complete(level, pos)) {
+        if (!shell(level, pos)) {
             announce(level, pos, Component.translatable("message.brightestday.battery.incomplete"), corps);
+        } else if (!elevated(level, pos)) {
+            announce(level, pos, Component.translatable("message.brightestday.battery.grounded"), corps);
         }
         WorldProgress.update(level.getServer(), state -> state.withBattery(WorldProgress.Battery.fresh(pos, corps)));
     }
 
     public static boolean complete(ServerLevel level, BlockPos core) {
+        return shell(level, core) && elevated(level, core);
+    }
+
+    private static boolean shell(ServerLevel level, BlockPos core) {
         if (!(level.getBlockState(core).getBlock() instanceof BatteryCoreBlock block)) return false;
         Block shell = block.shell();
         for (BlockPos pos : BlockPos.betweenClosed(core.offset(-1, -1, -1), core.offset(1, 1, 1))) {
             if (pos.equals(core)) continue;
-            if (!level.getBlockState(pos).is(shell)) return false;
+            if (!isShell(level.getBlockState(pos), shell)) return false;
         }
         return true;
     }
@@ -299,13 +403,22 @@ public final class CentralPowerBattery {
         WorldProgress state = WorldProgress.get(server);
         if (server.getTickCount() % CHECK_INTERVAL == 0 && !state.batteries().isEmpty()) {
             List<WorldProgress.Battery> kept = new ArrayList<>();
+            boolean reshaped = false;
             for (WorldProgress.Battery battery : state.batteries()) {
                 if (!level.isLoaded(battery.pos())) {
                     kept.add(battery);
                     continue;
                 }
-                if (!(level.getBlockState(battery.pos()).getBlock() instanceof BatteryCoreBlock)) continue;
+                if (!(level.getBlockState(battery.pos()).getBlock() instanceof BatteryCoreBlock core)) {
+                    if (FORMED.remove(battery.pos())) reveal(level, battery.pos());
+                    continue;
+                }
                 boolean whole = complete(level, battery.pos());
+                if (whole ? FORMED.add(battery.pos()) : FORMED.remove(battery.pos())) {
+                    reshaped = true;
+                    if (whole) conceal(level, battery.pos(), core.shell());
+                    else reveal(level, battery.pos());
+                }
                 boolean wasActive = battery.active();
                 WorldProgress.Battery current = battery;
                 if (whole && current.health() < WorldProgress.Battery.MAX_HEALTH && server.getTickCount() % REPAIR_INTERVAL == 0 && !threatened(level, current)) {
@@ -326,8 +439,11 @@ public final class CentralPowerBattery {
                 bar(level, current);
                 kept.add(current);
             }
+            FORMED.removeIf(pos -> kept.stream().noneMatch(battery -> battery.pos().equals(pos)));
             if (!kept.equals(state.batteries())) {
                 WorldProgress.update(server, current -> current.withBatteries(kept));
+                broadcast(server);
+            } else if (reshaped) {
                 broadcast(server);
             }
         }

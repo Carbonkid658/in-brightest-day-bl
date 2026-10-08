@@ -1,7 +1,9 @@
 package dev.amble.core.beams;
 
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.poses.Poses;
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.BeamS2CPayload;
 import dev.amble.core.ringpowers.RingPowerRegistry;
@@ -18,7 +20,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
@@ -26,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class BeamManager {
-    public static final double RANGE = 32.0;
     private static final int DAMAGE_INTERVAL = 5;
     private static final double PUSH = 0.08;
 
@@ -69,18 +69,18 @@ public final class BeamManager {
             boolean selected = ArmedRingPower.selectedConstruct(player).orElse(null) == RingPowerRegistry.BEAM;
             boolean outOfCharge = !PowerRingItem.hasCharge(player)
                     || drainTick && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, BrightestDayConfig.get().beamDrainPerSecond);
-            if (++beam.age > BrightestDayConfig.get().beamMaxTicks || player.isRemoved() || !player.isAlive() || !ArmedRingPower.isArmed(player) || !selected || outOfCharge) {
+            if (++beam.age > BrightestDayConfig.get().beamMaxTicks || player.isRemoved() || !player.isAlive() || !ArmedRingPower.isArmed(player) && !Poses.channeling(player) || !selected || outOfCharge) {
                 stop(player);
                 continue;
             }
 
-            ConstructRingPower.Aim aim = ConstructRingPower.aim(player, RANGE);
-            if (!(aim.entity() instanceof LivingEntity target)) continue;
+            ConstructRingPower.Aim aim = ConstructRingPower.aim(player, range());
+            Entity target = aim.entity();
+            if (target == null || !RingTargets.isHittable(target)) continue;
 
             ServerLevel level = player.level();
             if (beam.age % DAMAGE_INTERVAL == 0) {
-                target.setInvulnerableTime(0);
-                target.hurtServer(level, RingDamage.source(level, player), BrightestDayConfig.get().beamDamage);
+                RingTargets.strike(level, target, RingDamage.source(level, player), BrightestDayConfig.get().beamDamage);
             }
             Vec3 push = aim.look().scale(PUSH);
             target.push(push);
@@ -94,6 +94,10 @@ public final class BeamManager {
         for (ServerPlayer watcher : PlayerLookup.tracking(player)) {
             if (watcher != player) ServerPlayNetworking.send(watcher, payload);
         }
+    }
+
+    public static double range() {
+        return BrightestDayConfig.get().beamRange;
     }
 
     public static boolean isBeaming(Entity entity) {

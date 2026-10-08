@@ -101,6 +101,10 @@ public final class RingOffers {
     }
 
     private static void answer(ServerPlayer player, boolean accepted) {
+        if (CHALLENGES.containsKey(player.getUUID())) {
+            player.sendSystemMessage(Component.translatable("message.brightestday.duel.pending").withStyle(ChatFormatting.GRAY));
+            return;
+        }
         Offer offer = OFFERS.remove(player.getUUID());
         if (offer == null || player.level().getGameTime() > offer.expires()) {
             player.sendSystemMessage(Component.translatable("message.brightestday.offer.expired").withStyle(ChatFormatting.GRAY));
@@ -111,7 +115,10 @@ public final class RingOffers {
             player.sendSystemMessage(Component.translatable("message.brightestday.offer.refused").withStyle(ChatFormatting.GRAY));
             return;
         }
-        if (!ringless(player)) return;
+        if (!ringless(player)) {
+            player.sendSystemMessage(Component.translatable("message.brightestday.offer.bound").withStyle(ChatFormatting.GRAY));
+            return;
+        }
 
         if (absent(player.level().getServer(), offer.corps())) {
             player.sendSystemMessage(Component.translatable("message.brightestday.offer.absent").withStyle(ChatFormatting.GRAY));
@@ -120,7 +127,7 @@ public final class RingOffers {
         if (offer.corps() == LanternCorps.ORANGE && !CorpsCaps.admits(player, LanternCorps.ORANGE)) {
             ServerPlayer holder = orangeHolder(player.level().getServer());
             if (holder != null) challenge(player, holder);
-            else CorpsCaps.refuse(player, LanternCorps.ORANGE);
+            else player.sendSystemMessage(Component.translatable("message.brightestday.offer.absent").withStyle(ChatFormatting.GRAY));
             return;
         }
         if (!CorpsCaps.check(player, offer.corps())) return;
@@ -158,6 +165,10 @@ public final class RingOffers {
 
 
     private static ServerPlayer orangeHolder(MinecraftServer server) {
+        for (UUID bearer : CorpsCaps.bearers(server, LanternCorps.ORANGE)) {
+            ServerPlayer online = server.getPlayerList().getPlayer(bearer);
+            if (online != null && !online.isSpectator()) return online;
+        }
         for (ServerPlayer other : server.getPlayerList().getPlayers()) {
             if (PowerRingItem.getCorps(BrightestDayAttachments.getRing(other)).orElse(null) == LanternCorps.ORANGE) return other;
         }
@@ -177,14 +188,28 @@ public final class RingOffers {
         Challenge challenge = CHALLENGES.get(killer.getUUID());
         if (challenge != null && challenge.holder().equals(victim.getUUID())) {
             CHALLENGES.remove(killer.getUUID());
-            ItemStack ring = BrightestDayAttachments.getRing(victim);
-            if (PowerRingItem.getCorps(ring).orElse(null) != LanternCorps.ORANGE || !ringless(killer)) return;
-            BrightestDayAttachments.setRing(victim, ItemStack.EMPTY);
+            ItemStack ring = takeOrange(victim);
+            if (ring.isEmpty()) return;
             RingLoyalty.deliver(killer, ring);
             killer.sendSystemMessage(Component.translatable("message.brightestday.duel.won").withStyle(ChatFormatting.BOLD).withColor(LanternCorps.ORANGE.color()));
             return;
         }
         CHALLENGES.values().removeIf(other -> other.challenger().equals(victim.getUUID()) && other.holder().equals(killer.getUUID()));
+    }
+
+    private static ItemStack takeOrange(ServerPlayer victim) {
+        ItemStack worn = BrightestDayAttachments.getRing(victim);
+        if (PowerRingItem.getCorps(worn).orElse(null) == LanternCorps.ORANGE) {
+            BrightestDayAttachments.setRing(victim, ItemStack.EMPTY);
+            return worn;
+        }
+        for (int slot = 0; slot < victim.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = victim.getInventory().getItem(slot);
+            if (PowerRingItem.getCorps(stack).orElse(null) != LanternCorps.ORANGE) continue;
+            victim.getInventory().setItem(slot, ItemStack.EMPTY);
+            return stack;
+        }
+        return ItemStack.EMPTY;
     }
 
     private static void tick(MinecraftServer server) {

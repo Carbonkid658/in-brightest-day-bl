@@ -2,6 +2,7 @@ package dev.amble.client.effects;
 
 import dev.amble.client.flight.FlightControls;
 import dev.amble.core.blocks.LanternBlock;
+import dev.amble.core.forge.BatteryCoreBlock;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.CycleConstructC2SPayload;
 import dev.amble.core.ringpowers.CorpsColors;
@@ -58,7 +59,9 @@ public final class ConstructClient {
         return client.level != null
                 && client.hitResult instanceof BlockHitResult blockHit
                 && blockHit.getType() == HitResult.Type.BLOCK
-                && client.level.getBlockState(blockHit.getBlockPos()).getBlock() instanceof LanternBlock;
+                && (client.level.getBlockState(blockHit.getBlockPos()).getBlock() instanceof LanternBlock
+                || client.level.getBlockState(blockHit.getBlockPos()).getBlock() instanceof BatteryCoreBlock
+                || BatteryEffects.isBattery(blockHit.getBlockPos()));
     }
 
     public static boolean onScroll(int wheel) {

@@ -2,6 +2,7 @@ package dev.amble.core.attacks.weapon;
 
 import dev.amble.core.ringpowers.ActiveConstructs;
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.TurretBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TurretS2CPayload;
@@ -18,7 +19,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
@@ -157,7 +158,7 @@ public final class TurretManager {
     }
 
     private static void shoot(Turret turret) {
-        LivingEntity target = findTarget(turret);
+        Entity target = findTarget(turret);
         if (target == null) {
             turret.nextShot = turret.level.getGameTime() + 5;
             return;
@@ -166,23 +167,24 @@ public final class TurretManager {
 
         Vec3 aim = target.getBoundingBox().getCenter().subtract(turret.center).normalize();
         Vec3 muzzle = turret.center.add(aim.scale(MUZZLE_OFFSET));
-        BOLTS.add(new Bolt(turret.level, turret.owner, target.getId(), muzzle));
+        BOLTS.add(new Bolt(turret.level, turret.owner, RingTargets.rootId(target), muzzle));
         turret.level.playSound(null, muzzle.x, muzzle.y, muzzle.z, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.0F, 1.8F);
         turret.level.playSound(null, muzzle.x, muzzle.y, muzzle.z, SoundEvents.SHULKER_SHOOT, SoundSource.PLAYERS, 0.5F, 1.6F);
 
-        TurretBoltS2CPayload payload = new TurretBoltS2CPayload(turret.id, muzzle, target.getId(), turret.color, BOLT_SPEED);
+        TurretBoltS2CPayload payload = new TurretBoltS2CPayload(turret.id, muzzle, RingTargets.rootId(target), turret.color, BOLT_SPEED);
         for (ServerPlayer watcher : turret.watchers) {
             if (!watcher.hasDisconnected()) ServerPlayNetworking.send(watcher, payload);
         }
     }
 
-    private static @Nullable LivingEntity findTarget(Turret turret) {
+    private static @Nullable Entity findTarget(Turret turret) {
         ServerPlayer owner = turret.level.getServer().getPlayerList().getPlayer(turret.owner);
         double range = BrightestDayConfig.get().turretRange;
-        LivingEntity best = null;
+        Entity best = null;
         double bestDistance = range * range;
-        for (LivingEntity entity : turret.level.getEntitiesOfClass(LivingEntity.class, new AABB(turret.center, turret.center).inflate(range),
-                entity -> entity instanceof Enemy && entity.isAlive() && !entity.isSpectator() && (owner == null || !owner.isAlliedTo(entity)))) {
+        for (Entity entity : turret.level.getEntities((Entity) null, new AABB(turret.center, turret.center).inflate(range),
+                entity -> (RingTargets.root(entity) instanceof Enemy || entity instanceof EndCrystal) && RingTargets.isHittable(entity)
+                        && (owner == null || RingTargets.isTarget(owner, entity)))) {
             Vec3 center = entity.getBoundingBox().getCenter();
             double distance = center.distanceToSqr(turret.center);
             if (distance > bestDistance || !clear(turret.level, turret.center, center)) continue;
@@ -200,19 +202,20 @@ public final class TurretManager {
         Iterator<Bolt> iterator = BOLTS.iterator();
         while (iterator.hasNext()) {
             Bolt bolt = iterator.next();
-            Entity target = bolt.level.getEntity(bolt.targetId);
-            if (++bolt.age > BOLT_LIFETIME || !(target instanceof LivingEntity living) || !living.isAlive()) {
+            Entity tracked = bolt.level.getEntity(bolt.targetId);
+            Entity target = tracked == null ? null : RingTargets.nearestPart(tracked, bolt.pos);
+            if (++bolt.age > BOLT_LIFETIME || target == null || !RingTargets.isHittable(target)) {
                 iterator.remove();
                 continue;
             }
 
-            Vec3 to = living.getBoundingBox().getCenter().subtract(bolt.pos);
+            Vec3 to = target.getBoundingBox().getCenter().subtract(bolt.pos);
             double distance = to.length();
-            if (distance <= BOLT_SPEED + BOLT_RADIUS + living.getBbWidth() * 0.5) {
+            if (distance <= BOLT_SPEED + BOLT_RADIUS + target.getBbWidth() * 0.5) {
                 ServerPlayer owner = server.getPlayerList().getPlayer(bolt.owner);
                 DamageSource source = owner != null ? RingDamage.source(bolt.level, owner) : bolt.level.damageSources().magic();
-                living.hurtServer(bolt.level, source, BrightestDayConfig.get().turretBoltDamage);
-                Vec3 hit = living.getBoundingBox().getCenter();
+                target.hurtServer(bolt.level, source, BrightestDayConfig.get().turretBoltDamage);
+                Vec3 hit = target.getBoundingBox().getCenter();
                 bolt.level.playSound(null, hit.x, hit.y, hit.z, SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 0.8F, 1.7F);
                 iterator.remove();
                 continue;

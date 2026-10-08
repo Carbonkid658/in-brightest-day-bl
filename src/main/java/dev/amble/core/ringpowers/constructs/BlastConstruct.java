@@ -3,7 +3,9 @@ package dev.amble.core.ringpowers.constructs;
 import dev.amble.core.ringpowers.CorpsArsenal;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.BrightestDay;
+import dev.amble.core.sphere.ContainmentSphere;
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.forge.CentralPowerBattery;
 import dev.amble.core.networking.payloads.s2c.BlastS2CPayload;
@@ -17,7 +19,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
@@ -92,6 +93,7 @@ public class BlastConstruct extends ConstructRingPower {
     @Override
     public void fire(ServerPlayer player, int radius, int color) {
         ServerLevel level = player.level();
+        ContainmentSphere.breakOut(player);
         BrightestDayConfig config = BrightestDayConfig.get();
         double range = config.blastRange;
         float scale = scale(radius);
@@ -112,10 +114,8 @@ public class BlastConstruct extends ConstructRingPower {
             if (distance > blastRadius && entity != direct) continue;
 
             double falloff = entity == direct ? 1.0 : 1.0 - distance / blastRadius;
-            if (entity instanceof LivingEntity living) {
-                float damage = (float) (config.blastSplashDamage * scale * falloff) + (entity == direct ? config.blastDirectDamage : 0.0F);
-                living.hurtServer(level, source, damage);
-            }
+            float damage = (float) (config.blastSplashDamage * scale * falloff) + (entity == direct ? config.blastDirectDamage : 0.0F);
+            RingTargets.hurt(level, entity, source, damage);
 
             Vec3 away = center.subtract(impact);
             away = away.lengthSqr() < 1.0E-4 ? aim.look() : away.normalize();
@@ -148,7 +148,7 @@ public class BlastConstruct extends ConstructRingPower {
         Entity best = null;
         double bestCos = -1.0;
         for (Entity entity : level.getEntities(player, new AABB(eye, eye).inflate(range),
-                entity -> entity instanceof LivingEntity && entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !player.isAlliedTo(entity))) {
+                entity -> entity.isPickable() && RingTargets.isTarget(player, entity))) {
             Vec3 to = entity.getBoundingBox().getCenter().subtract(eye);
             double distance = to.length();
             if (distance > range || distance < 1.0E-3) continue;

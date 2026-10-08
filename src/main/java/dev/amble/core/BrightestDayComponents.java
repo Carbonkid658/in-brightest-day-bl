@@ -86,6 +86,15 @@ public class BrightestDayComponents {
                             .build()
             );
 
+    public static final DataComponentType<Float> RING_SYNC =
+            Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    BrightestDay.id("ring_sync"),
+                    DataComponentType.<Float>builder()
+                            .persistent(Codec.FLOAT)
+                            .networkSynchronized(ByteBufCodecs.FLOAT)
+                            .build()
+            );
+
     public record Bond(UUID id, int generation) {
         public static final Codec<Bond> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 UUIDUtil.CODEC.fieldOf("id").forGetter(Bond::id),

@@ -4,6 +4,8 @@ import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -113,22 +115,26 @@ public final class CrystalManager {
             HitResult block = shard.level.clip(new ClipContext(shard.position, next, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, shard.owner));
             Vec3 end = block.getType() == HitResult.Type.MISS ? next : block.getLocation();
 
-            LivingEntity target = null;
+            Entity target = null;
             double nearest = Double.MAX_VALUE;
             for (Entity entity : shard.level.getEntities(shard.owner, new AABB(shard.position, end).inflate(HIT_PADDING),
-                    entity -> entity instanceof LivingEntity && entity.isAlive() && !entity.isSpectator() && !shard.owner.isAlliedTo(entity))) {
+                    entity -> RingTargets.isTarget(shard.owner, entity))) {
                 double distance = entity.distanceToSqr(shard.position);
                 if (distance < nearest) {
                     nearest = distance;
-                    target = (LivingEntity) entity;
+                    target = entity;
                 }
             }
 
             shard.level.sendParticles(new DustParticleOptions(shard.color, 1.2F), end.x, end.y, end.z, 3, 0.05, 0.05, 0.05, 0.0);
             if (target != null) {
                 iterator.remove();
-                encase(target, shard.color);
-                RingRanks.fire(shard.owner, Trigger.ENCASE, Milestone.Context.of(target));
+                if (RingTargets.root(target) instanceof LivingEntity living) {
+                    encase(living, shard.color);
+                    RingRanks.fire(shard.owner, Trigger.ENCASE, Milestone.Context.of(living));
+                } else {
+                    RingTargets.hurt(shard.level, target, RingDamage.source(shard.level, shard.owner), 1.0F);
+                }
             } else if (block.getType() != HitResult.Type.MISS || end.distanceTo(shard.origin) > range) {
                 iterator.remove();
                 shard.level.sendParticles(ParticleTypes.END_ROD, end.x, end.y, end.z, 6, 0.1, 0.1, 0.1, 0.05);

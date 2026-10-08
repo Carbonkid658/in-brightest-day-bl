@@ -2,6 +2,7 @@ package dev.amble.core.attacks.weapon;
 
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import dev.amble.core.networking.payloads.s2c.WhipS2CPayload;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -17,7 +18,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -162,7 +162,7 @@ public final class WhipManager {
 
         for (Entity entity : crack.level.getEntities(player, new AABB(eye, eye).inflate(crack.length + 1.0),
                 entity -> entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !player.isAlliedTo(entity) && entity != player.getVehicle())) {
-            if (crack.hit.contains(entity.getId())) continue;
+            if (crack.hit.contains(RingTargets.rootId(entity))) continue;
 
             Vec3 to3 = entity.getBoundingBox().getCenter().subtract(eye);
             double along = to3.dot(crack.forward);
@@ -177,10 +177,10 @@ public final class WhipManager {
             if (angle < low - slack || angle > high + slack) continue;
             if (!player.hasLineOfSight(entity)) continue;
 
-            crack.hit.add(entity.getId());
+            crack.hit.add(RingTargets.rootId(entity));
             Vec3 radial = crack.forward.scale(Mth.cos(angle)).add(crack.side.scale(Mth.sin(angle)));
             Vec3 tangent = crack.forward.scale(Mth.sin(angle)).subtract(crack.side.scale(Mth.cos(angle))).scale(crack.sweepSide);
-            if (entity instanceof LivingEntity living) living.hurtServer(crack.level, RingDamage.source(crack.level, player), config.whipDamage);
+            RingTargets.hurt(crack.level, entity, RingDamage.source(crack.level, player), config.whipDamage);
             entity.push(tangent.scale(config.whipKnockback).add(radial.scale(OUTWARD)).add(0.0, LIFT, 0.0));
             entity.needsSync = true;
         }
@@ -188,15 +188,15 @@ public final class WhipManager {
 
     private static void lash(Crack crack, float progress) {
         Entity target = crack.target;
-        if (target == null || !target.isAlive() || crack.hit.contains(target.getId())) return;
+        if (target == null || !target.isAlive() || crack.hit.contains(RingTargets.rootId(target))) return;
 
         ServerPlayer player = crack.player;
         Vec3 eye = player.getEyePosition();
         Vec3 center = target.getBoundingBox().getCenter();
         if (eye.distanceTo(center) > crack.length * progress + target.getBbWidth() + 0.5) return;
 
-        crack.hit.add(target.getId());
-        if (target instanceof LivingEntity living) living.hurtServer(crack.level, RingDamage.source(crack.level, player), BrightestDayConfig.get().whipLashDamage);
+        crack.hit.add(RingTargets.rootId(target));
+        RingTargets.hurt(crack.level, target, RingDamage.source(crack.level, player), BrightestDayConfig.get().whipLashDamage);
         Vec3 pull = player.position().subtract(target.position());
         double distance = pull.length();
         if (distance > 1.0E-3) {

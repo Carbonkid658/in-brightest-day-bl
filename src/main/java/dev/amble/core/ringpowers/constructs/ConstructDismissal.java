@@ -15,6 +15,7 @@ import dev.amble.core.beams.HealBeamManager;
 import dev.amble.core.light.LightOrbManager;
 import dev.amble.core.mounts.ConstructMounts;
 import dev.amble.core.sphere.ContainmentSphere;
+import dev.amble.core.visuals.Insignia;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.shields.ShieldManager;
 import dev.amble.core.walls.WallManager;
@@ -47,13 +48,19 @@ public final class ConstructDismissal {
         long probeCreated = OreProbeManager.latestCreatedAt(player.getUUID());
         long toolCreated = ConstructTools.latestCreatedAt(player);
         long mountCreated = ConstructMounts.latestCreatedAt(player.getUUID());
-        long newest = LongStream.of(shieldCreated, wallCreated, sculptCreated, orbCreated, turretCreated, glideCreated, drillCreated, lumberjackCreated, probeCreated, toolCreated, mountCreated).max().getAsLong();
+        long sphereCreated = ContainmentSphere.latestCreatedAt(player);
+        long insigniaCreated = Insignia.latestCreatedAt(player.getUUID());
+        long newest = LongStream.of(shieldCreated, wallCreated, sculptCreated, orbCreated, turretCreated, glideCreated, drillCreated, lumberjackCreated, probeCreated, toolCreated, mountCreated, sphereCreated, insigniaCreated).max().getAsLong();
         if (newest == Long.MIN_VALUE) {
             player.sendOverlayMessage(Component.translatable("message.brightestday.no_constructs_to_dismiss"));
             return;
         }
 
-        if (newest == mountCreated) {
+        if (newest == insigniaCreated) {
+            Insignia.hide(player);
+        } else if (newest == sphereCreated) {
+            ContainmentSphere.stop(player);
+        } else if (newest == mountCreated) {
             ConstructMounts.dismissLatest(player.getUUID());
         } else if (newest == toolCreated) {
             ConstructTools.dissolveAll(player);
@@ -100,6 +107,7 @@ public final class ConstructDismissal {
         ConstructTools.dissolveAll(player);
         ConstructMounts.dismissAll(player.getUUID());
         ContainmentSphere.stop(player);
+        Insignia.hide(player);
     }
 
     private ConstructDismissal() {}

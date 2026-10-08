@@ -9,6 +9,7 @@ import dev.amble.client.forge.ForgeClient;
 import dev.amble.client.flight.FlightRenderTypes;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.items.LanternBlockItem;
+import dev.amble.core.sync.RingSync;
 import dev.amble.core.networking.payloads.c2s.ChargeC2SPayload;
 import dev.amble.core.networking.payloads.c2s.FireConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.StopBeamC2SPayload;
@@ -171,7 +172,7 @@ public final class BlastEffects {
             return;
         }
 
-        if (charge == 0) chargeGoal = ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::chargeTicks).orElse(LONG_CHARGE_TICKS);
+        if (charge == 0) chargeGoal = RingSync.chargeTicks(player, ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::chargeTicks).orElse(LONG_CHARGE_TICKS));
         if (charge == 0 && chargeGoal > 1) {
             chargeSound = new EntityBoundSoundInstance(SoundEvents.WARDEN_SONIC_CHARGE, SoundSource.PLAYERS, 1.0F, CHARGE_SOUND_PITCH, player, player.getRandom().nextLong());
             client.getSoundManager().play(chargeSound);
@@ -278,6 +279,8 @@ public final class BlastEffects {
     }
 
     public static Vec3 hand(Player player, float partialTicks) {
+        Vec3 posed = PoseAnimations.ringPosition(player, partialTicks);
+        if (posed != null) return posed;
         float yaw = Mth.rotLerp(partialTicks, player.yBodyRotO, player.yBodyRot) * Mth.DEG_TO_RAD;
         Vec3 right = new Vec3(-Mth.cos(yaw), 0.0, -Mth.sin(yaw));
         float side = player.getMainArm() == HumanoidArm.RIGHT ? 1.0F : -1.0F;

@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "material=gold": {
+      "model": "minecraft:block/gold_block"
+    },
+    "material=amethyst": {
+      "model": "minecraft:block/amethyst_block"
+    },
+    "material=emerald": {
+      "model": "minecraft:block/emerald_block"
+    },
+    "material=redstone": {
+      "model": "minecraft:block/redstone_block"
+    },
+    "material=lapis": {
+      "model": "minecraft:block/lapis_block"
+    },
+    "material=obsidian": {
+      "model": "minecraft:block/obsidian"
+    }
+  }
+}

@@ -6,6 +6,8 @@ import dev.amble.core.ringpowers.constructs.BlastConstruct;
 import dev.amble.core.ringpowers.constructs.ConstructBoatConstruct;
 import dev.amble.core.ringpowers.constructs.ConstructHorseConstruct;
 import dev.amble.core.ringpowers.constructs.ContainmentSphereConstruct;
+import dev.amble.core.ringpowers.constructs.RingCompassConstruct;
+import dev.amble.core.ringpowers.constructs.InsigniaConstruct;
 import dev.amble.core.ringpowers.constructs.BloodHuntConstruct;
 import dev.amble.core.ringpowers.constructs.BoomerangDiscConstruct;
 import dev.amble.core.ringpowers.constructs.ChainBoltConstruct;
@@ -92,6 +94,8 @@ public final class RingPowerRegistry {
     public static final ConstructHorseConstruct CONSTRUCT_HORSE = register(new ConstructHorseConstruct());
     public static final ConstructBoatConstruct CONSTRUCT_BOAT = register(new ConstructBoatConstruct());
     public static final ContainmentSphereConstruct CONTAINMENT_SPHERE = register(new ContainmentSphereConstruct());
+    public static final RingCompassConstruct RING_COMPASS = register(new RingCompassConstruct());
+    public static final InsigniaConstruct INSIGNIA = register(new InsigniaConstruct());
     public static final TractorBeamRingPower TRACTOR_BEAM = register(new TractorBeamRingPower());
     public static final ScanRingPower SCAN = register(new ScanRingPower());
     public static final ConcussiveRingPower CONCUSSIVE = register(new ConcussiveRingPower());

@@ -13,10 +13,11 @@ import java.util.List;
 
 public record BatteriesS2CPayload(List<Entry> batteries) implements CustomPacketPayload {
 
-    public record Entry(BlockPos pos, int color) {
+    public record Entry(BlockPos pos, int color, boolean active) {
         public static final Codec<Entry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 BlockPos.CODEC.fieldOf("pos").forGetter(Entry::pos),
-                Codec.INT.fieldOf("color").forGetter(Entry::color)
+                Codec.INT.fieldOf("color").forGetter(Entry::color),
+                Codec.BOOL.optionalFieldOf("active", true).forGetter(Entry::active)
         ).apply(instance, Entry::new));
     }
 

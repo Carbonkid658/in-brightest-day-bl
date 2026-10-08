@@ -2,6 +2,7 @@ package dev.amble.core.attacks.projectile;
 
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.SwarmS2CPayload;
+import dev.amble.core.team.RingTargets;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -145,7 +146,7 @@ public final class SwarmManager {
         ServerPlayer owner = volley.owner;
         ServerLevel level = volley.level;
         BrightestDayConfig config = BrightestDayConfig.get();
-        if (dart.target != null && (!dart.target.isAlive() || dart.target.level() != level)) {
+        if (dart.target != null && (!RingTargets.isHittable(dart.target) || dart.target.level() != level)) {
             dart.target = ProjectileTargeting.nearest(owner, dart.position, RETARGET_RANGE, Set.of());
         }
 

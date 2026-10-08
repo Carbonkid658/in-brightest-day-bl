@@ -90,6 +90,8 @@ public final class PowerWheel {
             Map.entry(RingPowerRegistry.CONSTRUCT_HORSE, Items.SADDLE),
             Map.entry(RingPowerRegistry.CONSTRUCT_BOAT, Items.BIRCH_BOAT),
             Map.entry(RingPowerRegistry.CONTAINMENT_SPHERE, Items.ENDER_PEARL),
+            Map.entry(RingPowerRegistry.RING_COMPASS, Items.COMPASS),
+            Map.entry(RingPowerRegistry.INSIGNIA, Items.GLOW_ITEM_FRAME),
             Map.entry(RingPowerRegistry.ORE_PROBE, Items.SPYGLASS),
             Map.entry(RingPowerRegistry.SWARM_MISSILES, Items.FIREWORK_ROCKET),
             Map.entry(RingPowerRegistry.PIERCING_LANCE, Items.SPECTRAL_ARROW),
@@ -122,7 +124,8 @@ public final class PowerWheel {
     private static final List<Group> GROUPS = List.of(
             new Group("construct_group.brightestday.attacks", Items.BLAZE_ROD, List.of("blast", "swarm_missiles", "piercing_lance", "chain_bolt", "boomerang_disc", "rapid_barrage", "nova_burst", "ground_slam", "plasma_burst", "crystal_prison")),
             new Group("construct_group.brightestday.weapons", Items.IRON_SWORD, List.of("giant_fist", "energy_whip", "sentry_turret")),
-            new Group("construct_group.brightestday.utility", Items.COMPASS, List.of("glider", "grappling_hook", "light_orb", "lumberjack", "ore_probe", "megaphone", "construct_horse", "construct_boat")),
+            new Group("construct_group.brightestday.utility", Items.COMPASS, List.of("glider", "grappling_hook", "light_orb", "lumberjack", "ore_probe", "megaphone", "construct_horse", "construct_boat", "ring_compass")),
+            new Group("construct_group.brightestday.visuals", Items.GLOW_INK_SAC, List.of("insignia")),
             new Group("construct_group.brightestday.shield", Items.SHIELD, List.of("entity_shield", "area_shield", "containment_sphere"))
     );
     private static final Map<DrillMode, Item> DRILL_MODE_ICONS = Map.of(

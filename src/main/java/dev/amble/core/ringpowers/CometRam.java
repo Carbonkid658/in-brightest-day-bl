@@ -3,6 +3,7 @@ package dev.amble.core.ringpowers;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import dev.amble.core.team.LanternTeams;
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
@@ -10,7 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -62,9 +63,9 @@ public final class CometRam {
         AABB swept = player.getBoundingBox().expandTowards(velocity.scale(-1.0)).inflate(REACH);
         Vec3 push = velocity.normalize();
         float damage = BASE_DAMAGE + DAMAGE_PER_SPEED * (float) speed;
-        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, swept,
-                entity -> entity != player && entity.isAlive() && !entity.isSpectator() && !LanternTeams.areTeammates(player, entity))) {
-            Hit hit = new Hit(player.getUUID(), target.getUUID());
+        for (Entity target : level.getEntities(player, swept,
+                entity -> RingTargets.root(entity) != player && RingTargets.isHittable(entity) && !LanternTeams.areTeammates(player, RingTargets.root(entity)))) {
+            Hit hit = new Hit(player.getUUID(), RingTargets.root(target).getUUID());
             Long previous = RAMMED.get(hit);
             if (previous != null && now - previous < RAM_COOLDOWN) continue;
             RAMMED.put(hit, now);

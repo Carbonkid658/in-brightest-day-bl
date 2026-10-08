@@ -45,8 +45,10 @@ public class BrightestDayConfig extends Config {
     @ValidatedInt.Restrict(min = 20, max = 600)
     public int beamMaxTicks = 140;
     @ValidatedInt.Restrict(min = 0, max = 200)
-    @ConfigGroup.Pop
     public int beamDrainPerSecond = 30;
+    @ValidatedDouble.Restrict(min = 8.0, max = 256.0)
+    @ConfigGroup.Pop
+    public double beamRange = 96.0;
 
     public ConfigGroup healBeam = new ConfigGroup("healBeam");
     @ValidatedFloat.Restrict(min = 0.0F, max = 10.0F)
@@ -58,9 +60,9 @@ public class BrightestDayConfig extends Config {
     public int healBeamDrainPerSecond = 10;
 
     public ConfigGroup wall = new ConfigGroup("wall");
-    @ValidatedInt.Restrict(min = 20, max = 6000)
+    @ValidatedInt.Restrict(min = 0, max = 100)
     @ConfigGroup.Pop
-    public int wallLifetimeTicks = 400;
+    public int wallDrainPerSecond = 1;
 
     public ConfigGroup sculpt = new ConfigGroup("sculpt");
     @ValidatedInt.Restrict(min = 0, max = 20)
@@ -132,8 +134,10 @@ public class BrightestDayConfig extends Config {
     @ValidatedInt.Restrict(min = 0, max = 3600)
     public int ringRecallCooldownSeconds = 300;
     @ValidatedInt.Restrict(min = 1, max = 365)
-    @ConfigGroup.Pop
     public int ringBondExpiryDays = 14;
+    @ValidatedInt.Restrict(min = 1, max = 100)
+    @ConfigGroup.Pop
+    public int ringSyncDays = 14;
 
     public ConfigGroup team = new ConfigGroup("team");
     @ValidatedDouble.Restrict(min = 8.0, max = 256.0)
@@ -394,6 +398,11 @@ public class BrightestDayConfig extends Config {
     @ConfigGroup.Pop
     public int mountChargeTicks = 10;
 
+    public ConfigGroup visuals = new ConfigGroup("visuals");
+    @ValidatedInt.Restrict(min = 1, max = 120)
+    @ConfigGroup.Pop
+    public int insigniaDrainSeconds = 5;
+
     public ConfigGroup sphere = new ConfigGroup("sphere");
     @ValidatedInt.Restrict(min = 0, max = 1000)
     public int sphereCostPerRadius = 40;
@@ -471,6 +480,10 @@ public class BrightestDayConfig extends Config {
     public int greenRingWill = 600;
     public int greenPlayersPerRing = 4;
     public int indigoMinPlayers = 3;
+    @ValidatedInt.Restrict(min = 0, max = 30)
+    public int indigoSlowSeconds = 3;
+    @ValidatedInt.Restrict(min = 1, max = 5)
+    public int indigoSlowLevel = 1;
     public boolean batteryCeremony = true;
     public int batteryCeremonyMembers = 2;
     public int bluePathDistance = 2000;

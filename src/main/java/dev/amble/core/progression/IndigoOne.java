@@ -15,6 +15,9 @@ import dev.amble.core.team.LanternTeams;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.ChatFormatting;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -64,6 +67,13 @@ public final class IndigoOne {
         UseEntityCallback.EVENT.register((player, level, hand, entity, hit) -> {
             if (hand != InteractionHand.MAIN_HAND || !(player instanceof ServerPlayer indigo) || !(entity instanceof ServerPlayer target)) return InteractionResult.PASS;
             return embrace(indigo, target) ? InteractionResult.SUCCESS_SERVER : InteractionResult.PASS;
+        });
+        ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamage, damageTaken, blocked) -> {
+            if (blocked || damageTaken <= 0.0F || !(entity instanceof ServerPlayer victim) || !(source.getEntity() instanceof ServerPlayer attacker) || attacker == victim) return;
+            if (PowerRingItem.getWornCorps(attacker).orElse(null) != LanternCorps.INDIGO) return;
+            BrightestDayConfig config = BrightestDayConfig.get();
+            if (config.indigoSlowSeconds <= 0) return;
+            victim.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, config.indigoSlowSeconds * 20, Math.max(0, config.indigoSlowLevel - 1)), attacker);
         });
     }
 

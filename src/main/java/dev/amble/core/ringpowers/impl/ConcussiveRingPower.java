@@ -4,6 +4,7 @@ import dev.amble.core.ringpowers.CorpsCombat;
 import com.mojang.serialization.MapCodec;
 import dev.amble.BrightestDay;
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
@@ -23,7 +24,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -82,7 +82,7 @@ public class ConcussiveRingPower extends RingPower<Unit> {
 
             double centered = coneCos >= 1.0 ? 1.0 : (cos - coneCos) / (1.0 - coneCos);
             double strength = config.concussiveKnockback * Math.max(MIN_STRENGTH, (1.0 - distance / range) * (0.5 + 0.5 * centered));
-            if (entity instanceof LivingEntity living) living.hurtServer(level, RingDamage.source(level, player), config.concussiveDamage);
+            RingTargets.hurt(level, entity, RingDamage.source(level, player), config.concussiveDamage);
             entity.push(to.normalize().add(look).normalize().scale(strength).add(0.0, LIFT * strength, 0.0));
             entity.needsSync = true;
         }

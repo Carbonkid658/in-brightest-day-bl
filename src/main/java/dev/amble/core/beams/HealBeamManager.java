@@ -4,6 +4,7 @@ import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.poses.Poses;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.HealBeamS2CPayload;
 import dev.amble.core.ringpowers.RingPowerRegistry;
@@ -77,7 +78,7 @@ public final class HealBeamManager {
                     || drainTick && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, BrightestDayConfig.get().healBeamDrainPerSecond);
             boolean targetLost = !target.isAlive() || target.isRemoved() || target.level() != player.level()
                     || target.distanceTo(player) > BREAK_DISTANCE;
-            if (++beam.age > BrightestDayConfig.get().healBeamMaxTicks || !player.isAlive() || !ArmedRingPower.isArmed(player) || !selected || outOfCharge || targetLost) {
+            if (++beam.age > BrightestDayConfig.get().healBeamMaxTicks || !player.isAlive() || !ArmedRingPower.isArmed(player) && !Poses.channeling(player) || !selected || outOfCharge || targetLost) {
                 stop(player);
                 continue;
             }

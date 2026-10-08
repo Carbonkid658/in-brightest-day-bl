@@ -3,6 +3,8 @@ package dev.amble.core.mounts;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.ringpowers.ActiveConstructs;
+import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
@@ -38,6 +40,9 @@ public final class ConstructMounts {
     private static final double HORSE_SPEED = 0.3375;
     private static final double HORSE_JUMP = 1.0;
     private static final double HORSE_HEALTH = 30.0;
+    private static final float DOWN_PITCH = 60.0F;
+    private static final double PLACE_RANGE = 24.0;
+    private static final double PLACE_BACKOFF = 0.8;
 
     public enum Kind {
         HORSE,
@@ -54,13 +59,15 @@ public final class ConstructMounts {
         final ServerPlayer owner;
         final Kind kind;
         final long createdAt;
+        final boolean placed;
         boolean ridden;
 
-        Mount(Entity entity, ServerPlayer owner, Kind kind, long createdAt) {
+        Mount(Entity entity, ServerPlayer owner, Kind kind, long createdAt, boolean placed) {
             this.entity = entity;
             this.owner = owner;
             this.kind = kind;
             this.createdAt = createdAt;
+            this.placed = placed;
         }
     }
 
@@ -77,25 +84,36 @@ public final class ConstructMounts {
         return entity != null && entity.hasAttached(COLOR);
     }
 
-    public static boolean ownedBy(Entity entity, Player player) {
+    public static boolean rideableBy(Entity entity, Player player) {
         Mount mount = MOUNTS.get(entity.getUUID());
-        return mount != null && mount.owner == player;
+        return mount != null && (mount.placed || mount.owner == player);
     }
 
     public static void summon(ServerPlayer player, Kind kind, int color) {
         dismiss(player.getUUID(), kind);
-        if (player.isPassenger()) player.stopRiding();
+        boolean placed = player.getXRot() < DOWN_PITCH;
+        if (!placed && player.isPassenger()) player.stopRiding();
         ServerLevel level = player.level();
         Entity entity = kind == Kind.HORSE ? horse(level, player) : boat(level, player);
         if (entity == null) return;
 
-        entity.snapTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), 0.0F);
+        if (placed) {
+            Vec3 look = player.getLookAngle();
+            Vec3 at = ConstructRingPower.aim(player, PLACE_RANGE).end().subtract(look.scale(PLACE_BACKOFF));
+            entity.snapTo(at.x, at.y, at.z, player.getYRot() + 180.0F, 0.0F);
+        } else {
+            entity.snapTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), 0.0F);
+        }
         entity.addTag(TAG);
         entity.setPermanentlyInvulnerable(true);
         entity.setAttached(COLOR, color);
-        level.addFreshEntity(entity);
-        player.startRiding(entity, true, true);
-        MOUNTS.put(entity.getUUID(), new Mount(entity, player, kind, level.getGameTime()));
+        MOUNTS.put(entity.getUUID(), new Mount(entity, player, kind, level.getGameTime(), placed));
+        if (!level.addFreshEntity(entity)) {
+            MOUNTS.remove(entity.getUUID());
+            return;
+        }
+        if (!placed) player.startRiding(entity, true, true);
+        ActiveConstructs.track(player, entity);
 
         burst(level, entity, color);
         level.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.2F, 1.2F);
@@ -145,6 +163,7 @@ public final class ConstructMounts {
 
     private static void dissolve(Mount mount) {
         MOUNTS.remove(mount.entity.getUUID());
+        ActiveConstructs.untrack(mount.owner.getUUID(), mount.entity);
         Entity entity = mount.entity;
         if (entity.isRemoved()) return;
         if (entity.level() instanceof ServerLevel level) {
@@ -169,8 +188,8 @@ public final class ConstructMounts {
             ServerPlayer owner = mount.owner;
             boolean riding = owner.getVehicle() == mount.entity;
             if (riding) mount.ridden = true;
-            boolean abandoned = mount.ridden && !riding;
-            if (mount.entity.isRemoved() || owner.isRemoved() || !owner.isAlive() || abandoned || !mount.ridden && server.overworld().getGameTime() - mount.createdAt > 20) {
+            boolean abandoned = !mount.placed && (mount.ridden && !riding || !mount.ridden && server.overworld().getGameTime() - mount.createdAt > 20);
+            if (mount.entity.isRemoved() || owner.isRemoved() || !owner.isAlive() || abandoned) {
                 dissolve(mount);
                 continue;
             }

@@ -53,7 +53,8 @@ public final class DrillEffects {
     private static final float BIT_TURNS = 2.5F;
     private static final float SPIN = 1.1F;
     static final float TIP_BITE = 0.15F;
-    private static final float IDLE_REACH = 0.6F;
+    private static final float HELD_LENGTH = 1.1F;
+    private static final float HELD_LENGTH_PER_STEP = 0.45F;
     private static final int COLLAR_VOXELS = 6;
     private static final int CHIP_VOXELS = 10;
     private static final float CHIP_HALF = 1.5F * VoxelRenderer.PIXEL;
@@ -114,11 +115,11 @@ public final class DrillEffects {
             Vec3 look = RemoteAim.look(player, partialTicks);
             BlockHitResult hit = DrillGeometry.target(client.level, player, eye, look);
             Vec3 start = BlastEffects.hand(player, partialTicks);
-            Vec3 tip = hit != null ? hit.getLocation().add(look.scale(TIP_BITE)) : eye.add(look.scale(DrillGeometry.REACH * IDLE_REACH));
+            Vec3 tip = hit != null ? hit.getLocation().add(look.scale(TIP_BITE)) : start.add(look.scale(HELD_LENGTH + HELD_LENGTH_PER_STEP * (drill.size() - 1)));
             float time = player.tickCount + partialTicks;
 
             List<ShieldEffects.Voxel> voxels = new ArrayList<>();
-            drill(start, tip, time, drill, voxels);
+            drill(start, tip, time, drill, true, voxels);
             if (hit != null) chips(client.level, hit, look, time, drill, voxels);
             ShieldEffects.submit(context, camera, voxels, 1.0F);
         }
@@ -152,7 +153,7 @@ public final class DrillEffects {
                 && ArmedRingPower.selectedConstruct(player).orElse(null) instanceof DrillConstruct;
     }
 
-    static void drill(Vec3 start, Vec3 tip, float time, ClientDrill drill, List<ShieldEffects.Voxel> out) {
+    static void drill(Vec3 start, Vec3 tip, float time, ClientDrill drill, boolean held, List<ShieldEffects.Voxel> out) {
         Vec3 path = tip.subtract(start);
         double length = path.length();
         if (length < 1.0E-3) return;
@@ -163,7 +164,7 @@ public final class DrillEffects {
         Vec3 up = direction.cross(side);
 
         int step = drill.size() - 1;
-        float bitLength = (float) Math.min(BIT_LENGTH + BIT_LENGTH_PER_STEP * step, length * 0.85);
+        float bitLength = held ? (float) length : (float) Math.min(BIT_LENGTH + BIT_LENGTH_PER_STEP * step, length * 0.85);
         float radius = BIT_RADIUS + BIT_RADIUS_PER_STEP * step;
         Vec3 base = tip.subtract(direction.scale(bitLength));
         double shaft = length - bitLength;
@@ -172,7 +173,7 @@ public final class DrillEffects {
 
         int coreColor = VoxelRenderer.toWhite(color, 0.75F);
         float coreHalf = VoxelRenderer.snapSize(CORE_HALF);
-        for (double d = 0.0; d <= length; d += CORE_SPACING) {
+        for (double d = held ? length * 0.5 : 0.0; d <= length; d += CORE_SPACING) {
             out.add(new ShieldEffects.Voxel(VoxelRenderer.snap(start.add(direction.scale(d))), coreHalf, coreColor));
         }
 

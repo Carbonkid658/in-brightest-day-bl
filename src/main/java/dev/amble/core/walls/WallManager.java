@@ -1,5 +1,6 @@
 package dev.amble.core.walls;
 
+import dev.amble.core.items.PowerRingItem;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.blocks.HardLightBlock;
@@ -135,16 +136,21 @@ public final class WallManager {
     }
 
     private static void tick(MinecraftServer server) {
-        Iterator<Wall> iterator = WALLS.iterator();
-        while (iterator.hasNext()) {
-            Wall wall = iterator.next();
-            if (++wall.age >= BrightestDayConfig.get().wallLifetimeTicks && !wall.sustained) {
-                iterator.remove();
-                collapse(wall, true);
-                continue;
-            }
-            if (wall.age % WATCH_INTERVAL == 0) syncWatchers(wall);
+        for (Wall wall : WALLS) {
+            if (++wall.age % WATCH_INTERVAL == 0) syncWatchers(wall);
         }
+        if (server.getTickCount() % 20 != 0) return;
+
+        Map<UUID, Integer> standing = new HashMap<>();
+        for (Wall wall : WALLS) {
+            if (!wall.sustained) standing.merge(wall.caster, 1, Integer::sum);
+        }
+        standing.forEach((caster, count) -> {
+            ServerPlayer player = server.getPlayerList().getPlayer(caster);
+            if (player == null || player.hasInfiniteMaterials()) return;
+            int drain = BrightestDayConfig.get().wallDrainPerSecond * count;
+            if (drain > 0 && !PowerRingItem.drainWorn(player, drain)) dismissAll(caster);
+        });
     }
 
     private static void collapse(Wall wall, boolean sound) {
@@ -167,7 +173,7 @@ public final class WallManager {
         Set<ServerPlayer> tracking = new HashSet<>(PlayerLookup.tracking(wall.level, wall.cells.getFirst()));
         for (ServerPlayer player : tracking) {
             if (wall.watchers.add(player)) {
-                ServerPlayNetworking.send(player, new WallSpawnS2CPayload(wall.id, wall.casterId, wall.cells, wall.color, wall.sustained ? NO_EXPIRY : BrightestDayConfig.get().wallLifetimeTicks, wall.age));
+                ServerPlayNetworking.send(player, new WallSpawnS2CPayload(wall.id, wall.casterId, wall.cells, wall.color, NO_EXPIRY, wall.age));
             }
         }
         wall.watchers.removeIf(player -> {

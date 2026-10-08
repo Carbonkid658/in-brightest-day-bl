@@ -4,6 +4,7 @@ import dev.amble.core.blocks.BlueShrineBlock;
 import dev.amble.core.forge.BatteryCoreBlock;
 import dev.amble.core.forge.ForgeRecipes;
 import dev.amble.core.forge.SpectrumForgeBlock;
+import dev.amble.core.forge.BatteryFrameBlock;
 import dev.amble.core.progression.Emotion;
 import dev.amble.BrightestDay;
 import dev.amble.core.blocks.ConstructLightBlock;
@@ -75,9 +76,33 @@ public class BrightestDayBlocks {
                     .sound(SoundType.METAL).lightLevel(_ -> 15)),
             new Item.Properties());
 
+    public static final Block BATTERY_FRAME = registerBlock("battery_frame",
+            properties -> new BatteryFrameBlock(properties.strength(5.0F, 1200.0F).noOcclusion().sound(SoundType.METAL)
+                    .isValidSpawn((state, level, pos, type) -> false).isViewBlocking((state, level, pos, box) -> false)));
+
     public static final Block SAPPHIRE_BATTERY_CORE = registerBlockWithItem("sapphire_battery_core",
             properties -> new BatteryCoreBlock(LanternCorps.STAR_SAPPHIRE, () -> Blocks.AMETHYST_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
                     .sound(SoundType.AMETHYST).lightLevel(_ -> 15)),
+            new Item.Properties());
+
+    public static final Block GREEN_BATTERY_CORE = registerBlockWithItem("green_battery_core",
+            properties -> new BatteryCoreBlock(LanternCorps.GREEN, () -> Blocks.EMERALD_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+                    .sound(SoundType.METAL).lightLevel(_ -> 15)),
+            new Item.Properties());
+
+    public static final Block RED_BATTERY_CORE = registerBlockWithItem("red_battery_core",
+            properties -> new BatteryCoreBlock(LanternCorps.RED, () -> Blocks.REDSTONE_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+                    .sound(SoundType.METAL).lightLevel(_ -> 15)),
+            new Item.Properties());
+
+    public static final Block BLUE_BATTERY_CORE = registerBlockWithItem("blue_battery_core",
+            properties -> new BatteryCoreBlock(LanternCorps.BLUE, () -> Blocks.LAPIS_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE).lightLevel(_ -> 15)),
+            new Item.Properties());
+
+    public static final Block INDIGO_BATTERY_CORE = registerBlockWithItem("indigo_battery_core",
+            properties -> new BatteryCoreBlock(LanternCorps.INDIGO, () -> Blocks.OBSIDIAN, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+                    .sound(SoundType.STONE).lightLevel(_ -> 15)),
             new Item.Properties());
 
     public static Optional<Block> lantern(LanternCorps corps) {

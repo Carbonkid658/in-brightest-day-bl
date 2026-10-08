@@ -27,6 +27,8 @@ import dev.amble.core.attacks.area.BarrageManager;
 import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.tractor.TractorManager;
+import dev.amble.core.sync.RingSync;
+import dev.amble.core.poses.Poses;
 import dev.amble.core.sphere.ContainmentSphere;
 import net.minecraft.util.Mth;
 import net.minecraft.network.chat.Component;
@@ -112,7 +114,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
 
         long now = player.level().getGameTime();
         boolean busy = BeamManager.isBeaming(player) || HealBeamManager.isHealing(player) || SculptManager.isSculpting(player)
-                || TractorManager.isHolding(player) || AcidManager.isSpewing(player) || LightRingPower.isEmitting(player) || BarrageManager.isFiring(player) || DrillManager.isDrilling(player) || Megaphone.isActive(player);
+                || TractorManager.isHolding(player) || AcidManager.isSpewing(player) || LightRingPower.isEmitting(player) || BarrageManager.isFiring(player) || DrillManager.isDrilling(player) || Megaphone.isActive(player) || ContainmentSphere.isActive(player);
         Long last = LAST_USED.get(player);
         if (busy || last == null) {
             LAST_USED.put(player, now);
@@ -123,7 +125,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
 
     public static void startCharge(ServerPlayer player) {
         CHARGE_STARTED.put(player, player.level().getGameTime());
-        raise(player);
+        if (!Poses.channeling(player)) raise(player);
     }
 
     public static float chargeFraction(ServerPlayer player, int fullTicks) {
@@ -256,7 +258,8 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
             return;
         }
         LAST_FIRED.put(player, now);
-        raise(player);
+        if (!Poses.channeling(player)) raise(player);
+        if (RingSync.misfire(player, construct.get())) return;
 
         int color = CorpsColors.of(player);
         construct.get().fire(player, radius, color);

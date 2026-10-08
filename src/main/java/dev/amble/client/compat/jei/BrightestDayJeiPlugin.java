@@ -66,6 +66,10 @@ public class BrightestDayJeiPlugin implements IModPlugin {
         info(registration, BrightestDayBlocks.ZAMARONIAN_CRYSTAL);
         info(registration, BrightestDayBlocks.YELLOW_BATTERY_CORE);
         info(registration, BrightestDayBlocks.SAPPHIRE_BATTERY_CORE);
+        info(registration, BrightestDayBlocks.GREEN_BATTERY_CORE);
+        info(registration, BrightestDayBlocks.RED_BATTERY_CORE);
+        info(registration, BrightestDayBlocks.BLUE_BATTERY_CORE);
+        info(registration, BrightestDayBlocks.INDIGO_BATTERY_CORE);
         registration.addIngredientInfo(BrightestDayItems.PARALLAX_SHARD, Component.translatable("jei.brightestday.info.parallax_shard"));
         registration.addIngredientInfo(BrightestDayItems.ZAMARON_CRYSTAL, Component.translatable("jei.brightestday.info.zamaron_crystal"));
     }

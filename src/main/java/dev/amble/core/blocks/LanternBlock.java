@@ -8,6 +8,7 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.blockentities.LanternBlockEntity;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.sync.RingSync;
 import dev.amble.core.loyalty.RingLoyalty;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
@@ -194,6 +195,7 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
 
     public void complete(Level level, BlockPos pos, Player player, ItemStack ring, boolean slotted, boolean announce) {
         PowerRingItem.setMaxPower(ring);
+        if (this.corps == LanternCorps.ORANGE) RingSync.restore(ring);
         PowerRingItem.awaken(player, ring);
         PowerRingItem.swear(player, ring);
         ring.remove(BrightestDayComponents.RING_DEATHS);

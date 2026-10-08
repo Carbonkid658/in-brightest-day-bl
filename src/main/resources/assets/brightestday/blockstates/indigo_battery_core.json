@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "brightestday:block/indigo_battery_core"
+    }
+  }
+}

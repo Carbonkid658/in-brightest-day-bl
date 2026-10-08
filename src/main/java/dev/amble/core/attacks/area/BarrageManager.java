@@ -2,6 +2,7 @@ package dev.amble.core.attacks.area;
 
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.BarrageBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.BarrageS2CPayload;
@@ -18,7 +19,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
@@ -113,10 +113,7 @@ public final class BarrageManager {
             end = entityHit.getLocation();
             hit = true;
             Entity target = entityHit.getEntity();
-            if (target instanceof LivingEntity living) {
-                living.setInvulnerableTime(0);
-                living.hurtServer(level, RingDamage.source(level, player), config.barrageDamage);
-            }
+            RingTargets.strike(level, target, RingDamage.source(level, player), config.barrageDamage);
             target.push(direction.scale(PUSH));
             target.needsSync = true;
             level.playSound(null, end.x, end.y, end.z, SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 0.8F, 1.6F + random.nextFloat() * 0.3F);
@@ -131,7 +128,7 @@ public final class BarrageManager {
         Entity best = null;
         double bestCos = -1.0;
         for (Entity entity : player.level().getEntities(player, new AABB(eye, eye).inflate(range),
-                entity -> entity instanceof LivingEntity && entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !player.isAlliedTo(entity))) {
+                entity -> entity.isPickable() && RingTargets.isTarget(player, entity))) {
             Vec3 to = entity.getBoundingBox().getCenter().subtract(eye);
             double distance = to.length();
             if (distance > range || distance < 1.0E-3) continue;

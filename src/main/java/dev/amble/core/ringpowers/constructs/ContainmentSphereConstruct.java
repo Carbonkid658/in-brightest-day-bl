@@ -2,6 +2,7 @@ package dev.amble.core.ringpowers.constructs;
 
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.sphere.ContainmentSphere;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -52,12 +53,12 @@ public class ContainmentSphereConstruct extends ConstructRingPower {
     }
 
     @Override
-    public boolean sustained() {
-        return true;
-    }
-
-    @Override
     public void fire(ServerPlayer player, int radius, int color) {
+        if (ContainmentSphere.isActive(player)) {
+            ContainmentSphere.stop(player);
+            PowerRingItem.refund(player, this.cost(radius));
+            return;
+        }
         ContainmentSphere.start(player, this.clampSize(player, radius), color);
     }
 }

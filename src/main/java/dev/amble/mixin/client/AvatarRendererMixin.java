@@ -1,6 +1,7 @@
 package dev.amble.mixin.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import dev.amble.client.effects.InsigniaEffects;
 import dev.amble.client.effects.ArmedPose;
 import dev.amble.client.flight.FlightAnimator;
 import dev.amble.client.render.GlowAura;
@@ -24,6 +25,7 @@ public abstract class AvatarRendererMixin {
         ArmedPose.extract(entity, state, partialTicks);
         GlowAura.extract(entity, state);
         LanternSuit.extract(entity, state, partialTicks);
+        InsigniaEffects.extract(entity, state, partialTicks);
         FlightAnimator.extractDive(entity, state, partialTicks);
     }
 

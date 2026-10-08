@@ -103,7 +103,7 @@ public final class PlacedDrillEffects {
             Vec3 face = drill.prevPos.lerp(drill.pos, partialTicks);
             Vec3 tip = face.add(forward.scale(DrillEffects.TIP_BITE));
             Vec3 start = face.subtract(forward.scale(SHAFT_LENGTH + drill.drill.size()));
-            DrillEffects.drill(start, tip, time, drill.drill, voxels);
+            DrillEffects.drill(start, tip, time, drill.drill, false, voxels);
 
             if (DrillGeometry.drillable(client.level, drill.head, client.level.getBlockState(drill.head))) {
                 DrillEffects.chips(client.level, new BlockHitResult(face, drill.direction.getOpposite(), drill.head, false), forward, time, drill.drill, voxels);

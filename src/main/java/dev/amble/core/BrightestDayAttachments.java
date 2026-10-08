@@ -1,5 +1,6 @@
 package dev.amble.core;
 
+import dev.amble.core.sync.RingSync;
 import com.mojang.serialization.Codec;
 import dev.amble.BrightestDay;
 import dev.amble.core.forge.CentralPowerBattery;
@@ -7,6 +8,7 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.comms.Comms;
 import dev.amble.core.progression.IndigoOne;
 import dev.amble.core.progression.RingRanks;
+import dev.amble.core.visuals.InsigniaAnchor;
 import dev.amble.core.ringpowers.ColorTweak;
 import dev.amble.core.ringpowers.CorpsMimicry;
 import dev.amble.core.ringpowers.CorpsSynergy;
@@ -63,11 +65,27 @@ public class BrightestDayAttachments {
                     .syncWith(EyePaint.STREAM_CODEC, AttachmentSyncPredicate.all())
                     .buildAndRegister(BrightestDay.id("eyes"));
 
+    public static final AttachmentType<InsigniaAnchor> INSIGNIA_ANCHOR =
+            AttachmentRegistry.<InsigniaAnchor>builder()
+                    .initializer(() -> InsigniaAnchor.DEFAULT)
+                    .persistent(InsigniaAnchor.CODEC)
+                    .copyOnDeath()
+                    .syncWith(InsigniaAnchor.STREAM_CODEC, AttachmentSyncPredicate.all())
+                    .buildAndRegister(BrightestDay.id("insignia_anchor"));
+
     public static final AttachmentType<Long> LAST_JUMPSTART =
             AttachmentRegistry.<Long>builder()
                     .persistent(Codec.LONG)
                     .copyOnDeath()
                     .buildAndRegister(BrightestDay.id("last_jumpstart"));
+
+    public static InsigniaAnchor getInsigniaAnchor(Player player) {
+        return player.getAttachedOrElse(INSIGNIA_ANCHOR, InsigniaAnchor.DEFAULT);
+    }
+
+    public static void setInsigniaAnchor(Player player, InsigniaAnchor anchor) {
+        player.setAttached(INSIGNIA_ANCHOR, anchor.sanitized());
+    }
 
     public static EyePaint getEyes(Player player) {
         return player.getAttachedOrElse(BrightestDayAttachments.EYES, EyePaint.EMPTY);
@@ -145,6 +163,7 @@ public class BrightestDayAttachments {
             if (!IndigoOne.isIndigoOne(player)) available = available.stream().filter(power -> power != RingPowerRegistry.GATHER).toList();
             if (!Comms.available()) available = available.stream().filter(power -> power != RingPowerRegistry.COMMS).toList();
             if (PowerRingItem.isDormant(PowerRingItem.getWornRing(player))) available = available.stream().filter(power -> power == RingPowerRegistry.ARMED).toList();
+            if (RingSync.locked(player)) available = available.stream().filter(power -> power == RingPowerRegistry.ARMED || power == RingPowerRegistry.COMMS || power == RingPowerRegistry.RING_COMPASS).toList();
         }
 
         if (current.size() == available.size()) {

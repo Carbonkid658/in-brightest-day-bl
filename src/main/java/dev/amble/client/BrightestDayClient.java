@@ -39,6 +39,11 @@ import dev.amble.client.wheel.PowerWheel;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.TractorEffects;
 import dev.amble.client.effects.SphereEffects;
+import dev.amble.client.effects.PoseAnimations;
+import dev.amble.client.effects.InsigniaEffects;
+import dev.amble.client.poses.PoseLibrary;
+import dev.amble.client.effects.CompassEffects;
+import dev.amble.client.hud.SyncHud;
 import dev.amble.client.effects.WallEffects;
 import dev.amble.client.effects.BatteryEffects;
 import dev.amble.client.effects.LanternChargeAnimations;
@@ -63,6 +68,8 @@ import dev.amble.client.render.LanternBlockEntityRenderer;
 import dev.amble.client.render.GlowAura;
 import dev.amble.client.render.LanternSuit;
 import dev.amble.client.render.SuitGlowLayer;
+import dev.amble.client.render.InsigniaLayer;
+import dev.amble.client.render.BatteryTextures;
 import dev.amble.client.render.SlottedRingLayer;
 import dev.amble.client.screens.LanternButtons;
 import dev.amble.client.screens.LanternScreen;
@@ -82,6 +89,10 @@ public class BrightestDayClient implements ClientModInitializer {
         FlightAnimator.init();
         FlightAnimations.init();
         LanternChargeAnimations.init();
+        PoseAnimations.init();
+        PoseLibrary.init();
+        InsigniaEffects.init();
+        BatteryTextures.init();
         FlightTrail.init();
         AileronRolls.init();
         ClientTeams.init();
@@ -100,6 +111,7 @@ public class BrightestDayClient implements ClientModInitializer {
         ElementAura.init();
         TractorEffects.init();
         SphereEffects.init();
+        CompassEffects.init();
         ScanEffects.init();
         GlowAura.init();
         LanternSuit.init();
@@ -109,6 +121,7 @@ public class BrightestDayClient implements ClientModInitializer {
         SculptClient.init();
         PowerWheel.init();
         RingFeed.init();
+        SyncHud.init();
         OathHud.init();
         RingInput.init();
         AbilityClient.init();
@@ -145,6 +158,7 @@ public class BrightestDayClient implements ClientModInitializer {
             if (entityRenderer instanceof AvatarRenderer<?> avatarRenderer) {
                 helper.register(new SlottedRingLayer(avatarRenderer));
                 helper.register(new SuitGlowLayer(avatarRenderer));
+                helper.register(new InsigniaLayer(avatarRenderer));
             }
         });
         registerBlockEntityRenderers();

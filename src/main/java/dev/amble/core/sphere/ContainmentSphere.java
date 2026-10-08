@@ -4,16 +4,15 @@ import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.mounts.ConstructMounts;
 import dev.amble.core.networking.payloads.s2c.SphereS2CPayload;
+import dev.amble.core.ringpowers.ActiveConstructs;
 import dev.amble.core.ringpowers.CorpsCombat;
-import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
-import dev.amble.core.tractor.Struggle;
-import dev.amble.core.tractor.TractorManager;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,30 +21,33 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class ContainmentSphere {
     public static final double GAP = 1.5;
-    private static final double FOLLOW = 0.5;
-    private static final double MAX_SPEED = 4.0;
-    private static final double GRAVITY_COMPENSATION = 0.08;
+    private static final Set<Relative> RELATIVE = EnumSet.of(Relative.X, Relative.Y, Relative.Z, Relative.Y_ROT, Relative.X_ROT);
     private static final double SNUG = 0.75;
     private static final int REFRESH_TICKS = 40;
 
-    private record Held(Entity entity, Vec3 offset, Struggle struggle) {}
+    private record Held(Entity entity, Vec3 offset) {}
 
     private static final class Sphere {
         final ServerLevel level;
         final float radius;
         final int color;
+        final long createdAt;
         final List<Held> held = new ArrayList<>();
         Vec3 lastCenter;
 
@@ -53,6 +55,7 @@ public final class ContainmentSphere {
             this.level = level;
             this.radius = radius;
             this.color = color;
+            this.createdAt = level.getGameTime();
             this.lastCenter = center;
         }
     }
@@ -69,6 +72,15 @@ public final class ContainmentSphere {
         return player.getEyePosition().add(player.getLookAngle().scale(radius + GAP));
     }
 
+    public static boolean isActive(ServerPlayer player) {
+        return SPHERES.containsKey(player);
+    }
+
+    public static long latestCreatedAt(ServerPlayer player) {
+        Sphere sphere = SPHERES.get(player);
+        return sphere == null ? Long.MIN_VALUE : sphere.createdAt;
+    }
+
     public static boolean holds(Entity entity) {
         return SPHERES.values().stream().anyMatch(sphere -> sphere.held.stream().anyMatch(held -> held.entity() == entity));
     }
@@ -78,6 +90,7 @@ public final class ContainmentSphere {
         Vec3 center = center(player, radius);
         Sphere sphere = new Sphere(player.level(), radius, color, center);
         SPHERES.put(player, sphere);
+        ActiveConstructs.track(player, sphere);
         capture(player, sphere, center);
         broadcast(player, radius, color);
         player.level().playSound(null, center.x, center.y, center.z, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.5F);
@@ -87,6 +100,7 @@ public final class ContainmentSphere {
     public static void stop(ServerPlayer player) {
         Sphere sphere = SPHERES.remove(player);
         if (sphere == null) return;
+        ActiveConstructs.untrack(player.getUUID(), sphere);
         broadcast(player, 0.0F, sphere.color);
         player.level().playSound(null, sphere.lastCenter.x, sphere.lastCenter.y, sphere.lastCenter.z, SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 1.0F, 1.2F);
     }
@@ -104,7 +118,7 @@ public final class ContainmentSphere {
             if (offset.length() > reach) continue;
             double room = Math.max(0.0, sphere.radius - Math.max(entity.getBbWidth(), entity.getBbHeight()) * 0.5) * SNUG;
             if (offset.length() > room) offset = offset.length() < 1.0E-4 ? Vec3.ZERO : offset.normalize().scale(room);
-            sphere.held.add(new Held(entity, offset, new Struggle()));
+            sphere.held.add(new Held(entity, offset));
         }
     }
 
@@ -115,10 +129,9 @@ public final class ContainmentSphere {
 
         for (ServerPlayer player : new ArrayList<>(SPHERES.keySet())) {
             Sphere sphere = SPHERES.get(player);
-            boolean selected = ArmedRingPower.selectedConstruct(player).orElse(null) == RingPowerRegistry.CONTAINMENT_SPHERE;
             int drain = CorpsCombat.utilityCost(player, Math.max(1, Math.round(BrightestDayConfig.get().sphereDrainPerRadius * sphere.radius)));
             boolean outOfCharge = !PowerRingItem.hasCharge(player) || drainTick && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, drain);
-            if (player.isRemoved() || !player.isAlive() || player.level() != sphere.level || !ArmedRingPower.isArmed(player) || !selected || outOfCharge) {
+            if (player.isRemoved() || !player.isAlive() || player.level() != sphere.level || !ArmedRingPower.isArmed(player) || outOfCharge) {
                 stop(player);
                 continue;
             }
@@ -132,19 +145,39 @@ public final class ContainmentSphere {
             sphere.held.removeIf(held -> {
                 Entity entity = held.entity();
                 if (entity.isRemoved() || !entity.isAlive() || entity.level() != sphere.level || entity.isPassenger()) return true;
-                if (held.struggle().escaped(entity)) {
-                    TractorManager.breakFree(player, entity);
-                    return true;
-                }
                 Vec3 goal = center.add(held.offset());
-                Vec3 velocity = carried.add(goal.subtract(entity.getBoundingBox().getCenter()).scale(FOLLOW));
-                if (velocity.length() > MAX_SPEED) velocity = velocity.normalize().scale(MAX_SPEED);
-                if (!entity.isNoGravity()) velocity = velocity.add(0.0, GRAVITY_COMPENSATION, 0.0);
-                held.struggle().push(entity, velocity);
+                place(entity, goal.subtract(0.0, entity.getBbHeight() * 0.5, 0.0), carried);
                 if (entity instanceof FallingBlockEntity block) block.time = 1;
                 return false;
             });
         }
+    }
+
+    private static void place(Entity entity, Vec3 feet, Vec3 carried) {
+        if (entity instanceof ServerPlayer player) {
+            Vec3 delta = feet.subtract(player.position());
+            player.teleportTo(player.level(), delta.x, delta.y, delta.z, RELATIVE, 0.0F, 0.0F, false);
+        } else {
+            entity.setPos(feet.x, feet.y, feet.z);
+            entity.setDeltaMovement(carried);
+            entity.needsSync = true;
+            if (entity instanceof Mob mob) mob.getNavigation().stop();
+        }
+        entity.resetFallDistance();
+    }
+
+    public static boolean breakOut(ServerPlayer prisoner) {
+        for (Map.Entry<ServerPlayer, Sphere> entry : new ArrayList<>(SPHERES.entrySet())) {
+            if (entry.getValue().held.stream().noneMatch(held -> held.entity() == prisoner)) continue;
+            ServerPlayer holder = entry.getKey();
+            stop(holder);
+            holder.sendOverlayMessage(Component.translatable("message.brightestday.sphere.shattered_holder", prisoner.getDisplayName()));
+            prisoner.sendOverlayMessage(Component.translatable("message.brightestday.sphere.shattered"));
+            Vec3 at = entry.getValue().lastCenter;
+            prisoner.level().playSound(null, at.x, at.y, at.z, SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.5F, 0.7F);
+            return true;
+        }
+        return false;
     }
 
     private static void broadcast(ServerPlayer player, float radius, int color) {

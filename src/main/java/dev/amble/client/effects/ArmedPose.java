@@ -118,8 +118,8 @@ public final class ArmedPose {
             data.setData(COLOR, CorpsColors.of(player));
             data.setData(CHARGED, PowerRingItem.hasCharge(player));
             data.setData(ACTIVITY, activity(player, partialTicks));
-            data.setData(CONSTRUCTING, ActiveConstructs.hasActive(player));
-            data.setData(CHARGE_ANIMATING, LanternChargeAnimations.handheld(player));
+            data.setData(CONSTRUCTING, ActiveConstructs.hasActive(player) || PoseAnimations.glowing(player));
+            data.setData(CHARGE_ANIMATING, LanternChargeAnimations.handheld(player) || PoseAnimations.posing(player));
             data.setData(COMMS, CommsClient.talking(player, partialTicks));
         } else {
             data.setData(AMOUNT, 0.0F);

@@ -18,7 +18,7 @@ public abstract class MobMixin {
     private void brightestday$constructMount(Player player, InteractionHand hand, Vec3 location, CallbackInfoReturnable<InteractionResult> cir) {
         Mob self = (Mob) (Object) this;
         if (!ConstructMounts.isConstruct(self)) return;
-        if (!self.level().isClientSide() && ConstructMounts.ownedBy(self, player) && !self.isVehicle()) player.startRiding(self);
+        if (!self.level().isClientSide() && ConstructMounts.rideableBy(self, player) && !self.isVehicle()) player.startRiding(self);
         cir.setReturnValue(InteractionResult.SUCCESS);
     }
 }

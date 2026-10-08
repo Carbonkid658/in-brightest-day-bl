@@ -44,7 +44,9 @@ public final class RingRanks {
             RingPowerRegistry.LUMBERJACK, 2,
             RingPowerRegistry.CONSTRUCT_HORSE, 1,
             RingPowerRegistry.CONSTRUCT_BOAT, 1,
-            RingPowerRegistry.CONTAINMENT_SPHERE, 3);
+            RingPowerRegistry.CONTAINMENT_SPHERE, 3,
+            RingPowerRegistry.RING_COMPASS, 1,
+            RingPowerRegistry.INSIGNIA, 2);
     private static final List<String> PRIORITY = List.of(
             "blast", "entity_shield", "boomerang_disc", "energy_whip", "chain_bolt", "wall", "piercing_lance", "swarm_missiles",
             "rapid_barrage", "area_shield", "beam", "giant_fist", "nova_burst", "ground_slam", "sentry_turret", "glider",

@@ -1,6 +1,7 @@
 package dev.amble.core.attacks.projectile;
 
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -9,7 +10,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -36,8 +36,7 @@ public final class ProjectileTargeting {
     }
 
     public static boolean isTarget(ServerPlayer player, Entity entity) {
-        return entity != player && entity instanceof LivingEntity && entity.isAlive() && entity.isPickable()
-                && !entity.isSpectator() && !player.isAlliedTo(entity);
+        return entity.isPickable() && RingTargets.isTarget(player, entity);
     }
 
     public static @Nullable Entity seek(ServerPlayer player, Vec3 eye, Vec3 look, double range, double coneDegrees) {
@@ -69,13 +68,13 @@ public final class ProjectileTargeting {
             if (player.hasLineOfSight(entity)) found.add(entity);
         }
         found.sort(Comparator.comparingDouble(entity -> -entity.getBoundingBox().getCenter().subtract(eye).normalize().dot(look)));
-        return found;
+        return RingTargets.distinct(found);
     }
 
     public static @Nullable Entity nearest(ServerPlayer player, Vec3 from, double range, Set<Entity> exclude) {
         Entity best = null;
         double bestDistance = range * range;
-        for (Entity entity : player.level().getEntities(player, new AABB(from, from).inflate(range), entity -> isTarget(player, entity) && !exclude.contains(entity))) {
+        for (Entity entity : player.level().getEntities(player, new AABB(from, from).inflate(range), entity -> isTarget(player, entity) && !RingTargets.excluded(exclude, entity))) {
             double distance = entity.getBoundingBox().getCenter().distanceToSqr(from);
             if (distance > bestDistance) continue;
             best = entity;
@@ -87,20 +86,17 @@ public final class ProjectileTargeting {
     public static List<Entity> along(ServerPlayer player, Vec3 from, Vec3 to, double padding, Set<Entity> exclude) {
         ServerLevel level = player.level();
         List<Entity> found = new ArrayList<>();
-        for (Entity entity : level.getEntities(player, new AABB(from, to).inflate(padding), entity -> isTarget(player, entity) && !exclude.contains(entity))) {
+        for (Entity entity : level.getEntities(player, new AABB(from, to).inflate(padding), entity -> isTarget(player, entity) && !RingTargets.excluded(exclude, entity))) {
             AABB box = entity.getBoundingBox().inflate(padding);
             if (box.contains(from) || box.clip(from, to).isPresent()) found.add(entity);
         }
         found.sort(Comparator.comparingDouble(entity -> entity.getBoundingBox().getCenter().distanceToSqr(from)));
-        return found;
+        return RingTargets.distinct(found);
     }
 
     public static void strike(ServerPlayer player, Entity entity, float damage, Vec3 push) {
         ServerLevel level = player.level();
-        if (entity instanceof LivingEntity living) {
-            living.setInvulnerableTime(0);
-            living.hurtServer(level, RingDamage.source(level, player), damage);
-        }
+        RingTargets.strike(level, entity, RingDamage.source(level, player), damage);
         entity.push(push);
         entity.needsSync = true;
     }

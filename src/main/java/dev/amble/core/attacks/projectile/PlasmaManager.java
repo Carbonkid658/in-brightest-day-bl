@@ -5,6 +5,7 @@ import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -99,8 +100,7 @@ public final class PlasmaManager {
             Vec3 end = block.getType() == HitResult.Type.MISS ? next : block.getLocation();
 
             AABB sweep = new AABB(orb.position, end).inflate(HIT_PADDING);
-            boolean struck = !orb.level.getEntities(orb.owner, sweep, entity -> entity instanceof LivingEntity && entity.isAlive()
-                    && !entity.isSpectator() && !orb.owner.isAlliedTo(entity)).isEmpty();
+            boolean struck = !orb.level.getEntities(orb.owner, sweep, entity -> RingTargets.isTarget(orb.owner, entity)).isEmpty();
             if (struck || block.getType() != HitResult.Type.MISS) {
                 iterator.remove();
                 detonate(orb, end);
@@ -132,8 +132,9 @@ public final class PlasmaManager {
             if (distance > radius) continue;
 
             double falloff = Math.max(MIN_FALLOFF, 1.0 - distance / radius);
-            if (entity instanceof LivingEntity living) {
-                living.hurtServer(level, source, (float) (damage * falloff));
+            boolean hittable = RingTargets.isHittable(entity);
+            RingTargets.hurt(level, entity, source, (float) (damage * falloff));
+            if (hittable && RingTargets.root(entity) instanceof LivingEntity living) {
                 if (orb.power >= FULL_POWER && !living.isAlive()) RingRanks.fire(orb.owner, Trigger.PLASMA_KILL, Milestone.Context.of(living));
                 living.setRemainingFireTicks(Math.max(living.getRemainingFireTicks(), BURN_TICKS));
             }

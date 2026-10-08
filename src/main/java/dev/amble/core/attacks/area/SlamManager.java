@@ -2,6 +2,7 @@ package dev.amble.core.attacks.area;
 
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import dev.amble.core.networking.payloads.s2c.SlamS2CPayload;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -21,7 +22,6 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -130,7 +130,7 @@ public final class SlamManager {
             if (distance > radius || Math.abs(to.y) > VERTICAL_REACH) continue;
 
             double falloff = Math.max(MIN_FALLOFF, 1.0 - distance / radius);
-            if (entity instanceof LivingEntity living) living.hurtServer(level, source, (float) (damage * falloff));
+            RingTargets.hurt(level, entity, source, (float) (damage * falloff));
             Vec3 away = distance < 1.0E-3 ? Vec3.ZERO : new Vec3(to.x / distance, 0.0, to.z / distance);
             entity.push(away.scale(OUTWARD * falloff).add(0.0, config.slamLaunch * falloff, 0.0));
             entity.needsSync = true;

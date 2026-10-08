@@ -1,5 +1,6 @@
 package dev.amble.core.items;
 
+import dev.amble.core.sync.RingSync;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.blocks.LanternBlock;
@@ -175,6 +176,7 @@ public class LanternBlockItem extends BlockItem {
     private void complete(Level level, Player player, boolean announce) {
         ItemStack ring = PowerRingItem.getWornRing(player);
         PowerRingItem.setMaxPower(ring);
+        if (this.corps() == LanternCorps.ORANGE) RingSync.restore(ring);
         PowerRingItem.awaken(player, ring);
         PowerRingItem.swear(player, ring);
         if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);

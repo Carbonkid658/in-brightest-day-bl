@@ -2,6 +2,7 @@ package dev.amble.core.ringpowers.constructs;
 
 import dev.amble.BrightestDay;
 import dev.amble.core.team.RingDamage;
+import dev.amble.core.team.RingTargets;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.attacks.area.AreaAttacks;
 import dev.amble.core.networking.payloads.s2c.NovaS2CPayload;
@@ -13,7 +14,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -50,7 +50,7 @@ public class NovaBurstConstruct extends ConstructRingPower {
             if (distance > radius || !player.hasLineOfSight(entity)) continue;
 
             double falloff = Math.max(MIN_FALLOFF, 1.0 - distance / radius);
-            if (entity instanceof LivingEntity living) living.hurtServer(level, source, (float) (config.novaDamage * falloff));
+            RingTargets.hurt(level, entity, source, (float) (config.novaDamage * falloff));
 
             Vec3 away = to.horizontalDistanceSqr() < 1.0E-4 ? player.getLookAngle().multiply(1.0, 0.0, 1.0) : to.multiply(1.0, 0.0, 1.0);
             away = away.lengthSqr() < 1.0E-4 ? new Vec3(1.0, 0.0, 0.0) : away.normalize();

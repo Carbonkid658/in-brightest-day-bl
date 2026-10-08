@@ -2,6 +2,7 @@ package dev.amble.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.BrightestDay;
+import dev.amble.client.effects.PoseAnimations;
 import dev.amble.client.flight.FlightControls;
 import dev.amble.client.screens.SpectrumScreen;
 import dev.amble.client.team.TeamScreen;
@@ -33,6 +34,7 @@ public final class BrightestDayKeybinds {
     public static final KeyMapping ACID_VOMIT = register("acid_vomit", InputConstants.KEY_N);
     public static final KeyMapping TEAM = register("team", InputConstants.KEY_J);
     public static final KeyMapping SPECTRUM = register("spectrum", InputConstants.KEY_K);
+    public static final KeyMapping POSE = register("pose", InputConstants.KEY_Y);
 
     public static final KeyMapping TOGGLE_LIGHT = register("toggle_light", InputConstants.KEY_V);
     public static final KeyMapping TOGGLE_SUIT = register("toggle_suit", InputConstants.KEY_PERIOD);
@@ -60,7 +62,7 @@ public final class BrightestDayKeybinds {
 
         FlightControls.syncBoost(client.player, FLIGHT_BOOST.isDown());
         if (client.gui.screen() != null) {
-            drain(FLIGHT, RAISE_RING, DISMISS_CONSTRUCT, CONCUSSIVE_BLAST, TEAM, TOGGLE_LIGHT, TOGGLE_SUIT, TOGGLE_MASK, SPECTRUM);
+            drain(FLIGHT, RAISE_RING, DISMISS_CONSTRUCT, CONCUSSIVE_BLAST, TEAM, TOGGLE_LIGHT, TOGGLE_SUIT, TOGGLE_MASK, SPECTRUM, POSE);
             raiseHeld = RAISE_RING.isDown();
             return;
         }
@@ -90,6 +92,10 @@ public final class BrightestDayKeybinds {
 
         while (SPECTRUM.consumeClick()) {
             client.gui.setScreen(new SpectrumScreen(null));
+        }
+
+        while (POSE.consumeClick()) {
+            PoseAnimations.cycle(client.player);
         }
 
         while (TOGGLE_LIGHT.consumeClick()) {

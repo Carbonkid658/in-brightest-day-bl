@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "S": "minecraft:emerald_block",
+    "I": "minecraft:diamond",
+    "C": "minecraft:heart_of_the_sea"
+  },
+  "pattern": [
+    "SIS",
+    "ICI",
+    "SIS"
+  ],
+  "result": {
+    "count": 1,
+    "id": "brightestday:green_battery_core"
+  }
+}
