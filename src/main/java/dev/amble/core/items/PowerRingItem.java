@@ -161,6 +161,15 @@ public class PowerRingItem extends Item {
         Component component = Component.literal(String.format("%.0f%%", percentage)).withStyle(ChatFormatting.BOLD).withColor(color);
 
         builder.accept(component);
+        BrightestDayComponents.ChargeCap cap = itemStack.get(BrightestDayComponents.CHARGE_CAP);
+        if (cap != null) {
+            int capPercent = Math.round(cap.capacity() * 100.0F / BrightestDayComponents.MAX_POWER);
+            builder.accept(Component.translatable("tooltip.brightestday.ring.cap", capPercent, cap.rank()).withStyle(ChatFormatting.GRAY));
+            if (cap.battery() < 100) {
+                Component corps = PowerRingItem.getCorps(itemStack).map(LanternCorps::displayName).orElse(Component.empty());
+                builder.accept(Component.translatable("tooltip.brightestday.ring.cap_battery", corps, cap.battery()).withStyle(ChatFormatting.GRAY));
+            }
+        }
         BrightestDayComponents.Sworn sworn = itemStack.get(BrightestDayComponents.SWORN_TO);
         if (sworn != null) builder.accept(Component.translatable("tooltip.brightestday.ring.sworn", sworn.name()).withStyle(ChatFormatting.GRAY));
         if (isDormant(itemStack)) {

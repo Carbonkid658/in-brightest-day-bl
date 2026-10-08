@@ -86,7 +86,7 @@ public class BrightestDayBlocks {
             new Item.Properties());
 
     public static final Block GREEN_BATTERY_CORE = registerBlockWithItem("green_battery_core",
-            properties -> new BatteryCoreBlock(LanternCorps.GREEN, () -> Blocks.EMERALD_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+            properties -> new BatteryCoreBlock(LanternCorps.GREEN, () -> Blocks.COPPER_BLOCK.weathering().oxidized(), properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
                     .sound(SoundType.METAL).lightLevel(_ -> 15)),
             new Item.Properties());
 

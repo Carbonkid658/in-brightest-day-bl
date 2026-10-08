@@ -74,6 +74,7 @@ import dev.amble.client.render.Holograms;
 import dev.amble.client.render.SlottedRingLayer;
 import dev.amble.client.screens.LanternButtons;
 import dev.amble.client.screens.LanternScreen;
+import dev.amble.client.screens.OfficialServerButton;
 import dev.amble.client.screens.MannequinScreen;
 import dev.amble.core.BrightestDayBlockEntityTypes;
 import dev.amble.core.BrightestDayMenus;
@@ -152,6 +153,7 @@ public class BrightestDayClient implements ClientModInitializer {
         ReplaySnapshot.init();
         IrisCompat.init();
         LanternButtons.init();
+        OfficialServerButton.init();
         RingChargeHud.init();
         EmotionVignette.init();
         PilgrimageHud.init();

@@ -7,6 +7,7 @@ import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.server.MinecraftServer;
 import org.jspecify.annotations.Nullable;
@@ -37,7 +38,7 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
         ).apply(instance, Shrine::new));
     }
 
-    public record Battery(BlockPos pos, LanternCorps corps, boolean active, int health, boolean lit) {
+    public record Battery(BlockPos pos, LanternCorps corps, boolean active, int health, boolean lit, Direction.Axis arms, long repaired) {
         public static final int MAX_HEALTH = 200;
 
         public static final Codec<Battery> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -45,23 +46,33 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
                 LanternCorps.CODEC.fieldOf("corps").forGetter(Battery::corps),
                 Codec.BOOL.optionalFieldOf("active", false).forGetter(Battery::active),
                 Codec.INT.optionalFieldOf("health", MAX_HEALTH).forGetter(Battery::health),
-                Codec.BOOL.optionalFieldOf("lit", true).forGetter(Battery::lit)
+                Codec.BOOL.optionalFieldOf("lit", true).forGetter(Battery::lit),
+                Direction.Axis.CODEC.optionalFieldOf("arms", Direction.Axis.Z).forGetter(Battery::arms),
+                Codec.LONG.optionalFieldOf("repaired", 0L).forGetter(Battery::repaired)
         ).apply(instance, Battery::new));
 
         public static Battery fresh(BlockPos pos, LanternCorps corps) {
-            return new Battery(pos, corps, false, MAX_HEALTH, false);
+            return new Battery(pos, corps, false, MAX_HEALTH, false, Direction.Axis.Z, 0L);
         }
 
         public Battery withActive(boolean active) {
-            return new Battery(this.pos, this.corps, active, this.health, this.lit);
+            return new Battery(this.pos, this.corps, active, this.health, this.lit, this.arms, this.repaired);
         }
 
         public Battery withHealth(int health) {
-            return new Battery(this.pos, this.corps, this.active, Math.clamp(health, 0, MAX_HEALTH), this.lit);
+            return new Battery(this.pos, this.corps, this.active, Math.clamp(health, 0, MAX_HEALTH), this.lit, this.arms, this.repaired);
         }
 
         public Battery withLit(boolean lit) {
-            return new Battery(this.pos, this.corps, this.active, this.health, lit);
+            return new Battery(this.pos, this.corps, this.active, this.health, lit, this.arms, this.repaired);
+        }
+
+        public Battery withArms(Direction.Axis arms) {
+            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, arms, this.repaired);
+        }
+
+        public Battery withRepaired(long repaired) {
+            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, this.arms, repaired);
         }
 
         public float strength() {

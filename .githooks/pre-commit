@@ -1,0 +1,14 @@
+#!/bin/sh
+file=gradle.properties
+marker="$(git rev-parse --git-dir)/version-bumped"
+current=$(sed -n 's/^version=//p' "$file")
+[ -z "$current" ] && exit 0
+if [ -f "$marker" ] && [ "$(cat "$marker")" = "$current" ]; then
+    git add "$file"
+    exit 0
+fi
+next=$(printf '%s\n' "$current" | awk -F. -v OFS=. '{ $NF = $NF + 1; print }')
+sed -i.bak "s/^version=.*/version=$next/" "$file" && rm -f "$file.bak"
+git add "$file"
+printf '%s\n' "$next" > "$marker"
+echo "Version bumped to $next"

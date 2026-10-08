@@ -17,7 +17,8 @@
 		"ZombieVillagerMixin",
 		"MobMixin",
 		"AbstractHorseMixin",
-		"MannequinAccessor"
+		"MannequinAccessor",
+		"MinecraftServerStatusMixin"
 	],
 	"client": [
 		"client.AbstractClientPlayerMixin",
@@ -33,7 +34,6 @@
 		"client.LocalPlayerMixin",
 		"client.MinecraftMixin",
 		"client.RenderTargetMixin",
-		"client.ServerListMixin",
 		"client.MouseHandlerMixin",
 		"client.FlashbackRecorderMixin",
 		"client.PlayerModelArmedMixin",

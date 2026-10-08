@@ -16,7 +16,7 @@ public final class CentralPowerBatteryModel {
 
     public CentralPowerBatteryModel() {
         this.root = createBodyLayer().bakeRoot();
-        this.body = this.root.getChild("bone16");
+        this.body = this.root.getChild("central");
     }
 
     public ModelPart body() {
@@ -26,12 +26,13 @@ public final class CentralPowerBatteryModel {
     public static LayerDefinition createBodyLayer() {
         MeshDefinition meshdefinition = new MeshDefinition();
         PartDefinition partdefinition = meshdefinition.getRoot();
-        PartDefinition bone16 = partdefinition.addOrReplaceChild("bone16", CubeListBuilder.create().texOffs(0, 0).addBox(-28.0F, -27.8995F, 11.0F, 56.0F, 56.0F, 56.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, -53.1005F, -39.0F));
 
-        PartDefinition cube_r1 = bone16.addOrReplaceChild("cube_r1", CubeListBuilder.create().texOffs(0, 112).addBox(-13.0F, -14.0F, 3.0F, 26.0F, 26.0F, 76.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.75F, 1.1005F, -2.0F, 0.0F, 0.0F, 0.7854F));
+        PartDefinition central = partdefinition.addOrReplaceChild("central", CubeListBuilder.create().texOffs(0, 0).addBox(-28.0F, -27.8995F, -28.0F, 56.0F, 56.0F, 56.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, -53.1005F, -1.5F));
 
-        PartDefinition north = bone16.addOrReplaceChild("north", CubeListBuilder.create().texOffs(90, 258).addBox(-18.0F, -19.3995F, -7.0F, 36.0F, 36.0F, 0.0F, new CubeDeformation(0.001F))
-        .texOffs(0, 258).addBox(-22.5F, -22.6495F, 0.9F, 45.0F, 45.0F, 0.0F, new CubeDeformation(0.001F)), PartPose.offset(0.0F, 0.0F, 0.0F));
+        PartDefinition cube_r1 = central.addOrReplaceChild("cube_r1", CubeListBuilder.create().texOffs(0, 112).addBox(-13.0F, -14.0F, 3.0F, 26.0F, 26.0F, 76.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-0.75F, 1.1005F, -41.0F, 0.0F, 0.0F, 0.7854F));
+
+        PartDefinition north = central.addOrReplaceChild("north", CubeListBuilder.create().texOffs(90, 258).addBox(-18.0F, -19.3995F, -7.0F, 36.0F, 36.0F, 0.0F, new CubeDeformation(0.001F))
+                .texOffs(0, 258).addBox(-22.5F, -22.6495F, 0.9F, 45.0F, 45.0F, 0.0F, new CubeDeformation(0.001F)), PartPose.offset(0.0F, 0.0F, -39.0F));
 
         PartDefinition bone = north.addOrReplaceChild("bone", CubeListBuilder.create().texOffs(0, 303).addBox(-9.0F, -21.8995F, -15.0F, 18.0F, 1.0F, 16.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.3927F));
 
@@ -71,8 +72,8 @@ public final class CentralPowerBatteryModel {
 
         PartDefinition cube_r16 = bone2.addOrReplaceChild("cube_r16", CubeListBuilder.create().texOffs(0, 303).addBox(-9.0F, 2.0F, -8.0F, 18.0F, 1.0F, 16.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-12.4359F, -12.4359F, -7.1783F, -0.7854F, 0.0F, -0.7854F));
 
-        PartDefinition south = bone16.addOrReplaceChild("south", CubeListBuilder.create().texOffs(90, 258).addBox(-18.0F, -19.3995F, -7.0F, 36.0F, 36.0F, 0.0F, new CubeDeformation(0.001F))
-        .texOffs(0, 258).addBox(-22.5F, -22.6495F, 0.9F, 45.0F, 45.0F, 0.0F, new CubeDeformation(0.001F)), PartPose.offsetAndRotation(0.0F, 0.0F, 78.0F, 0.0F, 3.1416F, 0.0F));
+        PartDefinition south = central.addOrReplaceChild("south", CubeListBuilder.create().texOffs(90, 258).addBox(-18.0F, -19.3995F, -7.0F, 36.0F, 36.0F, 0.0F, new CubeDeformation(0.001F))
+                .texOffs(0, 258).addBox(-22.5F, -22.6495F, 0.9F, 45.0F, 45.0F, 0.0F, new CubeDeformation(0.001F)), PartPose.offsetAndRotation(0.0F, 0.0F, 39.0F, 0.0F, 3.1416F, 0.0F));
 
         PartDefinition bone12 = south.addOrReplaceChild("bone12", CubeListBuilder.create().texOffs(0, 303).addBox(-9.0F, -21.8995F, -15.0F, 18.0F, 1.0F, 16.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.3927F));
 
@@ -112,41 +113,38 @@ public final class CentralPowerBatteryModel {
 
         PartDefinition cube_r31 = bone15.addOrReplaceChild("cube_r31", CubeListBuilder.create().texOffs(0, 303).addBox(-9.0F, 2.0F, -8.0F, 18.0F, 1.0F, 16.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-12.4359F, -12.4359F, -7.1783F, -0.7854F, 0.0F, -0.7854F));
 
-        PartDefinition bone6 = bone16.addOrReplaceChild("bone6", CubeListBuilder.create().texOffs(224, 0).addBox(-48.0F, -1.5F, -2.25F, 98.0F, 4.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offset(-1.0F, 0.1005F, 39.5F));
+        PartDefinition ears = central.addOrReplaceChild("ears", CubeListBuilder.create(), PartPose.offset(-1.0F, 0.1005F, 0.5F));
 
-        PartDefinition cube_r32 = bone6.addOrReplaceChild("cube_r32", CubeListBuilder.create().texOffs(0, 214).addBox(-34.0F, -11.0F, -11.5F, 70.0F, 22.0F, 22.0F, new CubeDeformation(0.0F))
-        .texOffs(184, 214).addBox(-39.0F, -7.0F, -7.5F, 80.0F, 14.0F, 14.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.7854F, 0.0F, 0.0F));
+        PartDefinition cube_r32 = ears.addOrReplaceChild("cube_r32", CubeListBuilder.create().texOffs(0, 214).addBox(-34.0F, -11.0F, -11.5F, 70.0F, 22.0F, 22.0F, new CubeDeformation(0.0F))
+                .texOffs(184, 214).addBox(-39.0F, -7.0F, -7.5F, 80.0F, 14.0F, 14.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 0.7854F, 0.0F, 0.0F));
 
-        PartDefinition bone7 = bone16.addOrReplaceChild("bone7", CubeListBuilder.create(), PartPose.offset(0.0F, -32.8995F, 41.0F));
+        PartDefinition base = central.addOrReplaceChild("base", CubeListBuilder.create(), PartPose.offset(0.0F, -32.8995F, 2.0F));
 
-        PartDefinition cube_r33 = bone7.addOrReplaceChild("cube_r33", CubeListBuilder.create().texOffs(224, 8).addBox(-24.0F, -25.0F, 15.0F, 48.0F, 48.0F, 16.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 125.0F, 0.0F, 1.5708F, -0.7854F, 0.0F));
+        PartDefinition cube_r33 = base.addOrReplaceChild("cube_r33", CubeListBuilder.create().texOffs(224, 8).addBox(-24.0F, -25.0F, 15.0F, 48.0F, 48.0F, 16.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 125.0F, 0.0F, 1.5708F, -0.7854F, 0.0F));
 
-        PartDefinition cube_r34 = bone7.addOrReplaceChild("cube_r34", CubeListBuilder.create().texOffs(292, 242).addBox(-18.0F, -19.0F, 24.0F, 36.0F, 36.0F, 0.0F, new CubeDeformation(0.004F)), PartPose.offsetAndRotation(0.5F, -0.15F, 0.5F, 1.5708F, 0.0F, 0.0F));
+        PartDefinition cube_r34 = base.addOrReplaceChild("cube_r34", CubeListBuilder.create().texOffs(292, 242).addBox(-18.0F, -19.0F, 24.0F, 36.0F, 36.0F, 0.0F, new CubeDeformation(0.004F)), PartPose.offsetAndRotation(0.5F, -0.15F, 0.25F, 1.5708F, 0.0F, 0.0F));
 
-        PartDefinition cube_r35 = bone7.addOrReplaceChild("cube_r35", CubeListBuilder.create().texOffs(184, 242).addBox(-18.0F, -19.0F, 6.0F, 36.0F, 36.0F, 18.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 1.5708F, -0.7854F, 0.0F));
+        PartDefinition cube_r35 = base.addOrReplaceChild("cube_r35", CubeListBuilder.create().texOffs(184, 242).addBox(-18.0F, -19.0F, 6.0F, 36.0F, 36.0F, 18.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, 1.5708F, -0.7854F, 0.0F));
 
-        PartDefinition cube_r36 = bone7.addOrReplaceChild("cube_r36", CubeListBuilder.create().texOffs(184, 242).addBox(-18.0F, -19.0F, 6.0F, 36.0F, 36.0F, 18.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 102.0F, 0.0F, 1.5708F, -0.7854F, 0.0F));
+        PartDefinition cube_r36 = base.addOrReplaceChild("cube_r36", CubeListBuilder.create().texOffs(184, 242).addBox(-18.0F, -19.0F, 6.0F, 36.0F, 36.0F, 18.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 102.0F, 0.0F, 1.5708F, -0.7854F, 0.0F));
 
-        PartDefinition cube_r37 = bone7.addOrReplaceChild("cube_r37", CubeListBuilder.create().texOffs(363, 77).addBox(-14.0F, -15.0F, 7.0F, 28.0F, 28.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 7.0F, 0.0F, 1.5708F, -0.7854F, 0.0F));
+        PartDefinition cube_r37 = base.addOrReplaceChild("cube_r37", CubeListBuilder.create().texOffs(363, 77).addBox(-14.0F, -15.0F, 7.0F, 28.0F, 28.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 7.0F, 0.0F, 1.5708F, -0.7854F, 0.0F));
 
-        PartDefinition cube_r38 = bone7.addOrReplaceChild("cube_r38", CubeListBuilder.create().texOffs(363, 77).addBox(-14.0F, -15.0F, 7.0F, 28.0F, 28.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 86.0F, 0.0F, 1.5708F, -0.7854F, 0.0F));
+        PartDefinition cube_r38 = base.addOrReplaceChild("cube_r38", CubeListBuilder.create().texOffs(363, 77).addBox(-14.0F, -15.0F, 7.0F, 28.0F, 28.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 86.0F, 0.0F, 1.5708F, -0.7854F, 0.0F));
 
-        PartDefinition cube_r39 = bone7.addOrReplaceChild("cube_r39", CubeListBuilder.create().texOffs(204, 112).addBox(-13.0F, -14.0F, -61.0F, 26.0F, 26.0F, 76.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 12.0F, 0.0F, 1.5708F, -0.7854F, 0.0F));
+        PartDefinition cube_r39 = base.addOrReplaceChild("cube_r39", CubeListBuilder.create().texOffs(204, 112).addBox(-13.0F, -14.0F, -61.0F, 26.0F, 26.0F, 76.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 12.0F, 0.0F, 1.5708F, -0.7854F, 0.0F));
 
-        PartDefinition bone8 = bone16.addOrReplaceChild("bone8", CubeListBuilder.create(), PartPose.offsetAndRotation(44.4645F, 34.993F, 57.338F, 0.3054F, 0.0F, 0.0F));
+        PartDefinition handle = central.addOrReplaceChild("handle", CubeListBuilder.create().texOffs(224, 0).addBox(-49.0F, -2.0F, -2.0F, 98.0F, 4.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.6005F, 0.25F));
 
-        PartDefinition cube_r40 = bone8.addOrReplaceChild("cube_r40", CubeListBuilder.create().texOffs(162, 258).addBox(-3.0F, -2.0F, -3.0F, 4.0F, 33.0F, 4.0F, new CubeDeformation(0.001F)), PartPose.offsetAndRotation(-89.777F, -3.4966F, 9.4845F, 0.3185F, 0.3035F, -0.7363F));
+        PartDefinition cube_r40 = handle.addOrReplaceChild("cube_r40", CubeListBuilder.create().texOffs(226, 296).mirror().addBox(-1.0F, -2.0F, -3.0F, 4.0F, 39.0F, 4.0F, new CubeDeformation(0.0F)).mirror(false)
+                .texOffs(226, 296).addBox(-94.8F, -2.0F, -3.0F, 4.0F, 39.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(45.9F, 1.4616F, 1.537F, 0.7418F, 0.0F, 0.0F));
 
-        PartDefinition cube_r41 = bone8.addOrReplaceChild("cube_r41", CubeListBuilder.create().texOffs(226, 296).addBox(-3.0F, -2.0F, -3.0F, 4.0F, 39.0F, 4.0F, new CubeDeformation(0.0F))
-        .texOffs(226, 296).mirror().addBox(90.8F, -2.0F, -3.0F, 4.0F, 39.0F, 4.0F, new CubeDeformation(0.0F)).mirror(false), PartPose.offsetAndRotation(-90.3645F, -36.3891F, -5.8535F, 0.4363F, 0.0F, 0.0F));
+        PartDefinition cube_r41 = handle.addOrReplaceChild("cube_r41", CubeListBuilder.create().texOffs(162, 258).mirror().addBox(-1.0F, -2.0F, -3.0F, 4.0F, 33.0F, 4.0F, new CubeDeformation(0.001F)).mirror(false), PartPose.offsetAndRotation(45.3125F, 28.2195F, 26.0561F, 0.5749F, -0.4981F, 0.6353F));
 
-        PartDefinition cube_r42 = bone8.addOrReplaceChild("cube_r42", CubeListBuilder.create().texOffs(162, 258).mirror().addBox(-1.0F, -2.0F, -3.0F, 4.0F, 33.0F, 4.0F, new CubeDeformation(0.001F)).mirror(false), PartPose.offsetAndRotation(0.8481F, -3.4966F, 9.4845F, 0.3185F, -0.3035F, 0.7363F));
+        PartDefinition cube_r42 = handle.addOrReplaceChild("cube_r42", CubeListBuilder.create().texOffs(162, 258).addBox(-3.0F, -2.0F, -3.0F, 4.0F, 33.0F, 4.0F, new CubeDeformation(0.001F)), PartPose.offsetAndRotation(-45.3125F, 28.2195F, 26.0561F, 0.5749F, 0.4981F, -0.6353F));
 
-        PartDefinition bone9 = bone16.addOrReplaceChild("bone9", CubeListBuilder.create(), PartPose.offsetAndRotation(-44.4645F, 34.993F, 57.338F, 0.0873F, 0.0F, 0.0F));
+        PartDefinition cube_r43 = handle.addOrReplaceChild("cube_r43", CubeListBuilder.create().texOffs(224, 72).addBox(-26.0F, -2.0F, -2.0F, 51.0F, 4.0F, 4.0F, new CubeDeformation(0.004F)), PartPose.offsetAndRotation(0.5115F, 45.1462F, 40.2088F, 0.7418F, 0.0F, 0.0F));
 
-        PartDefinition bone10 = bone16.addOrReplaceChild("bone10", CubeListBuilder.create(), PartPose.offsetAndRotation(-44.4645F, 34.993F, 57.338F, 0.3054F, 0.0F, 0.0F));
-
-        PartDefinition cube_r43 = bone10.addOrReplaceChild("cube_r43", CubeListBuilder.create().texOffs(224, 72).addBox(-26.0F, -2.0F, -2.0F, 51.0F, 4.0F, 4.0F, new CubeDeformation(0.004F)), PartPose.offsetAndRotation(44.976F, 16.9024F, 17.8922F, 0.4363F, 0.0F, 0.0F));
         return LayerDefinition.create(meshdefinition, 512, 512);
     }
 }

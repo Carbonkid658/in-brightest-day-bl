@@ -25,7 +25,9 @@ public class BatteryFrameBlock extends Block {
         EMERALD("emerald", () -> Blocks.EMERALD_BLOCK),
         REDSTONE("redstone", () -> Blocks.REDSTONE_BLOCK),
         LAPIS("lapis", () -> Blocks.LAPIS_BLOCK),
-        OBSIDIAN("obsidian", () -> Blocks.OBSIDIAN);
+        OBSIDIAN("obsidian", () -> Blocks.OBSIDIAN),
+        OXIDIZED_COPPER("oxidized_copper", () -> Blocks.COPPER_BLOCK.weathering().oxidized()),
+        WAXED_OXIDIZED_COPPER("waxed_oxidized_copper", () -> Blocks.COPPER_BLOCK.waxed().oxidized());
 
         private final String name;
         private final Supplier<Block> block;

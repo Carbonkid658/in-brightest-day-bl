@@ -25,6 +25,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.Objects;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -225,10 +226,19 @@ public final class RingRanks {
         if (corps == null || !PowerRingItem.usesPower(ring)) return;
 
         int cap = capacity(player, corps);
-        int power = PowerRingItem.getRingPower(ring);
-        if (power <= cap) return;
-        ring.set(BrightestDayComponents.POWER_TYPE, cap);
-        BrightestDayAttachments.setRing(player, ring);
+        int battery = Math.round(CentralPowerBattery.strength(player.level().getServer(), corps) * 100.0F);
+        BrightestDayComponents.ChargeCap info = cap >= BrightestDayComponents.MAX_POWER ? null
+                : new BrightestDayComponents.ChargeCap(cap, Mth.clamp(rank(player, corps), 1, MAX_RANK), battery);
+        boolean changed = !Objects.equals(ring.get(BrightestDayComponents.CHARGE_CAP), info);
+        if (changed) {
+            if (info == null) ring.remove(BrightestDayComponents.CHARGE_CAP);
+            else ring.set(BrightestDayComponents.CHARGE_CAP, info);
+        }
+        if (PowerRingItem.getRingPower(ring) > cap) {
+            ring.set(BrightestDayComponents.POWER_TYPE, cap);
+            changed = true;
+        }
+        if (changed) BrightestDayAttachments.setRing(player, ring);
     }
 
     private static final Set<LanternCorps> FORGE_STARTERS = EnumSet.of(LanternCorps.GREEN, LanternCorps.YELLOW, LanternCorps.ORANGE,

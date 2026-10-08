@@ -95,6 +95,29 @@ public class BrightestDayComponents {
                             .build()
             );
 
+    public record ChargeCap(int capacity, int rank, int battery) {
+        public static final Codec<ChargeCap> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.INT.fieldOf("capacity").forGetter(ChargeCap::capacity),
+                Codec.INT.fieldOf("rank").forGetter(ChargeCap::rank),
+                Codec.INT.fieldOf("battery").forGetter(ChargeCap::battery)
+        ).apply(instance, ChargeCap::new));
+
+        public static final StreamCodec<ByteBuf, ChargeCap> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT, ChargeCap::capacity,
+                ByteBufCodecs.VAR_INT, ChargeCap::rank,
+                ByteBufCodecs.VAR_INT, ChargeCap::battery,
+                ChargeCap::new);
+    }
+
+    public static final DataComponentType<ChargeCap> CHARGE_CAP =
+            Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    BrightestDay.id("charge_cap"),
+                    DataComponentType.<ChargeCap>builder()
+                            .persistent(ChargeCap.CODEC)
+                            .networkSynchronized(ChargeCap.STREAM_CODEC)
+                            .build()
+            );
+
     public record Bond(UUID id, int generation) {
         public static final Codec<Bond> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 UUIDUtil.CODEC.fieldOf("id").forGetter(Bond::id),

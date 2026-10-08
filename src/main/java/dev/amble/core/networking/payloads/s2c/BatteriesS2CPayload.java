@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.amble.BrightestDay;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -13,11 +14,12 @@ import java.util.List;
 
 public record BatteriesS2CPayload(List<Entry> batteries) implements CustomPacketPayload {
 
-    public record Entry(BlockPos pos, int color, boolean active) {
+    public record Entry(BlockPos pos, int color, boolean active, Direction.Axis arms) {
         public static final Codec<Entry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 BlockPos.CODEC.fieldOf("pos").forGetter(Entry::pos),
                 Codec.INT.fieldOf("color").forGetter(Entry::color),
-                Codec.BOOL.optionalFieldOf("active", true).forGetter(Entry::active)
+                Codec.BOOL.optionalFieldOf("active", true).forGetter(Entry::active),
+                Direction.Axis.CODEC.optionalFieldOf("arms", Direction.Axis.Z).forGetter(Entry::arms)
         ).apply(instance, Entry::new));
     }
 

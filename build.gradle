@@ -104,26 +104,6 @@ jar {
 	}
 }
 
-def versionProperties = file("gradle.properties")
-def builtVersion = project.version.toString()
-
-tasks.register("bumpVersion") {
-	description = "Increments the patch version in gradle.properties after a successful build."
-	def propertiesFile = versionProperties
-	def current = builtVersion
-	doLast {
-		def parts = current.tokenize(".")
-		parts[-1] = ((parts[-1] as int) + 1).toString()
-		def next = parts.join(".")
-		propertiesFile.text = propertiesFile.text.replaceFirst(/(?m)^version=.*$/, "version=${next}")
-		println "Built ${current}; next build will be ${next}"
-	}
-}
-
-tasks.named("build") {
-	finalizedBy("bumpVersion")
-}
-
 loom {
 	runs {
 		client {

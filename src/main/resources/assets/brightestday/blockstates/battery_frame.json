@@ -17,6 +17,12 @@
     },
     "material=obsidian": {
       "model": "minecraft:block/obsidian"
+    },
+    "material=oxidized_copper": {
+      "model": "minecraft:block/oxidized_copper"
+    },
+    "material=waxed_oxidized_copper": {
+      "model": "minecraft:block/oxidized_copper"
     }
   }
 }

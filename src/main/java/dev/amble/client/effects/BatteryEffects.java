@@ -1,7 +1,9 @@
 package dev.amble.client.effects;
 
+import com.mojang.math.Axis;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import dev.amble.core.forge.CentralPowerBattery;
 import dev.amble.client.flight.FlightRenderTypes;
 import dev.amble.client.render.BatteryTextures;
 import dev.amble.client.render.models.CentralPowerBatteryModel;
@@ -15,6 +17,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.LightCoordsUtil;
@@ -55,7 +58,11 @@ public final class BatteryEffects {
     public static boolean isBattery(BlockPos pos) {
         for (BatteriesS2CPayload.Entry battery : batteries) {
             BlockPos core = battery.pos();
-            if (Math.abs(pos.getX() - core.getX()) <= 1 && Math.abs(pos.getY() - core.getY()) <= 1 && Math.abs(pos.getZ() - core.getZ()) <= 1) return true;
+            int dx = Math.abs(pos.getX() - core.getX());
+            int dz = Math.abs(pos.getZ() - core.getZ());
+            int reach = 2 + CentralPowerBattery.ARM;
+            boolean alongX = battery.arms() == Direction.Axis.X;
+            if (Math.abs(pos.getY() - core.getY()) <= 1 && (alongX ? dx <= reach && dz <= 1 : dz <= reach && dx <= 1)) return true;
         }
         return false;
     }
@@ -78,7 +85,8 @@ public final class BatteryEffects {
             Vec3 center = Vec3.atCenterOf(battery.pos());
             if (center.distanceTo(camera) > RENDER_DISTANCE) continue;
             int color = ARGB.opaque(battery.color());
-            BlockPos sample = battery.pos().north(LIGHT_SAMPLE_OFFSET);
+            boolean turned = battery.arms() == Direction.Axis.X;
+            BlockPos sample = turned ? battery.pos().east(LIGHT_SAMPLE_OFFSET) : battery.pos().north(LIGHT_SAMPLE_OFFSET);
             int light = LightCoordsUtil.pack(client.level.getBrightness(LightLayer.BLOCK, sample), client.level.getBrightness(LightLayer.SKY, sample));
             float pulse = 0.5F + 0.5F * Mth.sin(time * 0.08F);
 
@@ -89,6 +97,7 @@ public final class BatteryEffects {
 
             poseStack.pushPose();
             poseStack.translate(center.x - camera.x, center.y - camera.y, center.z - camera.z);
+            if (turned) poseStack.rotate(Axis.YP.rotationDegrees(90.0F));
             poseStack.pushPose();
             poseStack.scale(-1.0F, -1.0F, 1.0F);
             poseStack.translate(0.0F, CentralPowerBatteryModel.CORE_Y / 16.0F, 0.0F);
