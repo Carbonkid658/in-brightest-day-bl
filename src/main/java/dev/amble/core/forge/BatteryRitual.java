@@ -1,9 +1,13 @@
 package dev.amble.core.forge;
 
+import dev.amble.BrightestDay;
 import dev.amble.core.blocks.LanternCharging;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.oath.OathCharge;
 import dev.amble.core.ringpowers.LanternCorps;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.ChatFormatting;
@@ -13,6 +17,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.util.Unit;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.HashMap;
@@ -46,6 +53,14 @@ public final class BatteryRitual {
 
     private static final Map<UUID, Session> SESSIONS = new HashMap<>();
 
+    public static final AttachmentType<Unit> PERFORMING = AttachmentRegistry.<Unit>builder()
+            .syncWith(StreamCodec.unit(Unit.INSTANCE), AttachmentSyncPredicate.all())
+            .buildAndRegister(BrightestDay.id("battery_ritual"));
+
+    public static boolean performing(Player player) {
+        return player.hasAttached(PERFORMING);
+    }
+
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(BatteryRitual::tick);
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
@@ -64,6 +79,7 @@ public final class BatteryRitual {
         boolean oath = OathCharge.begin(player, corps, true);
         if (!oath) player.sendSystemMessage(Component.translatable(corps.oathKey()).withStyle(ChatFormatting.BOLD).withColor(corps.color()));
         SESSIONS.put(player.getUUID(), new Session(core.immutable(), corps, oath, ceremony, now));
+        player.setAttached(PERFORMING, Unit.INSTANCE);
     }
 
     private static void tick(MinecraftServer server) {
@@ -85,6 +101,7 @@ public final class BatteryRitual {
             boolean silent = !released && !broken && session.oath && !OathCharge.tick(player, session.corps.color());
             if (released || broken || silent) {
                 iterator.remove();
+                player.removeAttached(PERFORMING);
                 if (session.oath) OathCharge.end(player);
                 player.sendOverlayMessage(Component.translatable(silent ? "message.brightestday.oath.silent" : "message.brightestday.battery.ritual_broken").withColor(session.corps.color()));
                 continue;
@@ -96,6 +113,7 @@ public final class BatteryRitual {
             boolean done = session.oath ? OathCharge.complete(player) : session.age >= DURATION_TICKS;
             if (!done) continue;
             iterator.remove();
+            player.removeAttached(PERFORMING);
             if (session.oath) OathCharge.end(player);
             if (session.ceremony) CentralPowerBattery.sworn(player.level(), session.core, player);
             else CentralPowerBattery.resync(player.level(), session.core, player, session.corps);

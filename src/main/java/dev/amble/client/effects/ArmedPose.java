@@ -1,6 +1,7 @@
 package dev.amble.client.effects;
 
 import dev.amble.client.render.Holograms;
+import dev.amble.core.forge.BatteryRitual;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.networking.payloads.s2c.ActiveConstructS2CPayload;
@@ -75,8 +76,9 @@ public final class ArmedPose {
         if (client.level == null || client.isPaused()) return;
 
         for (AbstractClientPlayer player : client.level.players()) {
-            boolean armed = ArmedRingPower.isArmed(player);
-            boolean active = armed && isUsingPower(client, player);
+            boolean ritual = BatteryRitual.performing(player);
+            boolean armed = ArmedRingPower.isArmed(player) || ritual;
+            boolean active = ritual || armed && isUsingPower(client, player);
             float[] amount = AMOUNTS.get(player);
             if (amount == null) {
                 if (!armed) continue;

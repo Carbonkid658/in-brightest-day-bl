@@ -182,7 +182,7 @@ public final class CentralPowerBattery {
         if (!config.batteryCeremony || battery.lit() || battery.health() <= 0 || !complete(level, battery.pos())) return InteractionResult.PASS;
         if (!(player instanceof ServerPlayer server)) return InteractionResult.PASS;
         BatteryRitual.hold(server, battery.pos(), battery.corps(), true);
-        return InteractionResult.SUCCESS_SERVER;
+        return InteractionResult.CONSUME;
     }
 
     static void sworn(ServerLevel level, BlockPos pos, ServerPlayer player) {
@@ -342,7 +342,7 @@ public final class CentralPowerBattery {
         if (settled && PowerRingItem.getRingPower(ring) >= BrightestDayComponents.MAX_POWER && RingSync.sync(ring) >= 1.0F) return InteractionResult.PASS;
         if (!(player instanceof ServerPlayer server)) return InteractionResult.PASS;
         BatteryRitual.hold(server, battery.pos(), corps, false);
-        return InteractionResult.SUCCESS_SERVER;
+        return InteractionResult.CONSUME;
     }
 
     static void resync(ServerLevel level, BlockPos core, ServerPlayer player, LanternCorps corps) {

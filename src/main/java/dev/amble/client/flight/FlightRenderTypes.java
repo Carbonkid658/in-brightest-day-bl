@@ -7,6 +7,7 @@ import com.mojang.renderpearl.api.pipeline.DepthStencilState;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import dev.amble.BrightestDay;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.oit.OitPipelineSet;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 
@@ -23,9 +24,17 @@ public final class FlightRenderTypes {
                     .build()
     );
 
+    private static final OitPipelineSet OIT_GLOW = RenderPipelines.register(
+            OitPipelineSet.builder("brightestday_flight_glow", RenderPipeline.builder(RenderPipelines.LIGHTNING_SNIPPET).withShaderDefine("OIT_ADDITIVE").withCull(false))
+                    .withDepthBoundsModifier(builder -> builder.withCull(false))
+                    .withTransmittanceModifier(builder -> builder.withCull(false))
+                    .withAccumulateModifier(builder -> builder.withCull(false))
+                    .build()
+    );
+
     public static final RenderType GLOW = RenderType.create(
             "brightestday_flight_glow",
-            RenderSetup.builder(GLOW_PIPELINE).setOitPipelines(RenderPipelines.OIT_LIGHTNING).sortOnUpload().createRenderSetup()
+            RenderSetup.builder(GLOW_PIPELINE).setOitPipelines(OIT_GLOW).sortOnUpload().createRenderSetup()
     );
 
     private static final RenderPipeline GLASS_PIPELINE = RenderPipelines.register(

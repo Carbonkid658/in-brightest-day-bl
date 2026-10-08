@@ -32,8 +32,6 @@ public final class BatteryEffects {
     private static final float PANEL_DEPTH = 2.9F;
     private static final float PANEL_RADIUS = 1.15F;
     private static final int SIDES = 8;
-    private static final float HEAD_ON = 0.92F;
-    private static final float HEAD_ON_FADE = 0.35F;
     private static final float RAY_LENGTH = 6.5F;
     private static final float PANE_DEPTH = 2.38F;
     private static final float PANE_RADIUS = 1.25F;
@@ -100,12 +98,12 @@ public final class BatteryEffects {
                 context.submitNodeCollector().submitModelPart(model.body(), poseStack, RenderTypes.eyes(emission), LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, null, glow);
             }
             poseStack.popPose();
-            if (battery.active()) rays(context, poseStack, color, time, camera.subtract(center));
+            if (battery.active()) rays(context, poseStack, color, time);
             poseStack.popPose();
         }
     }
 
-    private static void rays(LevelRenderContext context, PoseStack poseStack, int color, float time, Vec3 eye) {
+    private static void rays(LevelRenderContext context, PoseStack poseStack, int color, float time) {
         float pulse = 0.5F + 0.5F * Mth.sin(time * PULSE_SPEED);
         float flicker = 0.9F + 0.1F * Mth.sin(time * 0.37F);
         int paneColor = ARGB.srgbLerp(PANE_WHITE_MIN + (PANE_WHITE_MAX - PANE_WHITE_MIN) * pulse, color, 0xFFFFFFFF);
@@ -113,15 +111,12 @@ public final class BatteryEffects {
             for (int side = -1; side <= 1; side += 2) {
                 for (float[] layer : PANES) {
                     int tint = VoxelRenderer.toWhite(paneColor, layer[2]);
-                    pane(pose, buffer, side * PANE_DEPTH, PANE_RADIUS * layer[0], ARGB.color(Math.round(255 * layer[1] * (0.55F + 0.45F * pulse)), tint));
+                    pane(pose, buffer, side * PANE_DEPTH, PANE_RADIUS * layer[0], additive(tint, layer[1] * (0.55F + 0.45F * pulse)));
                 }
                 Vec3 from = new Vec3(0.0, 0.0, side * PANEL_DEPTH);
                 Vec3 to = new Vec3(0.0, 0.0, side * (PANEL_DEPTH + RAY_LENGTH));
-                float facing = Math.abs((float) from.lerp(to, 0.5).subtract(eye).normalize().z);
-                float visibility = Mth.clamp((HEAD_ON - facing) / HEAD_ON_FADE, 0.0F, 1.0F);
-                if (visibility <= 0.01F) continue;
                 for (float[] layer : BEAMS) {
-                    float strength = layer[2] * flicker * (0.75F + 0.25F * pulse) * visibility;
+                    float strength = layer[2] * flicker * (0.75F + 0.25F * pulse);
                     frustum(pose, buffer, from, to, PANEL_RADIUS * layer[0], PANEL_RADIUS * layer[1], VoxelRenderer.toWhite(color, layer[3]), strength);
                 }
             }
@@ -129,7 +124,7 @@ public final class BatteryEffects {
     }
 
     private static void pane(PoseStack.Pose pose, VertexConsumer buffer, float z, float radius, int color) {
-        int edge = ARGB.color(0, color);
+        int edge = 0;
         for (int i = 0; i < SIDES; i++) {
             float a0 = (i + 0.5F) * Mth.TWO_PI / SIDES;
             float a1 = (i + 1.5F) * Mth.TWO_PI / SIDES;
@@ -141,8 +136,8 @@ public final class BatteryEffects {
     }
 
     private static void frustum(PoseStack.Pose pose, VertexConsumer buffer, Vec3 from, Vec3 to, float nearRadius, float farRadius, int color, float strength) {
-        int near = ARGB.color(Math.round(255 * Mth.clamp(strength, 0.0F, 1.0F)), color);
-        int far = ARGB.color(0, color);
+        int near = additive(color, strength);
+        int far = 0;
         for (int i = 0; i < SIDES; i++) {
             float a0 = (i + 0.5F) * Mth.TWO_PI / SIDES;
             float a1 = (i + 1.5F) * Mth.TWO_PI / SIDES;
@@ -151,6 +146,11 @@ public final class BatteryEffects {
             buffer.addVertex(pose, Mth.cos(a1) * farRadius, Mth.sin(a1) * farRadius, (float) to.z).setColor(far);
             buffer.addVertex(pose, Mth.cos(a0) * farRadius, Mth.sin(a0) * farRadius, (float) to.z).setColor(far);
         }
+    }
+
+    private static int additive(int color, float strength) {
+        float root = Mth.sqrt(Mth.clamp(strength, 0.0F, 1.0F));
+        return ARGB.color(Math.round(255 * root), ARGB.scaleRGB(color, root));
     }
 
     private BatteryEffects() {}
