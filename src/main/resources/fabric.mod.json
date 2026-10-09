@@ -1,0 +1,59 @@
+{
+	"schemaVersion": 1,
+	"id": "brightestday",
+	"version": "${version}",
+	"name": "In Brightest Day",
+	"description": "In Brightest Day, you become any Lantern Corps you can dream of.",
+	"authors": [
+		"Loqor",
+		"Addie",
+		"BungusBen",
+		"Brettski",
+		"Ember (The Evil One)"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "LGPL-3.0",
+	"icon": "assets/brightestday/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"dev.amble.BrightestDay"
+		],
+		"client": [
+			"dev.amble.client.BrightestDayClient"
+		],
+		"fabric-datagen": [
+          "dev.amble.datagen.BrightestDayDataGenerator"
+		],
+		"lambdynlights:initializer": [
+			"dev.amble.client.compat.LambDynamicLightsCompat"
+		],
+		"jei_mod_plugin": [
+			"dev.amble.client.compat.jei.BrightestDayJeiPlugin"
+		],
+		"voicechat": [
+			"dev.amble.core.comms.CommsVoicePlugin"
+		]
+	},
+	"mixins": [
+		"brightestday.mixins.json"
+	],
+	"suggests": {
+		"lambdynlights": "*",
+		"jei": "*",
+		"modmenu": "*",
+		"voicechat": "*"
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*",
+		"player_animation_library": "*",
+		"fabric-language-kotlin": ">=1.13.11",
+		"fzzy_config": ">=0.7.7"
+	}
+}

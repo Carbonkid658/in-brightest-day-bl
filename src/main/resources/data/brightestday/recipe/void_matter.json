@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "brightestday:void_shard",
+    "brightestday:void_shard",
+    "brightestday:void_shard",
+    "brightestday:void_shard"
+  ],
+  "result": {
+    "count": 1,
+    "id": "brightestday:void_matter"
+  }
+}

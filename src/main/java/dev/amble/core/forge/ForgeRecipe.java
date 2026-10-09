@@ -1,0 +1,47 @@
+package dev.amble.core.forge;
+
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.List;
+import java.util.function.Function;
+
+public record ForgeRecipe(String key, List<ItemStack> inputs, int lava, Function<Player, List<ItemStack>> outputs) {
+
+    public boolean affordable(Player player) {
+        if (player.hasInfiniteMaterials()) return true;
+        for (ItemStack input : this.inputs) {
+            if (player.getInventory().countItem(input.getItem()) < input.getCount()) return false;
+        }
+        return true;
+    }
+
+    public void consume(Player player) {
+        if (player.hasInfiniteMaterials()) return;
+        for (ItemStack input : this.inputs) {
+            Item item = input.getItem();
+            int remaining = input.getCount();
+            for (int slot = 0; slot < player.getInventory().getContainerSize() && remaining > 0; slot++) {
+                ItemStack stack = player.getInventory().getItem(slot);
+                if (!stack.is(item)) continue;
+                int taken = Math.min(remaining, stack.getCount());
+                stack.shrink(taken);
+                remaining -= taken;
+            }
+        }
+    }
+
+    public Component describe() {
+        MutableComponent text = Component.translatable("forge.brightestday.recipe." + this.key).append(": ");
+        for (int i = 0; i < this.inputs.size(); i++) {
+            ItemStack input = this.inputs.get(i);
+            if (i > 0) text.append(", ");
+            text.append(input.getCount() + "× ").append(input.getHoverName());
+        }
+        if (this.lava > 0) text.append(", ").append(Component.translatable("forge.brightestday.lava", this.lava));
+        return text;
+    }
+}

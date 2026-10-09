@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "brightestday:block/black_anvil"
+    },
+    "facing=east": {
+      "model": "brightestday:block/black_anvil",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "brightestday:block/black_anvil",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "brightestday:block/black_anvil",
+      "y": 270
+    }
+  }
+}

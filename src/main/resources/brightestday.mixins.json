@@ -1,0 +1,52 @@
+{
+	"required": true,
+	"package": "dev.amble.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"EntityMixin",
+		"ExampleMixin",
+		"LivingEntityMixin",
+		"PlayerMixin",
+		"AvatarMixin",
+		"GlideLivingEntityMixin",
+		"ServerGamePacketListenerImplMixin",
+		"AbstractVillagerMixin",
+		"AnimalMixin",
+		"TamableAnimalMixin",
+		"ItemEntityMixin",
+		"ZombieVillagerMixin",
+		"MobMixin",
+		"AbstractHorseMixin",
+		"MannequinAccessor",
+		"MinecraftServerStatusMixin"
+	],
+	"client": [
+		"client.AbstractClientPlayerMixin",
+		"client.AbstractContainerScreenAccessor",
+		"client.AttachmentChangeMixin",
+		"client.AvatarRendererMixin",
+		"client.CameraMixin",
+		"client.EntityGlowColorMixin",
+		"client.HudOverlayMixin",
+		"client.FirstPersonHandsAndItemsRendererMixin",
+		"client.ItemModelResolverMixin",
+		"client.ItemStackLayerRenderStateMixin",
+		"client.LocalPlayerMixin",
+		"client.MinecraftMixin",
+		"client.RenderTargetMixin",
+		"client.MouseHandlerMixin",
+		"client.FlashbackRecorderMixin",
+		"client.PlayerModelArmedMixin",
+		"client.ItemInHandLayerMixin",
+		"client.EntityTurnMixin",
+		"client.EntityRendererMixin",
+		"client.LivingEntityRendererMixin",
+		"client.AbstractBoatRendererMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

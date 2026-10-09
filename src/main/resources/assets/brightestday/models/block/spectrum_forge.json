@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "brightestday:block/spectrum_forge_front",
+    "side": "brightestday:block/spectrum_forge_side",
+    "top": "brightestday:block/spectrum_forge_top"
+  }
+}

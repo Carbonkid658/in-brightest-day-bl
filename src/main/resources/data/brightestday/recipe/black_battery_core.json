@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "S": "brightestday:void_block",
+    "I": "brightestday:void_matter",
+    "C": "minecraft:wither_skeleton_skull"
+  },
+  "pattern": [
+    "SIS",
+    "ICI",
+    "SIS"
+  ],
+  "result": {
+    "count": 1,
+    "id": "brightestday:black_battery_core"
+  }
+}

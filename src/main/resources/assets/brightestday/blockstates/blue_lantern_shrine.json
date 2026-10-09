@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "brightestday:block/blue_lantern_shrine" },
+    "facing=east": { "model": "brightestday:block/blue_lantern_shrine", "y": 90 },
+    "facing=south": { "model": "brightestday:block/blue_lantern_shrine", "y": 180 },
+    "facing=west": { "model": "brightestday:block/blue_lantern_shrine", "y": 270 }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "V": "brightestday:void_matter",
+    "A": "minecraft:anvil"
+  },
+  "pattern": [
+    "VVV",
+    " A "
+  ],
+  "result": {
+    "count": 1,
+    "id": "brightestday:black_anvil"
+  }
+}

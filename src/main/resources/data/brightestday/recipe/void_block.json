@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "V": "brightestday:void_matter"
+  },
+  "pattern": [
+    "VV",
+    "VV"
+  ],
+  "result": {
+    "count": 1,
+    "id": "brightestday:void_block"
+  }
+}

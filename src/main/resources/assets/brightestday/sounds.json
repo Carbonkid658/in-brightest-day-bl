@@ -1,0 +1,8 @@
+{
+  "ring.charge_5_percent": {
+    "sounds": [
+      "brightestday:ring/ring_charge_5_percent"
+    ],
+    "subtitle": "subtitles.brightestday.ring.charge_5_percent"
+  }
+}

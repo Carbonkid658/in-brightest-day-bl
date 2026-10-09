@@ -1,0 +1,17 @@
+{
+  "itemSpecific": {
+    "brightestday:orange_lantern": {
+      "kind": "LANTERN",
+      "armKind": "LANTERN",
+      "physics": {
+        "name": "FULL_PENDULUM",
+        "limitDeg": 25.0,
+        "force": 1.0,
+        "speed": 1.0,
+        "cameraSens": 1.0,
+        "gravity": 1.0,
+        "motionSens": 1.0
+      }
+    }
+  }
+}

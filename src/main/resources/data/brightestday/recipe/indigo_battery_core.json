@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "S": "minecraft:obsidian",
+    "I": "minecraft:echo_shard",
+    "C": "minecraft:crying_obsidian"
+  },
+  "pattern": [
+    "SIS",
+    "ICI",
+    "SIS"
+  ],
+  "result": {
+    "count": 1,
+    "id": "brightestday:indigo_battery_core"
+  }
+}

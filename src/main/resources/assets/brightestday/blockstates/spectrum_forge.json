@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "brightestday:block/spectrum_forge" },
+    "facing=east": { "model": "brightestday:block/spectrum_forge", "y": 90 },
+    "facing=south": { "model": "brightestday:block/spectrum_forge", "y": 180 },
+    "facing=west": { "model": "brightestday:block/spectrum_forge", "y": 270 }
+  }
+}
